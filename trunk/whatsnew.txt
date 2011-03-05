@@ -9,10 +9,15 @@ Download new version at:http://regshot.yeah.net/
               +: Function added
               -: Function deleted             
 -------------------------------------------------
+V1.61a,b,c  2002/07/13
++ Add 2 languages[1 in 1.61b],Fixed 1.
+! SeparatorBar missplaced in Popup menu in some OS,
+  Hope to fix it![Thanks Dchenka]
+
 V1.61	2002/03/30
 + Clear shots separately
 + Show translators name in About Dialog
-+ Add Nederlands, Türkçe language support
++ Add Nederlands, Türkçe ,Èeskylanguage support
 ! Optimize some codes
 
 V1.60[test] 2002/03/25
