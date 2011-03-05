@@ -1,5 +1,5 @@
 		---------------------------------------------------
-			Readme file of Regshot 1.61d  2002/07/13
+			Readme file of Regshot 1.61e5 Final 2003/1/1
 		---------------------------------------------------
 			Please view whatsnew.txt for update info!!!
 
@@ -91,11 +91,21 @@ Per Bryldt		-- Danish
 Rajah			-- Latvian
 Leandro			-- Portuguese
 Roland Turcan		-- Slovak
+Kentaro Okude		-- Japanese
+Adam Mikusiñski		-- Polish
+Computer Wizard[Wiz]	-- Serbian
+Jack Gorji		-- Hebrew
+Xosé Antón Vicente Rodríguez --Galego
+Obelix			-- Hrvatski
+Alex Simidchiev		-- Bulgarian
+joup@algonet.se		-- Svenska
+
 Nick Reid		-- Advice
+
 Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey,
-Dchenka and all those I fogot to mention!!
+Dchenka , itschy and all those I fogot to mention!!
 ------------------------------------------------------------------------------------
 		Homepage:http://regshot.yeah.net/ http://regshot.ist.md
-				Email:spring_w@163.com
+				Email:regshot@ist.md
 			(c) Copyright 2000-2002 TiANWEi
 				All rights reserved

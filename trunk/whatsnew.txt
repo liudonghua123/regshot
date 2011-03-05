@@ -9,10 +9,20 @@ Download new version at:http://regshot.yeah.net/
               +: Function added
               -: Function deleted             
 -------------------------------------------------
-V1.61a,b,c  2002/07/13
+
+V1.61a,b,c,d,e,e+,e1-e5 2002/07/13-2003/01/01
 + Add 2 languages[1 in 1.61b],Fixed 1.
 ! SeparatorBar missplaced in Popup menu in some OS,
   Hope to fix it![Thanks Dchenka]
+! Fix Output path bug found by itschy!
++ Add Japanese language by Kentaro Okude!
++ Add Polish language by Adam Mikusiñski!
++ Add Serbian language by Wiz from Yugoslavia!1.61e1
++ Add Hebrew language by Jack Gorji! 1.61e1
++ Add Galego language by Xosé Antón Vicente Rodríguez [e2]
++ Add Hrvatski language by Obelix[[e3]
++ Add Bulgarian language by Alex Simidchiev[e4]
++ Add Svenska language by joup@algonet.se[e5]
 
 V1.61	2002/03/30
 + Clear shots separately
