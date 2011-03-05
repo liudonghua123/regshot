@@ -1,174 +1,108 @@
 
              What's new of Regshot
 
-Download new version : http://regshot.yeah.net/
+Download new version at:http://regshot.yeah.net/ 
+			http://regshot.isd.md/
 -------------------------------------------------
               *: Note must read
               !: Changes made
               +: Function added
               -: Function deleted             
+-------------------------------------------------
+V1.61	2002/03/30
++ Clear shots separately
++ Show translators name in About Dialog
++ Add Nederlands, Türkçe language support
+! Optimize some codes
 
--------------------------------------------------
-Version 1.60       2002/03/25
+V1.60[test] 2002/03/25
 + Snapshots can be saved into "Hive" files
--------------------------------------------------
-Version 1.55       2002/03/11
+
+V1.55	2002/03/11
 - Cut off "Dynamic Monitor" Function
 + Compare log file are saved with the name of the
   comment you input!
--------------------------------------------------
-Version 1.54b      2002/02/28
+
+V1.54b	2002/02/28
 ! Fix bug that "rgst152.dat" was miss placed.
 + Add Deutsch language support.
--------------------------------------------------
-Version 1.54a      2002/02/22
+
+V1.54a	2002/02/22
 ! Fix bug that made in 1.54 [Can not save mask in
   Monitor window]
 + Minor changes,add Italian language strings.
 * Some friends reported that Monitor Window may hang 
   up,but I have not encounter it myself, I will 
   debug later.
--------------------------------------------------
-Version 1.54       2002/01/27
+
+V1.54	2002/01/27
 + Multi Language interface and inner strings
--------------------------------------------------
-Version 1.53       2001/12/16
+
+V1.53	2001/12/16
 + Show progress during compare
 ! New counter refresh methord
 ! URL change to regshot.yeah.net
--------------------------------------------------
-Version 1.52c      2001/12/10
+
+V1.52c	2001/12/10
 + Browse button in static window
--------------------------------------------------
-Version 1.52b      2001/11/18
+
+V1.52b	2001/11/18
 + Pause "||" added in dynamic window
 + Save function added in dynamic window
--------------------------------------------------
-Version 1.52a      2001/11/16
+
+V1.52a	2001/11/16
 + Output-path in static window
 + Ring3TD name catch and filter in dynamic window
--------------------------------------------------
-Version 1.52       2001/11/10
+
+V1.52	2001/11/10
 + Dynamic monitor window under Win9x
   read readme.txt for detail!
 ! rgst150a.dat -> rgst152.dat
--------------------------------------------------
-Version 1.51,1.51a 2001/10/25
+
+V1.51,1.51a 2001/10/25
 ! Fix crash bug in 1.50e when scan folders!!
 + Scan unlimited number of drivers[folders]
--------------------------------------------------
-Version 1.50e 2001/10/18
+
+V1.50e	2001/10/18
 + Scan up to 26 drivers[folders] separated with ";"
 - Text log don't wrap at too long data for the 
   3rd party software analysis 
--------------------------------------------------
-Version 1.50d 2001/09/29
+
+V1.50d	2001/09/29
 ! Deal with more non-standard(invalid) reg values
--------------------------------------------------
-Version 1.50c 2001/09/28
+
+V1.50c	2001/09/28
 ! Crash bug fixed when grab some non-standard value
 * Thanks firstk@21cn.com for testing debug version!
--------------------------------------------------
-Version 1.50b 2001/09/22
+
+V1.50b	2001/09/22
 ! NULL folder name minor bug fixed 
--------------------------------------------------
-Version 1.50a 2001/09/10
+
+V1.50a	2001/09/10
 * Teachers Day!
 + files and folders scan![maybe whole partition!]
 ! log filename fixed
 ! regshot.dat -> rgst150.dat
--------------------------------------------------
-Version 1.40c 2001/09/05
+
+V1.40c	2001/09/05
 + Comments field for compare log
 ! Due to HTML viewer's limit,some change made
- -------------------------------------------------
-Version 1.40b 2001/09/04
+ 
+V1.40b	2001/09/04
 + Show keys and values counts during registry grab
 + Show elapse time during registry grab
 + Refresh dialog box during registry grab
 + Show icon on sysmenu
 ! New string api 
 ! Minor changes on memory allocation
--------------------------------------------------
-Version 1.40a 2001/09/01
+
+V1.40a	2001/09/01
 * This is a brandnew version!
 ! New data structure,more detailed output.
 + HTML document compare log output.
 - Some checkbox.
 -------------------------------------------------
-Version 1.30c 2001/08/2?
-! Getsystime -> Getlocaltime
-! H.L.K -> H.M
-! little changes
--------------------------------------------------
-Version 1.30b 2001/08/13
-- Some ASM code
-- Some exception handler
-- Some old function
-* Great Thanks to Mr.Zhangl!!!
--------------------------------------------------
-Debug Version 1.20b 2001/08/10
-* This is a debug version to Mr. ZhangL
--------------------------------------------------
-Debug Version 1.20a 2001/08/9
-* This is a debug version to Mr. ZhangL
-! Pointers unclear bug fixed
-! Dbytes bug fixed
--------------------------------------------------
-Debug Version 1.2  2001/08/08
-* This is a debug version to Mr. ZhangL
-+ New debuglog output
--------------------------------------------------
-Debug Version 1.1  2001/08/07
-* This is a debug version to Mr. ZhangL
-+ New debuglog "debug_keyqueryinfo.log" output
--------------------------------------------------
-Debug Version 1.0 2001/08/07
-* This is a debug version to Mr. ZhangL
-* Four month apart from my cute Regshot!
-+ debug_keyopen.log
-  debug_keyclose.log
-  debug_keyqueryinfo.log
-  debug_keycannotbeopen.log
-* My PC has no Win2000 installed,so I email this
-  Version to Zhangl,and he email me the logfile!
--------------------------------------------------
-Version 1.10 2001/04/09
-* One and a half year apart from my regshot!
-! Fixed bugs on NT4
--------------------------------------------------
-Version 1.01j 1999/12/29
-- NT4 bug can not be found?? So sad!
-- Not packed by UPX any more
--------------------------------------------------
-Version 1.01i 1999/12/04
-+ Compare log save to different files,max 10000!
-+ Turtor file (turtor.txt) added in release pack.
-* Found bugs on NT,bug I cannot fix it
--------------------------------------------------
-Version 1.01h 1999/11/25
-! Found bugs on NT sp3
--------------------------------------------------
-Version 1.01g 1999/10
-! Windows version detect error fixed.
-+ Exterviewer editbox.
--------------------------------------------------
-Version 1.01f 1999/10
-! New method of compare
-+ ASM codes
-+ Notpad.exe called to show the log
-+ New Icon.
-- Bmp logo.
--------------------------------------------------
-Version 1.01e
-* Mostly like 1.01d,bugs fixed.
--------------------------------------------------
-Version 1.01d
-! Use direct "=" instead "lstrcat()",faster!
-! Larger listBox
--------------------------------------------------
-Version before 1.01c
-* I don't remember so much!:))
--------------------------------------------------
+Version before 1.30c are omitted!
+
 (c) Copyright 2000-2002 TiANWEi
       All rights reserved
