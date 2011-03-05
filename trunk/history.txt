@@ -8,6 +8,17 @@ History of Regshot
 -: Function deleted             
 -------------------------------------------------
 
+V1.8.2 20071103
+! Change some calls to ANSI version(lstrcmp->strcmp...)
+! Use risk . and .. compare
+! Use HeapAlloc instead of GlobalAlloc,danger but slightly faster,see sourcecode
+! html differ color from e0e0e0 to e0f0e0. Thanks Charles!
++ Add frech languagefixed,kazakh language.
++ Add new style browseforfolder by Belogorokhov Youri! (NT+)
++ Do not save setting to regshot.ini when there is no such ini file.( idea from "alan borer" in My msg board)
++ Fix crash bug in former version if start from cmd window
+! minor changes and minor bug fixed
+
 V1.8.1 20070620
 ! Fix a Crash bug in 1.8.0! (LoadHive()->ReadFile())
 + Dir chains comparison is more human.

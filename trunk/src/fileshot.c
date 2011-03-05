@@ -20,7 +20,7 @@
 */
 
 #include "global.h"
-//ISDIR,ISFILE added in 1.80
+//ISDIR,ISFILE added in 1.8.0
 #define ISDIR(x) ( (x&FILE_ATTRIBUTE_DIRECTORY)!=0 )
 #define ISFILE(x) ( (x&FILE_ATTRIBUTE_DIRECTORY)==0 )
 extern u_char * lan_dir;
@@ -32,30 +32,26 @@ extern u_char * lan_file;
 LPSTR	GetWholeFileName(LPFILECONTENT lpFileContent)
 {
 	LPFILECONTENT lpf;
-	DWORD	nWholeLen=0,nLen,i;
-	LPSTR	lpWholeName=NULL,lptail;
-	for(lpf=lpFileContent;lpf!=NULL;lpf=lpf->lpfatherfile)
-	{
-		nWholeLen=nWholeLen+lstrlen(lpf->lpfilename)+1;
-	}
-	lpWholeName=GlobalAlloc(LMEM_FIXED,nWholeLen);
+	LPSTR	lpName,lptail;
+	int	nLen=0;
 
-	lptail=lpWholeName+nWholeLen-1;
+	for(lpf=lpFileContent;lpf!=NULL;lpf=lpf->lpfatherfile)
+		nLen+=strlen(lpf->lpfilename)+1;
+	if(nLen==0)
+		nLen++;
+	lpName=MYALLOC(nLen);
+
+	lptail=lpName+nLen-1;
 	*lptail=0x00;
 	
 	for(lpf=lpFileContent;lpf!=NULL;lpf=lpf->lpfatherfile)
 	{
-		nLen=lstrlen(lpf->lpfilename);
-		for(lptail--,i=1;i<=nLen;i++,lptail--)
-		{
-			*lptail=*((lpf->lpfilename)+nLen-i);
-			
-		}
-		if (lptail>lpWholeName)
-			*lptail=0x5c; //"\\"
-
+		nLen=strlen(lpf->lpfilename);
+		memcpy(lptail-=nLen,lpf->lpfilename,nLen);
+		if (lptail>lpName)
+			*--lptail='\\'; //0x5c;
 	}
-	return lpWholeName;
+	return lpName;
 }
 				
 
@@ -69,17 +65,21 @@ VOID	GetAllSubFile(
 					  LPFILECONTENT lpFileContent
 					  )
 {
+	LPSTR	lpTemp;
+	
 	if(ISDIR(lpFileContent->fileattr))
 	{
-		if(lstrcmp(lpFileContent->lpfilename,".")!=0 &&lstrcmp(lpFileContent->lpfilename,"..")!=0) //we should add here 1.8
+		lpTemp=lpFileContent->lpfilename;
+		//if(strcmp(lpFileContent->lpfilename,".")!=0 &&strcmp(lpFileContent->lpfilename,"..")!=0) //we should add here 1.8.0
+		if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E && *(lpTemp+2)==0x00 )  ) //1.8.2
 			LogToMem(typedir,lpcountdir,lpFileContent);
 	}
 	else
 		LogToMem(typefile,lpcountfile,lpFileContent);
 
-	if(lpFileContent->lpfirstsubfile!=NULL) //tfx 避免目录扫描时产生"."和".." added in 1.7.3 fixed at 1.8
-		//&&lstrcmp(lpFileContent->lpfirstsubfile->lpfilename,".")!=0 //But, this break the chain! :(. because we store . and .. in scan filecontent!
-		//&&lstrcmp(lpFileContent->lpfirstsubfile->lpfilename,"..")!=0) //So we should move these two lines above
+	if(lpFileContent->lpfirstsubfile!=NULL) //tfx 避免目录扫描时产生"."和".." added in 1.7.3 fixed at 1.8.0
+		//&&strcmp(lpFileContent->lpfirstsubfile->lpfilename,".")!=0 //But, this break the chain! :(. because we store . and .. in scan filecontent!
+		//&&strcmp(lpFileContent->lpfirstsubfile->lpfilename,"..")!=0) //So we should move these two lines above
 	{
 		GetAllSubFile(TRUE,typedir,typefile,lpcountdir,lpcountfile,lpFileContent->lpfirstsubfile);
 	}
@@ -108,29 +108,29 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 	//Not used
 	//if(bWinNTDetected)
 	//{
-	//	lpFilename=GlobalAlloc(LMEM_FIXED,lstrlen(lpTemp)+5+4);
-	//	lstrcpy(lpFilename,"\\\\?\\");
-	//	lstrcat(lpFilename,lpTemp);
+	//	lpFilename=MYALLOC(strlen(lpTemp)+5+4);
+	//	strcpy(lpFilename,"\\\\?\\");
+	//	strcat(lpFilename,lpTemp);
 	//}
 	//else
 	{
-		lpFilename=GlobalAlloc(LMEM_FIXED,lstrlen(lpTemp)+5);
-		lstrcpy(lpFilename,lpTemp);
+		lpFilename=MYALLOC(strlen(lpTemp)+5);
+		strcpy(lpFilename,lpTemp);
 	}
-	lstrcat(lpFilename,"\\*.*");
+	strcat(lpFilename,"\\*.*");
 
-	GlobalFree(lpTemp);
+	MYFREE(lpTemp);
 	//_asm int 3;
 	filehandle=FindFirstFile(lpFilename,&finddata);
-	GlobalFree(lpFilename);
+	MYFREE(lpFilename);
 	if(filehandle==INVALID_HANDLE_VALUE)
 		return;
 	
 	lpTemp=finddata.cFileName; //1.8
 
-	lpFileContent=GlobalAlloc(LPTR,sizeof(FILECONTENT));
-	lpFileContent->lpfilename=GlobalAlloc(LPTR,lstrlen(finddata.cFileName)+1); //must add one!
-	lstrcpy(lpFileContent->lpfilename,finddata.cFileName);
+	lpFileContent=MYALLOC0(sizeof(FILECONTENT));
+	lpFileContent->lpfilename=MYALLOC0(strlen(finddata.cFileName)+1); //must add one!
+	strcpy(lpFileContent->lpfilename,finddata.cFileName);
 	lpFileContent->writetimelow=finddata.ftLastWriteTime.dwLowDateTime;
 	lpFileContent->writetimehigh=finddata.ftLastWriteTime.dwHighDateTime;
 	lpFileContent->filesizelow=finddata.nFileSizeLow;
@@ -142,8 +142,24 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 
 	if(ISDIR(lpFileContent->fileattr))
 	{
+/*
+if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E && *(lpTemp+2)==0x00 )   //1.8.2
+00401292   66:8B85 E4FEFFFF MOV AX,WORD PTR SS:[EBP-11C]
+00401299   66:3D 2E00       CMP AX,2E
+0040129D   74 43            JE SHORT regshot.004012E2
+0040129F   66:3D 2E2E       CMP AX,2E2E
+004012A3   75 0A            JNZ SHORT regshot.004012AF
+004012A5   8A85 E6FEFFFF    MOV AL,BYTE PTR SS:[EBP-11A]
+004012AB   84C0             TEST AL,AL
+004012AD   74 33            JE SHORT regshot.004012E2
+//存在风险,因为如果filename的长度不一定,内存分配不够长度的话代码是会出问题的! 而且从LoadHive过来的也不一定长度.从汇编代码来看还是比较安全的. 我要好好考虑考虑再用.
+
+*/
+		//if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0 //or we can use that
 		//use lpTemp may "optimize" some, note, finddata.cfilename should exists!
-		if(   !(*lpTemp=='.' && *(lpTemp+1)==0x00 ) && !(*lpTemp=='.' && *(lpTemp+1)=='.' && *(lpTemp+2)==0x00 ) //if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0 //or we can use that
+		//if( !(*lpTemp=='.' && *(lpTemp+1)==0x00 ) && !(*lpTemp=='.' && *(lpTemp+1)=='.' && *(lpTemp+2)==0x00 ) //1.8.0
+		//risk! see above.
+		if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E && *(lpTemp+2)==0x00 )   //1.8.2
 			&&!IsInSkipList(lpFileContent->lpfilename,lpSnapFiles)) //tfx
 		{
 			
@@ -159,9 +175,9 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 	
 	for	(;FindNextFile(filehandle,&finddata)!=FALSE;)
 	{
-		lpFileContent=GlobalAlloc(LPTR,sizeof(FILECONTENT));
-		lpFileContent->lpfilename=GlobalAlloc(LPTR,lstrlen(finddata.cFileName)+1);
-		lstrcpy(lpFileContent->lpfilename,finddata.cFileName);
+		lpFileContent=MYALLOC0(sizeof(FILECONTENT));
+		lpFileContent->lpfilename=MYALLOC0(strlen(finddata.cFileName)+1);
+		strcpy(lpFileContent->lpfilename,finddata.cFileName);
 		lpFileContent->writetimelow=finddata.ftLastWriteTime.dwLowDateTime;
 		lpFileContent->writetimehigh=finddata.ftLastWriteTime.dwHighDateTime;
 		lpFileContent->filesizelow=finddata.nFileSizeLow;
@@ -173,7 +189,8 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 
 		if(ISDIR(lpFileContent->fileattr))
 		{
-			if(   !(*lpTemp=='.' && *(lpTemp+1)==0x00 ) && !(*lpTemp=='.' && *(lpTemp+1)=='.' && *(lpTemp+2)==0x00 ) //if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0
+			//if(   !(*lpTemp=='.' && *(lpTemp+1)==0x00 ) && !(*lpTemp=='.' && *(lpTemp+1)=='.' && *(lpTemp+2)==0x00 ) //if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0
+			if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E && *(lpTemp+2)==0x00 )  //1.8.2
 				&&!IsInSkipList(lpFileContent->lpfilename,lpSnapFiles)) //tfx
 			{
 				nGettingDir++;
@@ -191,7 +208,7 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 	nGettingTime=GetTickCount();
 	if ((nGettingTime-nBASETIME1)>REFRESHINTERVAL)
 	{
-		ShowCounters(lan_dir,lan_file,nGettingDir,nGettingFile);
+		UpdateCounters(lan_dir,lan_file,nGettingDir,nGettingFile);
 	}
 
 	return ;
@@ -208,7 +225,7 @@ VOID	CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2)
 	{
 		for(lp2=lpHead2;lp2!=NULL;lp2=lp2->lpbrotherfile)
 		{
-			if((lp2->bfilematch==NOTMATCH)&&lstrcmp(lp1->lpfilename,lp2->lpfilename)==0)
+			if((lp2->bfilematch==NOTMATCH) && strcmp(lp1->lpfilename,lp2->lpfilename)==0)  //1.8.2 from lstrcmp to strcmp
 			{	//Two 'FILE's have same name,but we are not sure they are the same,so we compare it!
 				if( ISFILE(lp1->fileattr) && ISFILE(lp2->fileattr) )
 					////(lp1->fileattr&FILE_ATTRIBUTE_DIRECTORY)!=FILE_ATTRIBUTE_DIRECTORY&&(lp2->fileattr&FILE_ATTRIBUTE_DIRECTORY)!=FILE_ATTRIBUTE_DIRECTORY)
@@ -308,8 +325,8 @@ VOID FreeAllFileContent(LPFILECONTENT lpFile)
 	{
 		FreeAllFileContent(lpFile->lpfirstsubfile);
 		FreeAllFileContent(lpFile->lpbrotherfile);
-		GlobalFree(lpFile->lpfilename);
-		GlobalFree(lpFile);
+		MYFREE(lpFile->lpfilename);
+		MYFREE(lpFile);
 	}
 }
 
@@ -323,7 +340,7 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 		FreeAllFileHead(lp->lpnextheadfile);
 		FreeAllFileContent(lp->lpfilecontent);
 		//FreeAllFileContent(lp->lpfilecontent2);
-		GlobalFree(lp);
+		MYFREE(lp);
 	}
 
 }
@@ -344,7 +361,7 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 	DWORD	nFPHeader,nFPCurrent,nFPTemp4Write,nLenPlus1;
 	
 	
-	nLenPlus1=lstrlen(lpFileContent->lpfilename)+1;											//get len+1
+	nLenPlus1=strlen(lpFileContent->lpfilename)+1;											//get len+1
 	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
 	nFPTemp4Write=nFPHeader+41;								//10*4+1
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpfilename
@@ -437,7 +454,7 @@ LPFILECONTENT SearchDirChain(LPSTR lpname,LPHEADFILE lpHF)
 	for(lphf=lpHF;lphf!=NULL;lphf=lphf->lpnextheadfile)
 	{
 		if(lphf->lpfilecontent!=NULL && lphf->lpfilecontent->lpfilename!=NULL)
-			if(lstrcmpi(lpname,lphf->lpfilecontent->lpfilename)==0)
+			if(strcmpi(lpname,lphf->lpfilecontent->lpfilename)==0)
 				return lphf->lpfilecontent;
 	}
 	return NULL;
@@ -456,7 +473,7 @@ VOID FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,int nMaxLen)
 	{
 		if(lphf->lpfilecontent!=NULL && nLen < nMaxLen)
 		{
-			nLen+=lstrlen(lphf->lpfilecontent->lpfilename)+1;
+			nLen+=strlen(lphf->lpfilecontent->lpfilename)+1;
 			strcat(lpDir,lphf->lpfilecontent->lpfilename);
 			strcat(lpDir,";");
 		}
@@ -475,7 +492,7 @@ BOOL DirChainMatch(LPHEADFILE lphf1,LPHEADFILE lphf2)
 	ZeroMemory(lpDir2,sizeof(lpDir2));
 	FindDirChain(lphf1,lpDir1,EXTDIRLEN);
 	FindDirChain(lphf2,lpDir2,EXTDIRLEN);
-	if(lstrcmpi(lpDir1,lpDir2)!=0)
+	if(strcmpi(lpDir1,lpDir2)!=0)
 		return FALSE;
 	else
 		return TRUE;

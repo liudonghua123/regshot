@@ -6,6 +6,7 @@
 #define IDD_DIALOG2                     101
 #define IDI_ICON1                       111
 #define ID_BASE                         1000
+
 #define IDC_1STSHOT                     1003
 #define IDC_2NDSHOT                     1004
 #define IDC_COMPARE                     1005
@@ -19,6 +20,7 @@
 #define IDC_RADIO1                      1013
 #define IDC_RADIO2                      1014
 #define IDC_CHECKDIR                    1015
+
 #define IDC_STATICSERVICE               1016
 #define IDC_STATICRING3                 1017
 #define IDC_SETMASK                     1018

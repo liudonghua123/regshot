@@ -24,9 +24,28 @@
 #include <shlobj.h>
 #include "resource.h"
 
+
+//!!!WARNING!!! HEAP_NO_SERIALIZE mean we can not use this in multithread.
+//added in 1.8.2 to gain a slightly faster speed but it is danger! 
+#define	USEHEAPALLOC_DANGER 
+
+#ifdef USEHEAPALLOC_DANGER
+
+#define	MYALLOC(x)	HeapAlloc(hHeap,1,x)
+#define	MYALLOC0(x)	HeapAlloc(hHeap,9,x) //HEAP_NO_SERIALIZE|HEAP_ZERO_MEMORY ,1|8
+#define	MYFREE(x)	HeapFree(hHeap,1,x)
+
+#else
+
+#define MYALLOC(x)	GlobalAlloc(GMEM_FIXED,x)
+#define MYALLOC0(x)	GlobalAlloc(GPTR,x)
+#define MYFREE(x)	GlobalFree(x)
+
+#endif
+
 //Optimize program size by tulipfan
-#define WIN32_LEAN_AND_MEAN //tfx 减少程序文件大小
-#pragma comment(linker,"/FILEALIGN:0x200 /MERGE:.data=.text /MERGE:.rdata=.text /SECTION:.text,EWR /IGNORE:4078")
+//#define WIN32_LEAN_AND_MEAN //tfx 减少程序文件大小
+//#pragma comment(linker,"/FILEALIGN:0x200 /MERGE:.data=.text /MERGE:.rdata=.text /SECTION:.text,EWR /IGNORE:4078")
 
 //#define DEBUGLOG
 //Some definations
@@ -200,8 +219,6 @@ LPSTR	lpWindowsDirName,lpTempPath,lpStartDir,lpIni,lpFreeStrings,lpCurrentTransl
 
 //LPSTR	REGSHOTDATFILE		="rgst152.dat";
 LPSTR	lpProgramDir; //tfx 定义
-#define SIZEOF_REGSHOT	65535
-#define MAXREGSHOT		100
 LPDWORD lpSnapRegs, lpSnapFiles;
 LPSTR	lpRegshotIni;
 LPSTR   lpSnapRegsStr,lpSnapFilesStr,lpSnapKey,lpSnapReturn;
@@ -237,12 +254,13 @@ FILETIME		ftLastWrite;					//Filetime struct
 BROWSEINFO		BrowseInfo1;					//BrowseINFO struct
 OPENFILENAME	opfn;							//Openfilename struct
 BOOL	bUseLongRegHead; //1.8.1 for compatible to 1.61e5 and undoreg1.46
+HANDLE	hHeap; //1.8.2
 
 VOID LogToMem(DWORD actiontype,LPDWORD lpcount,LPVOID lp);
 BOOL GetSnapRegs(HWND hDlg);
 BOOL SetSnapRegs(HWND hDlg);
 BOOL IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList);
-VOID ShowCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2);
+VOID UpdateCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2);
 LPSTR	AtPos(LPSTR lpMaster,LPSTR lp,DWORD size);
 BOOL	GetLanguageType(HWND hDlg);
 VOID	GetDefaultStrings(VOID);

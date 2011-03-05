@@ -1,5 +1,4 @@
 /*
-    Copyright 1999-2003,2007 TiANWEi
     Copyright 2004 tulipfan
 
     This file is part of Regshot.
@@ -20,9 +19,11 @@
 */
 
 #include "global.h"
+// 1.8.2 move defination from global.h to this place
+#define SIZEOF_REGSHOT	65535
+#define MAXREGSHOT		100
 
-
-//setup based on regshot.ini by tulipfan
+//setup based on regshot.ini by tulipfan (tfx)
 LPSTR	INI_SETUP			="Setup";
 LPSTR	INI_FLAG			="Flag";
 LPSTR	INI_EXTDIR			="ExtDir";
@@ -36,15 +37,15 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 	int i;
 	BYTE nFlag;
 
-	lpSnapKey=GlobalAlloc(LMEM_FIXED,20);
+	lpSnapKey=MYALLOC(20);
 
-	lpSnapRegs=GlobalAlloc(LMEM_ZEROINIT,sizeof(LPSTR)*MAXREGSHOT);
-	lpSnapRegsStr=GlobalAlloc(LMEM_ZEROINIT,SIZEOF_REGSHOT);
+	lpSnapRegs=MYALLOC0(sizeof(LPSTR)*MAXREGSHOT);
+	lpSnapRegsStr=MYALLOC0(SIZEOF_REGSHOT);
 	if(GetPrivateProfileSection(INI_SKIPREGKEY,lpSnapRegsStr,SIZEOF_REGSHOT,lpRegshotIni)>0)
 	{
 		for(i=0;i<MAXREGSHOT-1;i++)
 		{
-			wsprintf(lpSnapKey,"%d%s",i,"=");
+			sprintf(lpSnapKey,"%d%s",i,"=");
 			if((lpSnapReturn=AtPos(lpSnapRegsStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
 			{
 				*(lpSnapRegs+i)=(DWORD)lpSnapReturn;
@@ -57,13 +58,13 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 		}
 	}
 
-	lpSnapFiles=GlobalAlloc(LMEM_ZEROINIT,sizeof(LPSTR)*MAXREGSHOT);
-	lpSnapFilesStr=GlobalAlloc(LMEM_ZEROINIT,SIZEOF_REGSHOT);
+	lpSnapFiles=MYALLOC0(sizeof(LPSTR)*MAXREGSHOT);
+	lpSnapFilesStr=MYALLOC0(SIZEOF_REGSHOT);
 	if(GetPrivateProfileSection(INI_SKIPDIR,lpSnapFilesStr,SIZEOF_REGSHOT,lpRegshotIni))
 	{
 		for(i=0;i<MAXREGSHOT-1;i++)
 		{
-			wsprintf(lpSnapKey,"%d%s",i,"=");
+			sprintf(lpSnapKey,"%d%s",i,"=");
 			if((lpSnapReturn=AtPos(lpSnapFilesStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
 			{
 				*(lpSnapFiles+i)=(DWORD)lpSnapReturn;
@@ -76,7 +77,7 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 		}
 	}
 
-	nFlag=(BYTE)GetPrivateProfileInt(INI_SETUP,INI_FLAG,0,lpRegshotIni);
+	nFlag=(BYTE)GetPrivateProfileInt(INI_SETUP,INI_FLAG,1,lpRegshotIni); //default from 0 to 1 in 1.8.2 (TEXT)
 	//if(nFlag!=0)
 	{
 		SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)(nFlag&0x01),(LPARAM)0);
@@ -114,14 +115,22 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 {
 	BYTE nFlag;
 	LPSTR lpString;
+	HANDLE hTest;
 
+	//1.8.2,someone do not want to create a regshot.ini when there isn't one. :O
+	hTest = CreateFile(lpRegshotIni,GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,	NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(hTest==INVALID_HANDLE_VALUE)
+		return FALSE;
+	CloseHandle(hTest);
+	
 	//nFlag=(BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0) //1.7
 	//	|SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1
 	//	|SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<2);
 	nFlag=(BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)|
 			SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1);
 
-	lpString=GlobalAlloc(LMEM_ZEROINIT,EXTDIRLEN+2);
+	lpString=MYALLOC0(EXTDIRLEN+2);
 	//sprintf(lpString,"%s=%d",INI_FLAG,nFlag); //1.7 solokey
 	//WritePrivateProfileSection(INI_SETUP,lpString,lpRegshotIni);  //1.7 solokey ,can only have one key.
 	
@@ -138,12 +147,12 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 	if(GetDlgItemText(hDlg,IDC_EDITPATH,lpString,MAX_PATH)!=0)
 		WritePrivateProfileString(INI_SETUP,INI_OUTDIR,lpString,lpRegshotIni);
 
-	GlobalFree(lpString);
-	GlobalFree(lpRegshotIni);
-	GlobalFree(lpSnapRegsStr);
-	GlobalFree(lpSnapFilesStr);
-	GlobalFree(lpSnapKey);
-	GlobalFree(lpSnapReturn);
+	MYFREE(lpString);
+	MYFREE(lpRegshotIni);
+	MYFREE(lpSnapRegsStr);
+	MYFREE(lpSnapFilesStr);
+	MYFREE(lpSnapKey);
+	MYFREE(lpSnapReturn);
 
 	return TRUE;
 }
@@ -152,9 +161,9 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 BOOL IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList) //tfx 跳过黑名单
 {
 	int i;
-	for(i=0;i<=MAXREGSHOT-1&&(LPSTR)(*(lpSkipList+i))!=NULL;i++)
+	for(i=0;(LPSTR)(*(lpSkipList+i))!=NULL && i<=MAXREGSHOT-1;i++)
 	{
-		if(lstrcmpi(lpSnap, (LPSTR)*(lpSkipList+i))==0)
+		if(strcmpi(lpSnap, (LPSTR)*(lpSkipList+i))==0)
 		{
 			return TRUE;
 		}

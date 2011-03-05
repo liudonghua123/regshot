@@ -1,6 +1,5 @@
 /*
     Copyright 1999-2003,2007 TiANWEi
-    Copyright 2004 tulipfan
 
     This file is part of Regshot.
 
@@ -53,7 +52,7 @@ VOID	DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 		else
 		{
 		
-			length=lstrlen(lpstr);
+			length=strlen(lpstr);
 			WriteFile(hFile,lpstr,length,&NBW,NULL);
 			if(NBW!=length)
 			{
@@ -74,23 +73,23 @@ VOID	DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 //------------------------------------------------------------
 BOOL ReplaceInValidFileName(LPSTR lpf)
 {
-	LPSTR	lpInvalid="\\/:*?\"<>|";
+	char lpInvalid[]="\\/:*?\"<>|"; //1.8.2
 	DWORD	i,j,nLen;
-	BOOL	bNoSpace=FALSE;
-	nLen=lstrlen(lpf);
+	BOOL	bLegal=FALSE;
+	nLen=strlen(lpf);
 	for(i=0;i<nLen;i++)
 	{
-		for(j=0;j<9;j++)
+		for(j=0;j<sizeof(lpInvalid)-1;j++) //changed at 1.8.2 from 9 to sizeof()-1
 		{
 			if (*(lpf+i)==*(lpInvalid+j))
-				*(lpf+i)=0x2D;// check for invalid chars and replace it (return FALSE;)
+				*(lpf+i)='-'; //0x2D; check for invalid chars and replace it (return FALSE;)
 			else
 				if(*(lpf+i)!=0x20&&*(lpf+i)!=0x09) //At least one non-space,non-tab char needed!
-					bNoSpace=TRUE;
+					bLegal=TRUE;
 
 		}
 	}
-	return bNoSpace;
+	return bLegal;
 }
 
 //--------------------------------------------------
@@ -99,7 +98,7 @@ BOOL ReplaceInValidFileName(LPSTR lpf)
 LPSTR	AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
 {
 	DWORD	i,j,nsizelp;
-	nsizelp=lstrlen(lp);
+	nsizelp=strlen(lp);
 	if (size<=nsizelp||nsizelp<1)
 		return NULL;
 	

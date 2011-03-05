@@ -57,29 +57,26 @@ extern char	str_CR[];
 LPSTR	GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 {
 	LPKEYCONTENT lpf;
-	DWORD	nWholeLen=0,nLen,i;
-	LPSTR	lpWholeName=NULL,lptail;
-	for(lpf=lpKeyContent;lpf!=NULL;lpf=lpf->lpfatherkey)
-	{
-		nWholeLen=nWholeLen+lstrlen(lpf->lpkeyname)+1;
-	}
-	lpWholeName=GlobalAlloc(LMEM_FIXED,nWholeLen);
+	LPSTR	lpName,lptail;
+	int nLen=0;
 
-	lptail=lpWholeName+nWholeLen-1;
+	for(lpf=lpKeyContent;lpf!=NULL;lpf=lpf->lpfatherkey)
+		nLen+=strlen(lpf->lpkeyname)+1;
+	if(nLen==0)
+		nLen++;
+	lpName=MYALLOC(nLen);
+
+	lptail=lpName+nLen-1;
 	*lptail=0x00;
+
 	for(lpf=lpKeyContent;lpf!=NULL;lpf=lpf->lpfatherkey)
 	{
-		nLen=lstrlen(lpf->lpkeyname);
-		for(lptail--,i=1;i<=nLen;i++,lptail--)
-		{
-			*lptail=*((lpf->lpkeyname)+nLen-i);
-			
-		}
-		if (lptail>lpWholeName)
-			*lptail=0x5c; //"\\"
-
+		nLen=strlen(lpf->lpkeyname);
+		memcpy(lptail-=nLen,lpf->lpkeyname,nLen);
+		if (lptail>lpName)
+			*--lptail='\\'; //0x5c='\\'
 	}
-	return lpWholeName;
+	return lpName;
 }
 
 
@@ -89,35 +86,27 @@ LPSTR	GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 LPSTR	GetWholeValueName(LPVALUECONTENT lpValueContent)
 {
 	LPKEYCONTENT lpf;
-	DWORD	nWholeLen=0,nLen,i;
-	LPSTR	lpWholeName=NULL,lptail;
-	nLen=lstrlen(lpValueContent->lpvaluename);
+	int nWholeLen,nLen;
+	LPSTR	lpName,lptail;
+	nLen=strlen(lpValueContent->lpvaluename);
 	nWholeLen=nLen+1;
 	for(lpf=lpValueContent->lpfatherkey;lpf!=NULL;lpf=lpf->lpfatherkey)
-	{
-		nWholeLen=nWholeLen+lstrlen(lpf->lpkeyname)+1;
-	}
-	lpWholeName=GlobalAlloc(LMEM_FIXED,nWholeLen);
-	lptail=lpWholeName+nWholeLen-1;
-	*lptail=0x00;
+		nWholeLen+=strlen(lpf->lpkeyname)+1;
 
-	for(lptail--,i=1;i<=nLen;i++,lptail--)
-	{
-		*lptail=*((lpValueContent->lpvaluename)+nLen-i);
-	}
-	*lptail=0x5c; //"\\"
+	lpName=MYALLOC(nWholeLen);
+	lptail=lpName+nWholeLen-1;
+
+	strcpy(lptail-=nLen,lpValueContent->lpvaluename);
+	*--lptail='\\'; //0x5c='\\'
+
 	for(lpf=lpValueContent->lpfatherkey;lpf!=NULL;lpf=lpf->lpfatherkey)
 	{
-		nLen=lstrlen(lpf->lpkeyname);
-		for(lptail--,i=1;i<=nLen;i++,lptail--)
-		{
-			*lptail=*((lpf->lpkeyname)+nLen-i);
-		}
-		if (lptail>lpWholeName)
-			*lptail=0x5c; //"\\"
-
+		nLen=strlen(lpf->lpkeyname);
+		memcpy(lptail-=nLen,lpf->lpkeyname,nLen);
+		if (lptail>lpName)
+			*--lptail='\\'; //0x5c= '\\'
 	}
-	return lpWholeName;
+	return lpName;
 }
 
 //-------------------------------------------------------------
@@ -132,18 +121,18 @@ LPSTR	TransData(LPVALUECONTENT lpValueContent,DWORD type)
 
 		case	REG_SZ:
 		//case	REG_EXPAND_SZ: Not used any more,they all included in [default],because some nonregular value would corrupt this.
-				lpvaluedata=GlobalAlloc(LPTR,size+5); //5 is enough
-				lstrcpy(lpvaluedata,": \"");
+				lpvaluedata=MYALLOC0(size+5); //5 is enough
+				strcpy(lpvaluedata,": \"");
 				if(lpValueContent->lpvaluedata!=NULL) //added in 1.62? not compiled
-					lstrcat(lpvaluedata,lpValueContent->lpvaluedata);
-				lstrcat(lpvaluedata,"\"");
+					strcat(lpvaluedata,lpValueContent->lpvaluedata);
+				strcat(lpvaluedata,"\"");
 				//wsprintf has a bug that can not print string too long one time!);
 				//wsprintf(lpvaluedata,"%s%s%s",": \"",lpValueContent->lpvaluedata,"\"");
 				break;
 		case	REG_MULTI_SZ:
 				//Be sure to add below line outside of following "if",
 				//for that GlobalFree(lp) must had lp already located!
-				lpvaluedata=GlobalAlloc(LPTR,size+5);//5 is enough
+				lpvaluedata=MYALLOC0(size+5);//5 is enough
 				for(c=0;c<size;c++)
 				{
 					if (*((LPBYTE)(lpValueContent->lpvaluedata+c))==0)
@@ -155,22 +144,22 @@ LPSTR	TransData(LPVALUECONTENT lpValueContent,DWORD type)
 					}
 				}
 				//*((LPBYTE)(lpValueContent->lpvaluedata+size))=0x00; // for some illegal multisz
-				lstrcpy(lpvaluedata,": '");
-				lstrcat(lpvaluedata,lpValueContent->lpvaluedata);
-				lstrcat(lpvaluedata,"'");
+				strcpy(lpvaluedata,": '");
+				strcat(lpvaluedata,lpValueContent->lpvaluedata);
+				strcat(lpvaluedata,"'");
 				//wsprintf(lpvaluedata,"%s%s%s",": \"",lpValueContent->lpvaluedata,"\"");
 				break;
 		case	REG_DWORD:
 		//case	REG_DWORD_BIG_ENDIAN: Not used any more,they all included in [default]
-				lpvaluedata=GlobalAlloc(LPTR,13); //13 is enough
-				wsprintf(lpvaluedata,"%s%08X",": 0x",*(LPDWORD)(lpValueContent->lpvaluedata));
+				lpvaluedata=MYALLOC0(13); //13 is enough
+				sprintf(lpvaluedata,"%s%08X",": 0x",*(LPDWORD)(lpValueContent->lpvaluedata));
 				break;
 		default	:
-				lpvaluedata=GlobalAlloc(LPTR,3*(size+1)); //3*(size+1) is enough
+				lpvaluedata=MYALLOC0(3*(size+1)); //3*(size+1) is enough
 				*lpvaluedata=0x3a;
 				//for the resttype lengthofvaluedata doesn't contains the 0!
 				for	(c=0;c<size;c++)
-					wsprintf(lpvaluedata+3*c+1," %02X",*(lpValueContent->lpvaluedata+c));
+					sprintf(lpvaluedata+3*c+1," %02X",*(lpValueContent->lpvaluedata+c));
 	}
 	return lpvaluedata;
 }
@@ -190,7 +179,7 @@ LPSTR	GetWholeValueData(LPVALUECONTENT lpValueContent)
 		case	REG_EXPAND_SZ:
 				if(lpValueContent->lpvaluedata!=NULL) //added in 1.62 not compiled
 				{
-				if(size==(DWORD)lstrlen(lpValueContent->lpvaluedata)+1)
+				if(size==(DWORD)strlen(lpValueContent->lpvaluedata)+1)
 					lpvaluedata=TransData(lpValueContent,REG_SZ);
 				else
 					lpvaluedata=TransData(lpValueContent,REG_BINARY);
@@ -235,7 +224,7 @@ LPSTR	GetWholeValueData(LPVALUECONTENT lpValueContent)
 VOID	CreateNewResult(DWORD actiontype,LPDWORD lpcount,LPSTR lpresult)
 {
 	LPCOMRESULT	lpnew;
-	lpnew=(LPCOMRESULT)GlobalAlloc(LPTR,sizeof(COMRESULT));
+	lpnew=(LPCOMRESULT)MYALLOC0(sizeof(COMRESULT));
 	lpnew->lpresult=lpresult;
 	
 	switch(actiontype)
@@ -308,12 +297,12 @@ VOID	LogToMem(DWORD actiontype,LPDWORD lpcount,LPVOID lp)
 		
 			lpname=GetWholeValueName(lp);
 			lpdata=GetWholeValueData(lp);
-			lpall=GlobalAlloc(LMEM_FIXED,lstrlen(lpname)+lstrlen(lpdata)+2);
+			lpall=MYALLOC(strlen(lpname)+strlen(lpdata)+2);
 			//do not use:wsprintf(lpall,"%s%s",lpname,lpdata); !!! strlen limit!
-			lstrcpy(lpall,lpname);
-			lstrcat(lpall,lpdata);
-			GlobalFree(lpname);
-			GlobalFree(lpdata);
+			strcpy(lpall,lpname);
+			strcat(lpall,lpdata);
+			MYFREE(lpname);
+			MYFREE(lpdata);
 			CreateNewResult(actiontype,lpcount,lpall);
 		}
 		else
@@ -379,10 +368,10 @@ VOID	FreeAllCom(LPCOMRESULT lpComResult)
 	for(lp=lpComResult;lp!=NULL;)
 	{
 		if(lp->lpresult!=NULL)
-			GlobalFree(lp->lpresult);
+			MYFREE(lp->lpresult);
 		lpold=lp;
 		lp=lp->lpnextresult;
-		GlobalFree(lpold);
+		MYFREE(lpold);
 	}
 	
 }
@@ -399,15 +388,15 @@ VOID FreeAllKey(LPKEYCONTENT lpKey)
 		FreeAllKey(lpKey->lpbrotherkey);
 		for(lpv=lpKey->lpfirstvalue;lpv!=NULL;)
 		{
-			GlobalFree(lpv->lpvaluename);
+			MYFREE(lpv->lpvaluename);
 			if(lpv->lpvaluedata!=NULL)
-				GlobalFree(lpv->lpvaluedata);
+				MYFREE(lpv->lpvaluedata);
 			lpvold=lpv;
 			lpv=lpv->lpnextvalue;
-			GlobalFree(lpvold);
+			MYFREE(lpvold);
 		}
-		GlobalFree(lpKey->lpkeyname);
-		GlobalFree(lpKey);
+		MYFREE(lpKey->lpkeyname);
+		MYFREE(lpKey);
 	}
 
 }
@@ -470,7 +459,7 @@ VOID FreeAllKeyContent1(void)
 
 	if(is1LoadFromHive)
 	{
-		GlobalFree(lpTempHive1); //Note,together we free the filecontent!
+		MYFREE(lpTempHive1); //Note,together we free the filecontent!
 		lpTempHive1=NULL;
 		lpHeadFile1=NULL; //We add here
 	}
@@ -488,7 +477,7 @@ VOID FreeAllKeyContent2(void)
 	
 	if(is2LoadFromHive)
 	{
-		GlobalFree(lpTempHive2); //Note,together we free the filecontent!
+		MYFREE(lpTempHive2); //Note,together we free the filecontent!
 		lpTempHive2=NULL;
 		lpHeadFile2=NULL; //We add here!
 	}
@@ -530,13 +519,13 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 {
 	LPKEYCONTENT	lp1,lp2;
 	LPVALUECONTENT	lpvalue1,lpvalue2;
-	DWORD	i;
+	//DWORD	i;
 	
 	for(lp1=lpHead1;lp1!=NULL;lp1=lp1->lpbrotherkey)
 	{
 		for(lp2=lpHead2;lp2!=NULL;lp2=lp2->lpbrotherkey)
 		{
-			if((lp2->bkeymatch==NOTMATCH)&&lstrcmp(lp1->lpkeyname,lp2->lpkeyname)==0)
+			if((lp2->bkeymatch==NOTMATCH)&&strcmp(lp1->lpkeyname,lp2->lpkeyname)==0) //1.8.2 from lstrcmp to strcmp
 			{	//Same key found! we compare their values and their subkeys!
 
 				lp2->bkeymatch=ISMATCH;
@@ -559,16 +548,17 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 							{	//Loop lp2 to find a value matchs lp1's
 								if((lpvalue2->bvaluematch==NOTMATCH)&&(lpvalue1->typecode==lpvalue2->typecode))
 								{	//Same valuedata type
-									if(lstrcmp(lpvalue1->lpvaluename,lpvalue2->lpvaluename)==0)
+									if(strcmp(lpvalue1->lpvaluename,lpvalue2->lpvaluename)==0)  //1.8.2 from lstrcmp to strcmp
 									{	//Same valuename
 										if(lpvalue1->datasize==lpvalue2->datasize)
 										{	//Same size of valuedata
-											for(i=0;i<lpvalue1->datasize;i++)
+											/*for(i=0;i<lpvalue1->datasize;i++)
 											{
 												if (*((lpvalue1->lpvaluedata)+i)!=*((lpvalue2->lpvaluedata)+i))
 													break;
 											}
-											if (i==lpvalue1->datasize)
+											if (i==lpvalue1->datasize)*/
+											if(memcmp(lpvalue1->lpvaluedata,lpvalue2->lpvaluedata,lpvalue1->datasize)==0) //1.8.2
 											{	//Same valuedata,keys are the same!
 												
 												lpvalue2->bvaluematch=ISMATCH;
@@ -770,12 +760,12 @@ BOOL CompareShots(void)
 		lpExt=".htm";
 	}
 	
-	lpDestFileName=GlobalAlloc(LPTR,MAX_PATH*2);
-	lpstrcomp=GlobalAlloc(LPTR,buffersize); //buffersize must> commentlength+10 .txt 0000
+	lpDestFileName=MYALLOC0(MAX_PATH*2);
+	lpstrcomp=MYALLOC0(buffersize); //buffersize must> commentlength+10 .txt 0000
 	GetDlgItemText(hWnd,IDC_EDITCOMMENT,lpstrcomp,COMMENTLENGTH);
 	GetDlgItemText(hWnd,IDC_EDITPATH,lpOutputpath,MAX_PATH);
 	
-	nLengthofStr=lstrlen(lpOutputpath);
+	nLengthofStr=strlen(lpOutputpath);
 
 	if (nLengthofStr>0&&*(lpOutputpath+nLengthofStr-1)!='\\')
 	{
@@ -783,24 +773,24 @@ BOOL CompareShots(void)
 		*(lpOutputpath+nLengthofStr+1)=0x00; //bug found by "itschy" <itschy@lycos.de> 1.61d->1.61e
 		nLengthofStr++;
 	}
-	lstrcpy(lpDestFileName,lpOutputpath);
+	strcpy(lpDestFileName,lpOutputpath);
 
 	//bSaveWithCommentName=TRUE;
 	if	(ReplaceInValidFileName(lpstrcomp))
-		lstrcat(lpDestFileName,lpstrcomp);
+		strcat(lpDestFileName,lpstrcomp);
 	else
-		lstrcat(lpDestFileName,str_DefResPre);
+		strcat(lpDestFileName,str_DefResPre);
 	
-	nLengthofStr=lstrlen(lpDestFileName);
-	lstrcat(lpDestFileName,lpExt);
+	nLengthofStr=strlen(lpDestFileName);
+	strcat(lpDestFileName,lpExt);
 	hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
 	if( hFile == INVALID_HANDLE_VALUE) 
 	{
 		for (filetail=0;filetail<MAXAMOUNTOFFILE;filetail++)
 		{
-			wsprintf(lpDestFileName+nLengthofStr,"%04d",filetail);
+			sprintf(lpDestFileName+nLengthofStr,"%04d",filetail);
 			//*(lpDestFileName+nLengthofStr+4)=0x00;
-			lstrcpy(lpDestFileName+nLengthofStr+4,lpExt);
+			strcpy(lpDestFileName+nLengthofStr+4,lpExt);
 
 			hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile == INVALID_HANDLE_VALUE) 
@@ -831,15 +821,15 @@ BOOL CompareShots(void)
 			WriteHtmlbegin();
 		}
 		
-		WriteFile(hFile,str_prgname,lstrlen(str_prgname),&NBW,NULL);
-		WriteFile(hFile,str_CR,lstrlen(str_CR),&NBW,NULL);
+		WriteFile(hFile,str_prgname,strlen(str_prgname),&NBW,NULL);
+		WriteFile(hFile,str_CR,strlen(str_CR),&NBW,NULL);
 
 		//_asm int 3;
 		GetDlgItemText(hWnd,IDC_EDITCOMMENT,lpstrcomp,COMMENTLENGTH);
 		WriteTitle(lan_comments,lpstrcomp,isHTML);
 
 		
-		wsprintf(lpstrcomp,"%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d",
+		sprintf(lpstrcomp,"%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d",
 			lpSystemtime1->wYear,"/",
 			lpSystemtime1->wMonth,"/",
 			lpSystemtime1->wDay,
@@ -861,20 +851,20 @@ BOOL CompareShots(void)
 		
 		*lpstrcomp=0x00; //ZeroMemory(lpstrcomp,buffersize);
 		//GetComputerName(lpstrcomp,&buffersize);
-		lstrcpy(lpstrcomp,lpComputerName1);
-		lstrcat(lpstrcomp," , ");
-		lstrcat(lpstrcomp,lpComputerName2);
+		strcpy(lpstrcomp,lpComputerName1);
+		strcat(lpstrcomp," , ");
+		strcat(lpstrcomp,lpComputerName2);
 		WriteTitle(lan_computer,lpstrcomp,isHTML);
 
 		*lpstrcomp=0x00;//ZeroMemory(lpstrcomp,buffersize);
 		//GetUserName(lpstrcomp,&buffersize);
-		lstrcpy(lpstrcomp,lpUserName1);
-		lstrcat(lpstrcomp," , ");
-		lstrcat(lpstrcomp,lpUserName2);
+		strcpy(lpstrcomp,lpUserName1);
+		strcat(lpstrcomp," , ");
+		strcat(lpstrcomp,lpUserName2);
 
 		WriteTitle(lan_username,lpstrcomp,isHTML);
 
-		GlobalFree(lpstrcomp);
+		MYFREE(lpstrcomp);
 
 		//Write keydel part
 		if(nKEYDEL!=0)
@@ -959,7 +949,7 @@ BOOL CompareShots(void)
 		
 		if((DWORD)ShellExecute(hWnd,"open",lpDestFileName,NULL,NULL,SW_SHOW)<=32)
 			ErrMsg(lan_errorexecviewer);
-		GlobalFree(lpDestFileName);
+		MYFREE(lpDestFileName);
 
 
 return TRUE;
@@ -1009,8 +999,8 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 	LengthOfLongestSubkeyName =LengthOfLongestSubkeyName*2+3; //yeah,may be x+1 is enought! x=chars
 	LengthOfLongestValueName  =LengthOfLongestValueName*2+3; //yeah,may be x+1 is enought! x=chars
 	LengthOfLongestValueData  =LengthOfLongestValueData+1;
-	lpValueName=GlobalAlloc(LMEM_FIXED,LengthOfLongestValueName);
-	lpValueData=GlobalAlloc(LMEM_FIXED,LengthOfLongestValueData);
+	lpValueName=MYALLOC(LengthOfLongestValueName);
+	lpValueData=MYALLOC(LengthOfLongestValueData);
 
 	//Get Values
 	for(i=0;;i++)
@@ -1037,7 +1027,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		DebugLog("debug_trytogetvalue.log",lpValueName,hWnd,TRUE);
 #endif
 
-		lpValueContent=GlobalAlloc(LPTR,sizeof(VALUECONTENT));
+		lpValueContent=MYALLOC0(sizeof(VALUECONTENT));
 		//I had done if(i==0) in 1.50b- ! thanks fisttk@21cn.com and non-standard 
 		if(lpFatherKeyContent->lpfirstvalue==NULL)
 			lpFatherKeyContent->lpfirstvalue=lpValueContent;
@@ -1047,32 +1037,32 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		lpValueContent->typecode=TypeCode;
 		lpValueContent->datasize=LengthOfValueData;
 		lpValueContent->lpfatherkey=lpFatherKeyContent;
-		lpValueContent->lpvaluename=GlobalAlloc(LMEM_FIXED,lstrlen(lpValueName)+1);
-		lstrcpy(lpValueContent->lpvaluename,lpValueName);
+		lpValueContent->lpvaluename=MYALLOC(strlen(lpValueName)+1);
+		strcpy(lpValueContent->lpvaluename,lpValueName);
 
 		if(LengthOfValueData!=0)
 		{
-			lpValueContent->lpvaluedata=GlobalAlloc(LMEM_FIXED,LengthOfValueData);
+			lpValueContent->lpvaluedata=MYALLOC(LengthOfValueData);
 			CopyMemory(lpValueContent->lpvaluedata,lpValueData,LengthOfValueData);
 			//	*(lpValueContent->lpvaluedata+LengthOfValueData)=0x00;
 		}
 		nGettingValue++;
 
 #ifdef DEBUGLOG		
-		lstrdb1=GlobalAlloc(LPTR,100);
-		wsprintf(lstrdb1,"LGVN:%08d LGVD:%08d VN:%08d VD:%08d",LengthOfLongestValueName,LengthOfLongestValueData,LengthOfValueName,LengthOfValueData);
+		lstrdb1=MYALLOC0(100);
+		sprintf(lstrdb1,"LGVN:%08d LGVD:%08d VN:%08d VD:%08d",LengthOfLongestValueName,LengthOfLongestValueData,LengthOfValueName,LengthOfValueData);
 		DebugLog("debug_valuenamedata.log",lstrdb1,hWnd,TRUE);
 		DebugLog("debug_valuenamedata.log",GetWholeValueName(lpValueContent),hWnd,FALSE);
 		DebugLog("debug_valuenamedata.log",GetWholeValueData(lpValueContent),hWnd,TRUE);
 		//DebugLog("debug_valuenamedata.log",":",hWnd,FALSE);
 		//DebugLog("debug_valuenamedata.log",lpValueData,hWnd,TRUE);
-		GlobalFree(lstrdb1);
+		MYFREE(lstrdb1);
 
 #endif
 	}
 
-	GlobalFree(lpValueName);
-	GlobalFree(lpValueData);
+	MYFREE(lpValueName);
+	MYFREE(lpValueData);
 	
 	for(i=0;;i++)
 	{
@@ -1088,32 +1078,36 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 				continue;
 			}
 		}
-		lpKeyContent=GlobalAlloc(LPTR,sizeof(KEYCONTENT));
+		lpKeyContent=MYALLOC0(sizeof(KEYCONTENT));
 		if	(lpFatherKeyContent->lpfirstsubkey==NULL)
 			lpFatherKeyContent->lpfirstsubkey=lpKeyContent;
 		else
 			lpKeyContentLast->lpbrotherkey=lpKeyContent;
 		lpKeyContentLast=lpKeyContent;
-		lpKeyContent->lpkeyname=GlobalAlloc(LMEM_FIXED,lstrlen(lpKeyName)+1);
-		lstrcpy(lpKeyContent->lpkeyname,lpKeyName);
+		lpKeyContent->lpkeyname=MYALLOC(strlen(lpKeyName)+1);
+		strcpy(lpKeyContent->lpkeyname,lpKeyName);
 		lpKeyContent->lpfatherkey=lpFatherKeyContent;
 		//DebugLog("debug_getkey.log",lpKeyName,hWnd,TRUE);
 
 #ifdef DEBUGLOG		
-		lstrdb1=GlobalAlloc(LPTR,100);
-		wsprintf(lstrdb1,"LGKN:%08d KN:%08d",LengthOfLongestSubkeyName,LengthOfKeyName);
+		lstrdb1=MYALLOC0(100);
+		sprintf(lstrdb1,"LGKN:%08d KN:%08d",LengthOfLongestSubkeyName,LengthOfKeyName);
 		DebugLog("debug_key.log",lstrdb1,hWnd,TRUE);
 		DebugLog("debug_key.log",GetWholeKeyName(lpKeyContent),hWnd,TRUE);
-		GlobalFree(lstrdb1);
+		MYFREE(lstrdb1);
 
 #endif
 		
 		nGettingKey++;
 
-		if(IsInSkipList(lpKeyName,lpSnapRegs)||RegOpenKeyEx(hkey,lpKeyName,0,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,&Subhkey)!=ERROR_SUCCESS)
+		if(RegOpenKeyEx(hkey,lpKeyName,0,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,&Subhkey)!=ERROR_SUCCESS)
+			continue;
+		if(IsInSkipList(lpKeyName,lpSnapRegs) )
 		{ //tfx
+			RegCloseKey(Subhkey);  //1.8.2 seprate
 			continue;
 		}
+
 		GetRegistrySnap(Subhkey,lpKeyContent);
 		RegCloseKey(Subhkey);
 	}
@@ -1121,7 +1115,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 	nGettingTime=GetTickCount();
 	if ((nGettingTime-nBASETIME1)>REFRESHINTERVAL)
 	{
-		ShowCounters(lan_key,lan_value,nGettingKey,nGettingValue);
+		UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 	}
 
 
@@ -1140,7 +1134,7 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	LPVALUECONTENT lpv;
 	
 	
-	nLenPlus1=lstrlen(lpKeyContent->lpkeyname)+1;											//get len+1
+	nLenPlus1=strlen(lpKeyContent->lpkeyname)+1;											//get len+1
 	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
 	nFPTemp4Write=nFPHeader+21;								//5*4+1
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpkeyname
@@ -1157,7 +1151,7 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	//Save the sub-value of current KeyContent
 	for(lpv=lpKeyContent->lpfirstvalue;lpv!=NULL;lpv=lpv->lpnextvalue)
 	{
-		nLenPlus1=lstrlen(lpv->lpvaluename)+1;
+		nLenPlus1=strlen(lpv->lpvaluename)+1;
 		nFPCurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);						//save  fp
 		WriteFile(hFileWholeReg,(LPBYTE)lpv,8,&NBW,NULL);
 		nFPTemp4Write=nFPCurrent+25;														//6*4+1
@@ -1219,7 +1213,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 		opfn.lStructSize=sizeof(opfn);
 		opfn.hwndOwner=hWnd;
 		opfn.lpstrFilter=str_filter;
-		opfn.lpstrFile=GlobalAlloc(LPTR,MAX_PATH+1);
+		opfn.lpstrFile=MYALLOC0(MAX_PATH+1);
 		opfn.nMaxFile=MAX_PATH*2;
 		opfn.lpstrInitialDir=lpLastSaveDir;
 		opfn.lpstrDefExt="hiv";
@@ -1294,9 +1288,9 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 
 				
 				SetFilePointer(hFileWholeReg,32,NULL,FILE_BEGIN);
-				WriteFile(hFileWholeReg,computer,lstrlen(computer)+1,&NBW,NULL);
+				WriteFile(hFileWholeReg,computer,strlen(computer)+1,&NBW,NULL);
 				SetFilePointer(hFileWholeReg,COMPUTERNAMELEN+32,NULL,FILE_BEGIN);
-				WriteFile(hFileWholeReg,user,lstrlen(user)+1,&NBW,NULL);
+				WriteFile(hFileWholeReg,user,strlen(user)+1,&NBW,NULL);
 				SetFilePointer(hFileWholeReg,COMPUTERNAMELEN*2+32,NULL,FILE_BEGIN);
 				WriteFile(hFileWholeReg,time,sizeof(SYSTEMTIME),&NBW,NULL);
 
@@ -1311,8 +1305,8 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 
 		}
 		*(opfn.lpstrFile+opfn.nFileOffset)=0x00;
-		lstrcpy(lpLastSaveDir,opfn.lpstrFile);
-		GlobalFree(opfn.lpstrFile);
+		strcpy(lpLastSaveDir,opfn.lpstrFile);
+		MYFREE(opfn.lpstrFile);
 	}
 }
 
@@ -1363,7 +1357,7 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 	opfn.lStructSize=sizeof(opfn);
 	opfn.hwndOwner=hWnd;
 	opfn.lpstrFilter=str_filter;
-	opfn.lpstrFile=GlobalAlloc(LPTR,MAX_PATH+1);
+	opfn.lpstrFile=MYALLOC0(MAX_PATH+1);
 	opfn.nMaxFile=MAX_PATH*2;
 	opfn.lpstrInitialDir=lpLastOpenDir;
 	opfn.Flags=OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
@@ -1373,10 +1367,10 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 		hFileWholeReg=CreateFile(opfn.lpstrFile,GENERIC_READ ,FILE_SHARE_READ ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 		if (hFileWholeReg!=INVALID_HANDLE_VALUE)
 		{
-			*lpHive=GlobalAlloc(LPTR,16);
+			*lpHive=MYALLOC0(16);
 			ReadFile(hFileWholeReg,*lpHive,16,&NBW,NULL);
 			
-			if(lstrcmp(str_RegFileSignature,*lpHive)!=0)
+			if(strcmp(str_RegFileSignature,*lpHive)!=0)
 			{
 				ErrMsg("It is not a valid Regshot hive file!");
 				bRet=FALSE;
@@ -1389,9 +1383,9 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 				else
 					UI_BeforeShot(IDC_2NDSHOT);
 				nFileSize=GetFileSize(hFileWholeReg,NULL);
-				GlobalFree(*lpHive);
+				MYFREE(*lpHive);
 
-				*lpHive=GlobalAlloc(LMEM_FIXED,nFileSize);
+				*lpHive=MYALLOC(nFileSize);
 				nBase=(DWORD)(*lpHive);
 				ReadFile(hFileWholeReg,&nOffSet,4,&NBW,NULL);
 				*lplpKeyHLM=(LPKEYCONTENT)(nBase+nOffSet);
@@ -1487,9 +1481,9 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 		bRet=FALSE;;
 
 	*(opfn.lpstrFile+opfn.nFileOffset)=0x00;
-	lstrcpy(lpLastOpenDir,opfn.lpstrFile);
+	strcpy(lpLastOpenDir,opfn.lpstrFile);
 
-	GlobalFree(opfn.lpstrFile);
+	MYFREE(opfn.lpstrFile);
 	return(bRet);
 
 }
