@@ -63,7 +63,8 @@
 #include <shlobj.h>
 #include "resource.h"
 
-
+#define WIN32_LEAN_AND_MEAN //tfx 减少程序文件大小
+#pragma comment(linker,"/FILEALIGN:0x200 /MERGE:.data=.text /MERGE:.rdata=.text /SECTION:.text,EWR /IGNORE:4078")
 
 //#define DEBUGLOG
 //Some definations
@@ -241,14 +242,31 @@ SYSTEMTIME FAR * lpSystemtime1,* lpSystemtime2;
 //Some pointers need to allocate enought space to working
 LPSTR	lpKeyName,lpMESSAGE,lpExtDir,lpOutputpath,lpLastSaveDir,lpLastOpenDir,lpCurrentLanguage;
 LPSTR	lpWindowsDirName,lpTempPath,lpStartDir,lpIni,lpFreeStrings,lpCurrentTranslator;
+
+LPSTR	lpProgramDir; //tfx 定义
+#define SIZEOF_REGSHOT	65535
+#define MAXREGSHOT		100
+LPDWORD lpSnapRegs, lpSnapFiles;
+LPSTR	lpRegshotIni;
+LPSTR   lpSnapRegsStr,lpSnapFilesStr,lpSnapKey,lpSnapReturn;
+LPSTR	REGSHOTINI			="regshot.ini";
+LPSTR	INI_SETUP			="Setup";
+LPSTR	INI_FLAG			="Flag";
+LPSTR	INI_EXTDIR			="ExtDir";
+LPSTR	INI_OUTDIR			="OutDir";
+LPSTR	INI_SKIPREGKEY		="SkipRegKey";
+LPSTR	INI_SKIPDIR			="SkipDir";
+
 LPSTR	REGSHOTDATFILE		="rgst152.dat";
 LPSTR	REGSHOTLANGUAGEFILE	="language.ini";
 LPSTR	lpSectionCurrent	="CURRENT";
 LPSTR	lpItemTranslator	="Translator";
 LPSTR	lpMyName			="[Original]";
 LPSTR	lpDefaultLanguage	="English";
-LPSTR	USERSSTRING			="HKEY_USERS";
-LPSTR	LOCALMACHINESTRING	="HKEY_LOCAL_MACHINE";
+//LPSTR	USERSSTRING			="HKEY_USERS";
+//LPSTR	LOCALMACHINESTRING	="HKEY_LOCAL_MACHINE";
+LPSTR	USERSSTRING			="HKU";
+LPSTR	LOCALMACHINESTRING	="HKLM";
 LPSTR	lpRegSaveFileHeader	="REGSHOTHIVE";
 LPDWORD	ldwTempStrings;
 
@@ -357,9 +375,9 @@ LPSTR	lpBodyOver	="</BODY>";
 LPSTR	lpTableBegin="<TABLE BORDER=0 WIDTH=480>";
 LPSTR	lpTableOver	="</TABLE>";
 LPSTR	str_website	="<FONT COLOR=C8C8C8>Bug reports to:<A HREF=\"http://regshot.yeah.net/\">regshot.yeah.net</FONT></A>";
-LPSTR	str_aboutme	="Regshot 1.61e5 Final\n(c) Copyright 2000-2002 TiANWEi\n\nhttp://regshot.yeah.net/\nhttp://regshot.ist.md/ [Thanks Alexander Romanenko!]\n\n";
-LPSTR	str_lognote	="REGSHOT LOG 1.61e5\r\n";
-
+LPSTR	str_aboutme	="Regshot 1.7\n(c) Copyright 2000-2002\tTiANWEi\n(c) Copyright 2004-2004\ttulipfan\n\nhttp://regshot.yeah.net/\nhttp://regshot.ist.md/ [Thanks Alexander Romanenko!]\n\n";
+LPSTR	str_lognote	="Regshot 1.7\r\n";
+LPSTR	str_prgname ="Regshot 1.7"; //tfx 程序标题
 
 unsigned char lpCR[]={0x0d,0x0a,0x00};
 unsigned char strDefResPre[]="~res";
@@ -812,7 +830,9 @@ void	GetAllSubFile(
 	else
 		LogToMem(typefile,lpcountfile,lpFileContent);
 
-	if(lpFileContent->lpfirstsubfile!=NULL)
+	if(lpFileContent->lpfirstsubfile!=NULL //tfx 避免目录扫描时产生"."和".."
+		&&lstrcmp(lpFileContent->lpfirstsubfile->lpfilename,".")!=0
+		&&lstrcmp(lpFileContent->lpfirstsubfile->lpfilename,"..")!=0)
 	{
 		GetAllSubFile(TRUE,typedir,typefile,lpcountdir,lpcountfile,lpFileContent->lpfirstsubfile);
 	}
@@ -1665,7 +1685,8 @@ void	GetFilesSnap(HWND hDlg,LPFILECONTENT lpFatherFile)
 	lpFileContentTemp=lpFileContent;
 	if((lpFileContent->fileattr&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY)
 	{
-		if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0)
+		if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0
+			&&!IsInSkipList(lpFileContent->lpfilename,lpSnapFiles)) //tfx
 		{
 			
 			nGettingDir++;
@@ -1693,7 +1714,8 @@ void	GetFilesSnap(HWND hDlg,LPFILECONTENT lpFatherFile)
 		lpFileContentTemp=lpFileContent;
 		if((lpFileContent->fileattr&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0)
+			if(lstrcmp(lpFileContent->lpfilename,".")!=0&&lstrcmp(lpFileContent->lpfilename,"..")!=0
+				&&!IsInSkipList(lpFileContent->lpfilename,lpSnapFiles)) //tfx
 			{
 				nGettingDir++;
 				GetFilesSnap(hDlg,lpFileContent);
@@ -1862,8 +1884,8 @@ LPKEYCONTENT	lpFatherKeyContent;
 		
 		nGettingKey++;
 
-		if	(RegOpenKeyEx(hkey,lpKeyName,0,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,&Subhkey)!=ERROR_SUCCESS)
-		{
+		if(IsInSkipList(lpKeyName,lpSnapRegs)||RegOpenKeyEx(hkey,lpKeyName,0,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,&Subhkey)!=ERROR_SUCCESS)
+		{ //tfx
 			continue;
 		}
 		GetRegistrySnap(hDlg,Subhkey,lpKeyContent);
@@ -2440,6 +2462,134 @@ BOOL	GetLanguageStrings(HWND hDlg)
 	return bRet;
 }
 
+BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
+{
+	BYTE nFlag;
+	LPSTR lpString;
+
+	nFlag=(BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)
+		|SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1
+		|SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<2);
+
+	lpString=GlobalAlloc(LMEM_ZEROINIT,EXTDIRLEN+2);
+	sprintf(lpString,"%s=%d",INI_FLAG,nFlag);
+	WritePrivateProfileSection(INI_SETUP,lpString,lpRegshotIni);
+
+	if(GetDlgItemText(hDlg,IDC_EDITDIR,lpString,EXTDIRLEN+2)!=0)
+		WritePrivateProfileString(INI_SETUP,INI_EXTDIR,lpString,lpRegshotIni);
+
+	if(GetDlgItemText(hDlg,IDC_EDITPATH,lpString,MAX_PATH)!=0)
+		WritePrivateProfileString(INI_SETUP,INI_OUTDIR,lpString,lpRegshotIni);
+
+	GlobalFree(lpString);
+	GlobalFree(lpRegshotIni);
+	GlobalFree(lpSnapRegsStr);
+	GlobalFree(lpSnapFilesStr);
+	GlobalFree(lpSnapKey);
+	GlobalFree(lpSnapReturn);
+
+	return TRUE;
+}
+
+BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
+{
+	int i;
+	BYTE nFlag;
+
+	lpSnapKey=GlobalAlloc(LMEM_FIXED,20);
+
+	lpSnapRegs=GlobalAlloc(LMEM_ZEROINIT,sizeof(LPSTR)*MAXREGSHOT);
+	lpSnapRegsStr=GlobalAlloc(LMEM_ZEROINIT,SIZEOF_REGSHOT);
+	if(GetPrivateProfileSection(INI_SKIPREGKEY,lpSnapRegsStr,SIZEOF_REGSHOT,lpRegshotIni)>0)
+	{
+		for(i=0;i<MAXREGSHOT-1;i++)
+		{
+			wsprintf(lpSnapKey,"%d%s",i,"=");
+			if((lpSnapReturn=FindMatchedPos(lpSnapRegsStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
+			{
+				*(lpSnapRegs+i)=(DWORD)lpSnapReturn;
+				//dwSnapFiles++;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	lpSnapFiles=GlobalAlloc(LMEM_ZEROINIT,sizeof(LPSTR)*MAXREGSHOT);
+	lpSnapFilesStr=GlobalAlloc(LMEM_ZEROINIT,SIZEOF_REGSHOT);
+	if(GetPrivateProfileSection(INI_SKIPDIR,lpSnapFilesStr,SIZEOF_REGSHOT,lpRegshotIni))
+	{
+		for(i=0;i<MAXREGSHOT-1;i++)
+		{
+			wsprintf(lpSnapKey,"%d%s",i,"=");
+			if((lpSnapReturn=FindMatchedPos(lpSnapFilesStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
+			{
+				*(lpSnapFiles+i)=(DWORD)lpSnapReturn;
+				//dwSnapFiles++;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	nFlag=(BYTE)GetPrivateProfileInt(INI_SETUP,INI_FLAG,0,lpRegshotIni);
+	if(nFlag!=0)
+	{
+		SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)(nFlag&0x01),(LPARAM)0);
+		SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)((nFlag&0x01)^0x01),(LPARAM)0);
+		SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)((nFlag&0x04)>>1),(LPARAM)0);
+	}
+	else
+	{
+		SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)0x01,(LPARAM)0);
+		SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
+		SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
+	}
+
+	if(GetPrivateProfileString(INI_SETUP,INI_EXTDIR,NULL,lpExtDir,MAX_PATH,lpRegshotIni)!=0)
+		SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
+	else
+	{
+		SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
+/*		lpProgramDir=GlobalAlloc(LPTR,MAX_PATH); //tfx 暂时不用了
+		if(SUCCEEDED(SHGetSpecialFolderPath(NULL,lpProgramDir,0x0026,0)))
+		{
+			lstrcat(lpProgramDir,";");
+			lstrcat(lpProgramDir,lpWindowsDirName);
+			SetDlgItemText(hDlg,IDC_EDITDIR,lpProgramDir);
+		}
+		else
+			SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
+		GlobalFree(lpProgramDir);
+*/	}
+
+	if(GetPrivateProfileString(INI_SETUP,INI_OUTDIR,NULL,lpOutputpath,MAX_PATH,lpRegshotIni)!=0)
+		SetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath);
+	else
+		SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
+
+	SendMessage(hDlg,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
+
+	return TRUE;
+}
+
+BOOL IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList) //tfx 跳过黑名单
+{
+	int i;
+	for(i=0;i<=MAXREGSHOT-1&&(LPSTR)(*(lpSkipList+i))!=NULL;i++)
+	{
+		if(lstrcmpi(lpSnap, (LPSTR)*(lpSkipList+i))==0)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 VOID	OnlyShot1(VOID)
 {
 	UINT	nLengthofStr;	
@@ -2603,7 +2753,7 @@ WPARAM	wParam;
 LPARAM	lParam; 
 {					    
 	UINT	nLengthofStr;
-	BYTE	nFlag;
+//	BYTE	nFlag;
 
 	switch(message)
 	{
@@ -2628,37 +2778,28 @@ LPARAM	lParam;
 			lpSystemtime2=GlobalAlloc(LPTR,sizeof(SYSTEMTIME));
 			lpCurrentTranslator=lpMyName;
 
-
-
-			
-			
-			lpIni=GlobalAlloc(LPTR,MAX_PATH*2);
-
-			GetCurrentDirectory(MAX_PATH,lpStartDir);
 			GetWindowsDirectory(lpWindowsDirName,MAX_PATH);
 			nLengthofStr=lstrlen(lpWindowsDirName);
 			if (nLengthofStr>0&&*(lpWindowsDirName+nLengthofStr-1)=='\\')
 				*(lpWindowsDirName+nLengthofStr-1)=0x00;
 			GetTempPath(MAX_PATH,lpTempPath);
 
-			
-			lstrcpy(lpIni,lpStartDir);
-			if (*(lpIni+lstrlen(lpIni)-1)!='\\')
-				lstrcat(lpIni,"\\");
-			lstrcat(lpIni,REGSHOTLANGUAGEFILE);
+			lpStartDir=GetCommandLine();
+			lpIni=strrchr(lpStartDir,'\\');lpStartDir++;*++lpIni=0x0;
 
+			lpIni=GlobalAlloc(LPTR,MAX_PATH*2);
+			lstrcpy(lpIni,lpStartDir);
+			lstrcat(lpIni,REGSHOTLANGUAGEFILE);
 
 			lpFreeStrings=GlobalAlloc(LMEM_FIXED,SIZEOF_FREESTRINGS);
 			ldwTempStrings=GlobalAlloc(LPTR,4*60); //max is 60 strings
 
 			if(GetLanguageType(hDlg))
-			{
 				GetLanguageStrings(hDlg);
-			}
 			else
 				GetDefaultStrings();
 			
-			//To get rgst152.dat which is the ini file of regshot,but it should  be a standard ini file in future!
+/*			//To get rgst152.dat which is the ini file of regshot,but it should  be a standard ini file in future!
 			hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile != INVALID_HANDLE_VALUE) 
 			{
@@ -2718,12 +2859,19 @@ LPARAM	lParam;
 				SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
 				//SendMessage(GetDlgItem(hDlg,IDC_CHECKTURBO),BM_SETCHECK,(WPARAM)0,(LPARAM)0);
 			}
-			//EnableWindow(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),FALSE);
+*/			//EnableWindow(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),FALSE);
 			SendMessage(hDlg,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
 
 			lpLastSaveDir=lpOutputpath;
 			lpLastOpenDir=lpOutputpath;
 			
+			lpRegshotIni=GlobalAlloc(LPTR,MAX_PATH);
+			lstrcpy(lpRegshotIni,lpStartDir);
+			if (*(lpRegshotIni+lstrlen(lpRegshotIni)-1)!='\\')
+				lstrcat(lpRegshotIni,"\\");
+			lstrcat(lpRegshotIni,REGSHOTINI);
+
+			GetSnapRegs(hDlg);
 			
 			return TRUE;
 			
@@ -2881,7 +3029,7 @@ LPARAM	lParam;
 					return(TRUE);
 			case	IDC_CANCEL1:
 			case	IDCANCEL:
-					SetCurrentDirectory(lpStartDir);
+/*					SetCurrentDirectory(lpStartDir);
 					hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 					if( hFile != INVALID_HANDLE_VALUE) 
 					{
@@ -2899,7 +3047,8 @@ LPARAM	lParam;
 
 						CloseHandle(hFile);
 					}
-	
+*/	
+					SetSnapRegs(hDlg);
 					PostQuitMessage(0);
 					return(TRUE);
 
@@ -3026,6 +3175,7 @@ int		nCmdShow;
 	
 	SetClassLong(hWnd,GCL_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
 
+	SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
 	ShowWindow(hWnd,nCmdShow);
 	UpdateWindow(hWnd);		   
 	//SetPriorityClass(hInstance,31);
