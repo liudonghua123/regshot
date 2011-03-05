@@ -1,7 +1,7 @@
 		---------------------------------------------------
-			Readme file of Regshot 1.61  2002/03/30
+			Readme file of Regshot 1.61d  2002/07/13
 		---------------------------------------------------
-			Please view whatsnew.txt for update info!
+			Please view whatsnew.txt for update info!!!
 
 -----------------
 Package includes:
@@ -27,8 +27,9 @@ Usage:
 (1)CLICK "1st shot" BUTTON
 It pops up a menu which contains several items:
  (A)"Shot"  to take a snapshot only,and it will not be kept if you exit regshot program;
- (B)"Shot and save..." to take a snapshot of your registry and save it to a "hive" file
-     and you can keep it in your harddisk for future use; NOTE:"hive" files are too big!
+ (B)"Shot and save..." to take a snapshot of your registry and save the whole registry to
+    a "hive" file and you can keep it in your harddisk for future use; NOTE:"hive" files
+    are too big!
  (C)"Load..." to load a "hive" file previous saved.
 If you want to monitor your file system ,just check the "Scan Dir [dir..]" checkbox
 and input the folder names below it. Note: Regshot has the ability to scan multiple 
@@ -75,18 +76,26 @@ mssoft			-- Test!
 dreamtheater		-- Test!
 Gonzalo			-- Spainish
 ArLang°¢ÀÉ		-- Chinese
-Mikhail A.Medvedev	-- Russian
+Mikhail A.Medvedev	-- Russian[Thanks!]
 Kenneth Aarseth		-- Norsk
 Marcel Drappier		-- French
 Vittorio "Capoccione"	-- Italian
 Gnatix			-- Deutsch
 Murat KASABOGLU		-- Türkçe
 Paul Lowagie		-- Nederlands
+ondra			-- Èesky
+AVE7			-- Fixed Deutsch!
+Pau Bosch i Crespo	-- Catalan
+Michael Papadakis	-- Greek
+Per Bryldt		-- Danish
+Rajah			-- Latvian
+Leandro			-- Portuguese
+Roland Turcan		-- Slovak
 Nick Reid		-- Advice
-Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey
-and all those I fogot to mention!!
+Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey,
+Dchenka and all those I fogot to mention!!
 ------------------------------------------------------------------------------------
 		Homepage:http://regshot.yeah.net/ http://regshot.ist.md
-				Email:spring_w@263.net
+				Email:spring_w@163.com
 			(c) Copyright 2000-2002 TiANWEi
 				All rights reserved
