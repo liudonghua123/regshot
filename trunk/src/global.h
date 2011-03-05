@@ -24,10 +24,20 @@
 #include <shlobj.h>
 #include "resource.h"
 
+// Platform suffix, see http://msdn.microsoft.com/library/b0084kay.aspx
+#ifdef _WIN64
+ #ifdef _M_IA64
+  #define PLATFORM_SUFFIX "IA64"
+ #else	// _M_IA64
+  #define PLATFORM_SUFFIX "64"
+ #endif	// _M_IA64
+#else	// _WIN64
+#define PLATFORM_SUFFIX "32"
+#endif	// _WIN64
 
 //!!!WARNING!!! HEAP_NO_SERIALIZE mean we can not use this in multithread.
-//added in 1.8.2 to gain a slightly faster speed but it is danger! 
-#define	USEHEAPALLOC_DANGER 
+//added in 1.8.2 to gain a slightly faster speed but it is danger!
+#define	USEHEAPALLOC_DANGER
 
 #ifdef USEHEAPALLOC_DANGER
 
@@ -49,7 +59,7 @@
 
 //#define DEBUGLOG
 //Some definations
-#define SIZEOFREG_DWORD	4		//In current windows ,reg_dword's size =4 
+#define SIZEOFREG_DWORD	4		//In current windows ,reg_dword's size =4
 #define NOTMATCH		0		//Define modification type in compare results
 #define ISMATCH			1
 #define ISDEL			2
@@ -85,9 +95,9 @@
 #define SIZEOF_ABOUTBOX 2048
 
 
-//Struct used for Windows Registry Key 
+//Struct used for Windows Registry Key
 struct	_KEYCONTENT
-{					
+{
 	LPSTR	lpkeyname;							//Pointer to Key Name
 	struct	_VALUECONTENT FAR * lpfirstvalue;	//Pointer to Key's first Value
 	struct	_KEYCONTENT	FAR * lpfirstsubkey;	//Pointer to Key's first Sub Key
@@ -145,7 +155,7 @@ struct	_HEADFILE
 };
 typedef	struct	_HEADFILE	HEADFILE,FAR * LPHEADFILE;
 
-//Struct use for compare result output 
+//Struct use for compare result output
 struct  _COMRESULT
 {
 	LPSTR	lpresult;							//Pointer to result string
@@ -155,7 +165,7 @@ typedef struct _COMRESULT COMRESULT,FAR * LPCOMRESULT;
 
 
 //Pointers to compare result [see above.]
-LPCOMRESULT	lpKEYADD;							
+LPCOMRESULT	lpKEYADD;
 LPCOMRESULT	lpKEYDEL;
 LPCOMRESULT	lpVALADD;
 LPCOMRESULT	lpVALDEL;
