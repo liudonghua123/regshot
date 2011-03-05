@@ -51,14 +51,14 @@
 #define IDC_RegFlushKey                 1045
 #define IDC_EDITRING3                   1046
 #define IDC_LIST1                       1047
-#define IDM_ONLYSHOT                    1048
+#define IDM_SHOTONLY                    1048
 #define IDM_SHOTSAVE                    1049
 #define IDM_LOAD                        1050
 #define IDM_BREAK                       1051
 #define IDM_CLEARALLSHOTS               1052
 #define IDM_CLEARSHOT1                  1053
 #define IDM_CLEARSHOT2                  1054
-
+#define IDM_CLEARRESULT                 1055 //not used
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

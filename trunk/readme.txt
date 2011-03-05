@@ -1,27 +1,19 @@
-		---------------------------------------------------
-			Readme file of Regshot 1.7.2       2004/3/5
-		---------------------------------------------------
-			Please view whatsnew.txt for update info!!!
 
------------------
-Package includes:
------------------
-regshot.exe,language.ini,readme.txt,whatsnew.txt,regshot.ini
-
+Readme file of Regshot 1.8.1    (20070620)
 
 -----------------
 Introduction:
 -----------------
-RegShot is a small registry compare utility  that allows you to quickly take a  snapshot
-of your registry and then compare it with a second one - done after doing system changes
-or installing a new software product. The changes report can be produced in text or HTML
-format and contains a list of all modifications that have taken place between  snapshot1
-and snapshot2.In addition, you can also specify folders (with sub filders) to be scanned
-for changes as well.In version 1.60+ you can save your whole registry in a *.hiv file for
-future use.
+Regshot is a small,free and open-source registry compare utility that allows you to quickly 
+take a snapshot of your registry and then compare it with a second one - done after doing 
+system changes or installing a new software product. The changes report can be produced in 
+text or HTML format and contains a list of all modifications that have taken place between 
+snapshot1 and snapshot2. In addition, you can also specify folders (with sub filders) to be 
+scanned for changes as well. 
+(Most of above text was copied from webattack.com,thanks :)  
 
-Note: Regshot is a FREEWARE!
-Note: From regshot 1.7 (also regshot 1.6e5),Source code are released to to public.
+MD5:045E354B1D9BEE5FFE9FDAAF651A1E40  1.8.1\regshot.exe
+
 
 -----------------
 Usage:
@@ -30,15 +22,12 @@ Usage:
 It pops up a menu which contains several items:
  (A)"Shot"  to take a snapshot only,and it will not be kept if you exit regshot program;
  (B)"Shot and save..." to take a snapshot of your registry and save the whole registry to
-    a "hive" file and you can keep it in your harddisk for future use; NOTE:"hive" files
-    are too big!
+    a "hive" file and you can keep it in your harddisk for future use; 
  (C)"Load..." to load a "hive" file previous saved.
 If you want to monitor your file system ,just check the "Scan Dir [dir..]" checkbox
 and input the folder names below it. Note: Regshot has the ability to scan multiple 
 folders,Just separate them with ";",Regshot also scan the subfolders of the current 
 folders you entered. 
-Note:This version  only save your registry to "hive" file,it does NOT include the
-folders you scaned!
 
 (2)RUN SOME PROGRAMS which may change your windows registry,or it may change the file system
 
@@ -65,16 +54,20 @@ Note:"Clear" does not erase the log files!
 (9)You can change the language of the regshot at main window,all words are saved in the 
 file "language.ini". View it for details!
 
-(10)New to 1.7+: regshot.dat now changed to regshot.ini, skipdirs and skip registry keys
+(10)New to 1.7: regshot.dat now changed to regshot.ini, skipdirs and skip registry keys
 are included. exe size are smaller!
+(11)New to 1.8: 
+File shots are now saved in hive file. 
+"UseLongRegHead" option added in regshot.ini to compatible with undoReg(1.46)
+"UseLongRegHead=1" means using "HKEY_LOCAL_MACHINE" instead of "HKLM",default 0
+Do not compare shots saved with different "UseLongRegHead" option!
 
 -----------------
 Thanks:
 -----------------
 Special thanks:
-Alexander Romanenko	-- Space provider! http://www.ist.md/
-Ivan                    -- Space provider! http://www.digitalnuke.com/
-
+Alexander Romanenko	-- Former space provider! http://www.ist.md/
+Ivan                    -- Former space provider! http://www.digitalnuke.com/
 Toye			-- Release!
 zhangl			-- Debug!
 firstk			-- Debug!
@@ -113,10 +106,36 @@ Nick Reid		-- Advice
 tongjiawang		-- Many help!
 
 Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey,
-Dchenka , itschy and all those we fogot to mention!!
-------------------------------------------------------------------------------------
-		             http://regshot.yeah.net/ 
-                         http://tianwei.digitalnuke.com/
-			(c) Copyright 2000-2002 TiANWEi  [spring_w@163.com] <=1.6e5
-			(c) Copyright 2004-2004 tulipfan [tulipfan@163.com] >=1.7
-				All rights reserved
+Dchenka , itschy, HANDLE and all those we fogot to mention!!
+
+-----------------
+LICENSE:
+-----------------
+
+Copyright 1999-2003,2007 TiANWEi
+Copyright 2004 tulipfan
+
+Multi-language translation are the property of their respective owner.
+
+Regshot is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Regshot is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Regshot; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+-----------------
+Contact:
+-----------------
+TiANWEi    spring_w@163.com
+tulipfan   tulipfan@163.com
+
+http://regshot.yeah.net/ 
+http://regshot.blog.googlepages.com/
