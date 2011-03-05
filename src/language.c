@@ -1,6 +1,5 @@
 /*
     Copyright 1999-2003,2007 TiANWEi
-    Copyright 2004 tulipfan
 
     This file is part of Regshot.
 
@@ -121,17 +120,17 @@ BOOL	GetLanguageType(HWND hDlg)
 	DWORD	nReturn;
 	BOOL	bRet;
 	LPSTR	lp;
-	LPSTR	lpSectionNames=GlobalAlloc(LPTR,SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER);
-	//LPSTR	lpCurrentLanguage=GlobalAlloc(LPTR,SIZEOF_SINGLE_LANGUAGENAME);
+	LPSTR	lpSectionNames=MYALLOC0(SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER);
+	//LPSTR	lpCurrentLanguage=MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
 
 	
 	nReturn=GetPrivateProfileSectionNames(lpSectionNames,SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER,lpIni);
 	if (nReturn>1)
 	{
 		bRet=TRUE;
-		for(lp=lpSectionNames;*lp!=0;lp=lp+lstrlen(lp)+1)
+		for(lp=lpSectionNames;*lp!=0;lp=lp+strlen(lp)+1)
 		{
-			if(lstrcmpi(lp,str_SectionCurrent)!=0)
+			if(strcmpi(lp,str_SectionCurrent)!=0)
 			SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_ADDSTRING,(WPARAM)0,(LPARAM)lp);
 		}
 		GetPrivateProfileString(str_SectionCurrent,str_SectionCurrent,
@@ -151,8 +150,8 @@ BOOL	GetLanguageType(HWND hDlg)
 		bRet=FALSE;
 
 
-	GlobalFree(lpSectionNames);
-	//GlobalFree(lpCurrentLanguage);
+	MYFREE(lpSectionNames);
+	//MYFREE(lpCurrentLanguage);
 	return bRet;
 	
 }
@@ -249,15 +248,14 @@ BOOL	GetLanguageStrings(HWND hDlg)
 {
 	DWORD	nIndex,i;
 	BOOL	bRet;
-	//LPSTR	lpCurrentLanguage=GlobalAlloc(LPTR,16);
-	LPSTR	lpIniKey=GlobalAlloc(LPTR,8);
 	LPSTR	lpReturn;
 	LPDWORD lp;
+	char lpIniKey[8];	//1.8.2	LPSTR	lpIniKey=MYALLOC0(8);
+
 
 	nIndex=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETCURSEL,(WPARAM)0,(LPARAM)0);
 	if (nIndex!=CB_ERR)
 	{
-		
 		
 		SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETLBTEXT,(WPARAM)nIndex,(LPARAM)lpCurrentLanguage);
 		WritePrivateProfileString(str_SectionCurrent,str_SectionCurrent,lpCurrentLanguage,lpIni);
@@ -266,7 +264,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 		for(i=1,lp=ldwTempStrings;i<47;i++)
 		{
 			
-			wsprintf(lpIniKey,"%d%s",i,"="); 
+			sprintf(lpIniKey,"%d%s",i,"="); 
 			//pointer returned was pointed to char just after "="
 			if((lpReturn=AtPos(lpFreeStrings,lpIniKey,SIZEOF_FREESTRINGS))!=NULL)
 			{
@@ -291,7 +289,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 	}
 	else
 		bRet=FALSE;
-	//GlobalFree(lpCurrentLanguage);
-	GlobalFree(lpIniKey);
+	//MYFREE(lpCurrentLanguage);
+	//MYFREE(lpIniKey);
 	return bRet;
 }

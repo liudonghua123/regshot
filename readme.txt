@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.8.1    (20070620)
+Readme file of Regshot 1.8.2    (20071103 )
 
 -----------------
 Introduction:
@@ -12,7 +12,7 @@ snapshot1 and snapshot2. In addition, you can also specify folders (with sub fil
 scanned for changes as well. 
 (Most of above text was copied from webattack.com,thanks :)  
 
-MD5:045E354B1D9BEE5FFE9FDAAF651A1E40  1.8.1\regshot.exe
+MD5:AAA8FFBCACE9C4999A77D63E0FA80F85  regshot.exe
 
 
 -----------------
@@ -100,10 +100,12 @@ Alex Simidchiev		-- Bulgarian
 joup@algonet.se		-- Svenska
 Bata György             -- Hungarian
 Dmitry P.               -- Ukrainian
-
+Mr Anonyme,Charles	-- French Update
+kazakh			-- Erzhan Erbolatuly
 
 Nick Reid		-- Advice
 tongjiawang		-- Many help!
+Belogorokhov Youri	-- Coder
 
 Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey,
 Dchenka , itschy, HANDLE and all those we fogot to mention!!
@@ -114,6 +116,7 @@ LICENSE:
 
 Copyright 1999-2003,2007 TiANWEi
 Copyright 2004 tulipfan
+Copyright 2007 Belogorokhov Youri
 
 Multi-language translation are the property of their respective owner.
 
@@ -136,6 +139,7 @@ Contact:
 -----------------
 TiANWEi    spring_w@163.com
 tulipfan   tulipfan@163.com
+Youri      handle@wgapatcher.ru
 
 http://regshot.yeah.net/ 
 http://regshot.blog.googlepages.com/

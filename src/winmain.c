@@ -1,6 +1,8 @@
 /*
     Copyright 1999-2003,2007 TiANWEi
     Copyright 2004 tulipfan
+	Copyright 2007 Belogorokhov Youri
+
 
     This file is part of Regshot.
 
@@ -24,11 +26,8 @@
 
 #include "global.h"
 
-char *str_prgname="Regshot 1.8.1"; //tfx 程序标题
-char *str_aboutme="Regshot is a free and opensource registry compare utility.\n\
-Copyright 1999-2003,2007 TiANWEi\n\
-Copyright 2004 tulipfan\n\
-(And with the help of other people! see the readme.txt)\n\n\
+char *str_prgname="Regshot 1.8.2"; //tfx 程序标题
+char *str_aboutme="Regshot is a free and opensource registry compare utility.\n\n\
 http://regshot.yeah.net/\n\
 http://regshot.blog.googlepages.com/\n\n";
 LPSTR	REGSHOTINI			="regshot.ini"; //tfx
@@ -40,6 +39,17 @@ extern u_char * lan_menuclearshot2;
 extern u_char * lan_about;
 extern LPSTR str_DefaultLanguage;
 extern LPSTR str_Original;
+
+
+// this new function Added by Youri in 1.8.2, for expand path in browse dialog
+int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+  if (uMsg == BFFM_INITIALIZED)
+  {
+    SendMessage(hWnd, BFFM_SETSELECTION, 1, lpData);
+  }
+  return 0;
+}
 
 //--------------------------------------------------
 //Main Dialog Proc
@@ -56,37 +66,38 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			SendDlgItemMessage(hDlg,IDC_EDITCOMMENT,EM_SETLIMITTEXT,(WPARAM)COMMENTLENGTH,(LPARAM)0);
 			SendDlgItemMessage(hDlg,IDC_EDITPATH,EM_SETLIMITTEXT,(WPARAM)MAX_PATH,(LPARAM)0);
 			SendDlgItemMessage(hDlg,IDC_EDITDIR,EM_SETLIMITTEXT,(WPARAM)EXTDIRLEN,(LPARAM)0);
-			lpExtDir=GlobalAlloc(LPTR,(EXTDIRLEN+2));
-			lpOutputpath=GlobalAlloc(LPTR,MAX_PATH+5);
-			lpCurrentLanguage=GlobalAlloc(LPTR,SIZEOF_SINGLE_LANGUAGENAME);
-			lpKeyName=GlobalAlloc(LPTR,MAX_PATH+1);
-			lpMESSAGE=GlobalAlloc(LPTR,100);
-			lpStartDir=GlobalAlloc(LPTR,MAX_PATH+1);
-			lpWindowsDirName=GlobalAlloc(LPTR,MAX_PATH+5);
-			lpTempPath=GlobalAlloc(LPTR,MAX_PATH+2);
-			lpComputerName1=GlobalAlloc(LPTR,COMPUTERNAMELEN);
-			lpComputerName2=GlobalAlloc(LPTR,COMPUTERNAMELEN);
-			lpUserName1=GlobalAlloc(LPTR,COMPUTERNAMELEN);
-			lpUserName2=GlobalAlloc(LPTR,COMPUTERNAMELEN);
-			lpSystemtime1=GlobalAlloc(LPTR,sizeof(SYSTEMTIME));
-			lpSystemtime2=GlobalAlloc(LPTR,sizeof(SYSTEMTIME));
+			lpExtDir=MYALLOC0(EXTDIRLEN+2);
+			lpOutputpath=MYALLOC0(MAX_PATH+5);
+			lpCurrentLanguage=MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
+			lpKeyName=MYALLOC0(MAX_PATH+1);
+			lpMESSAGE=MYALLOC0(128);
+			lpStartDir=MYALLOC0(MAX_PATH+1);
+			lpWindowsDirName=MYALLOC0(MAX_PATH+5);
+			lpTempPath=MYALLOC0(MAX_PATH+2);
+			lpComputerName1=MYALLOC0(COMPUTERNAMELEN);
+			lpComputerName2=MYALLOC0(COMPUTERNAMELEN);
+			lpUserName1=MYALLOC0(COMPUTERNAMELEN);
+			lpUserName2=MYALLOC0(COMPUTERNAMELEN);
+			lpSystemtime1=MYALLOC0(sizeof(SYSTEMTIME));
+			lpSystemtime2=MYALLOC0(sizeof(SYSTEMTIME));
 			lpCurrentTranslator=str_Original;
 
 			GetWindowsDirectory(lpWindowsDirName,MAX_PATH);
-			nLengthofStr=lstrlen(lpWindowsDirName);
+			nLengthofStr=strlen(lpWindowsDirName);
 			if (nLengthofStr>0&&*(lpWindowsDirName+nLengthofStr-1)=='\\')
 				*(lpWindowsDirName+nLengthofStr-1)=0x00;
 			GetTempPath(MAX_PATH,lpTempPath);
+			
+			//_asm int 3;
+			GetCurrentDirectory(MAX_PATH,lpStartDir); //fixed at 1.8.2 former version use getcommandline()
+			lpIni=MYALLOC0(MAX_PATH*2);
+			strcpy(lpIni,lpStartDir);
+			if (*(lpIni+strlen(lpIni)-1)!='\\') // 1.8.2
+				strcat(lpIni,"\\");
+			strcat(lpIni,REGSHOTLANGUAGEFILE);
 
-			lpStartDir=GetCommandLine();
-			lpIni=strrchr(lpStartDir,'\\');lpStartDir++;*++lpIni=0x0;
-
-			lpIni=GlobalAlloc(LPTR,MAX_PATH*2);
-			lstrcpy(lpIni,lpStartDir);
-			lstrcat(lpIni,REGSHOTLANGUAGEFILE);
-
-			lpFreeStrings=GlobalAlloc(LMEM_FIXED,SIZEOF_FREESTRINGS);
-			ldwTempStrings=GlobalAlloc(LPTR,4*60); //max is 60 strings
+			lpFreeStrings=MYALLOC(SIZEOF_FREESTRINGS);
+			ldwTempStrings=MYALLOC0(4*60); //max is 60 strings
 
 			if(GetLanguageType(hDlg))
 				GetLanguageStrings(hDlg);
@@ -159,11 +170,11 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			lpLastSaveDir=lpOutputpath;
 			lpLastOpenDir=lpOutputpath;
 			
-			lpRegshotIni=GlobalAlloc(LPTR,3*MAX_PATH);
-			lstrcpy(lpRegshotIni,lpStartDir);
-			if (*(lpRegshotIni+lstrlen(lpRegshotIni)-1)!='\\')
-				lstrcat(lpRegshotIni,"\\");
-			lstrcat(lpRegshotIni,REGSHOTINI);
+			lpRegshotIni=MYALLOC0(3*MAX_PATH);
+			strcpy(lpRegshotIni,lpStartDir);
+			if (*(lpRegshotIni+strlen(lpRegshotIni)-1)!='\\')
+				strcat(lpRegshotIni,"\\");
+			strcat(lpRegshotIni,REGSHOTINI);
 
 			GetSnapRegs(hDlg); //tfx
 			
@@ -365,29 +376,33 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					LPITEMIDLIST lpidlist;
 					DWORD	nWholeLen;
 					BrowseInfo1.hwndOwner=hDlg;
-					BrowseInfo1.pszDisplayName=GlobalAlloc(LPTR,MAX_PATH+1);
+					BrowseInfo1.pszDisplayName=MYALLOC0(MAX_PATH+1);
 					//BrowseInfo1.lpszTitle="Select:";
+					BrowseInfo1.ulFlags =0; //3lines added in 1.8.2
+					BrowseInfo1.lpfn = NULL;
+					BrowseInfo1.lParam = 0;
+
 					lpidlist=SHBrowseForFolder(&BrowseInfo1);
 					if (lpidlist!=NULL)
 					{
 						SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
 						nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
-						nWholeLen=nLengthofStr+lstrlen(BrowseInfo1.pszDisplayName);
+						nWholeLen=nLengthofStr+strlen(BrowseInfo1.pszDisplayName);
 						
 						if (nWholeLen<EXTDIRLEN+1)
 						{
-							lstrcat(lpExtDir,";");
-							lstrcat(lpExtDir,BrowseInfo1.pszDisplayName);
+							strcat(lpExtDir,";");
+							strcat(lpExtDir,BrowseInfo1.pszDisplayName);
 
 						}
 						else
-							lstrcpy(lpExtDir,BrowseInfo1.pszDisplayName);
+							strcpy(lpExtDir,BrowseInfo1.pszDisplayName);
 						
 						SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
-						GlobalFree(lpidlist);
+						MYFREE(lpidlist);
 					}
 					
-					GlobalFree(BrowseInfo1.pszDisplayName);
+					MYFREE(BrowseInfo1.pszDisplayName);
 				}
 				return(TRUE);
 					
@@ -396,17 +411,28 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 
 					LPITEMIDLIST lpidlist;
 					BrowseInfo1.hwndOwner=hDlg;
-					BrowseInfo1.pszDisplayName=GlobalAlloc(LPTR,MAX_PATH+1);
+					BrowseInfo1.pszDisplayName=MYALLOC0(MAX_PATH+1);
 					//BrowseInfo1.lpszTitle="Select:";
+
+					//-----------------
+					// Added by Youri in 1.8.2 ,Thanks!
+					// if you add this code, the browse dialog will be expand path and have button "Create Folder"
+					BrowseInfo1.ulFlags |= 0x0040; //BIF_NEWDIALOGSTYLE;    // button "Create Folder" and resizable
+					BrowseInfo1.lpfn = SelectBrowseFolder;        // function for expand path
+					BrowseInfo1.lParam = (LPARAM)BrowseInfo1.pszDisplayName;
+					// Initilize selection path
+					GetDlgItemText(hDlg,IDC_EDITPATH,BrowseInfo1.pszDisplayName,MAX_PATH);
+					//-----------------
+
 					lpidlist=SHBrowseForFolder(&BrowseInfo1);
 					if (lpidlist!=NULL)
 					{
 						SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
 						SetDlgItemText(hDlg,IDC_EDITPATH,BrowseInfo1.pszDisplayName);
-						GlobalFree(lpidlist);
+						MYFREE(lpidlist);
 					}
 					
-					GlobalFree(BrowseInfo1.pszDisplayName);
+					MYFREE(BrowseInfo1.pszDisplayName);
 				}
 				return(TRUE);
 			case	IDC_COMBOLANGUAGE:
@@ -417,11 +443,11 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					{	
 					LPSTR	lpAboutBox;
 					//_asm int 3;
-					lpAboutBox=GlobalAlloc(LPTR,SIZEOF_ABOUTBOX);
+					lpAboutBox=MYALLOC0(SIZEOF_ABOUTBOX);
 					//it is silly that when wsprintf encounter a NULL strings, it will write the whole string to NULL!
-					wsprintf(lpAboutBox,"%s%s%s%s%s%s",str_aboutme,"[",(lstrlen(lpCurrentLanguage)==0)?str_DefaultLanguage:lpCurrentLanguage,"]"," by:",lpCurrentTranslator);
+					sprintf(lpAboutBox,"%s%s%s%s%s%s",str_aboutme,"[",(strlen(lpCurrentLanguage)==0)?str_DefaultLanguage:lpCurrentLanguage,"]"," by:",lpCurrentTranslator);
 					MessageBox(hDlg,lpAboutBox,lan_about,MB_OK);
-					GlobalFree(lpAboutBox);
+					MYFREE(lpAboutBox);
 					return(TRUE);
 					}
 			}
@@ -474,7 +500,7 @@ int		PASCAL WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	//lpfnDlgProc	=	MakeProcInstance((FARPROC)DialogProc,hInstance); //old style of create dialogproc
 	*/			
 			
-
+	hHeap=GetProcessHeap(); //1.8.2
 	hWnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,(WNDPROC)DialogProc);
 	
 	SetClassLong(hWnd,GCL_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
