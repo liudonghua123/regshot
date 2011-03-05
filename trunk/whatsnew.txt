@@ -3,12 +3,21 @@
 
 Download new version at:http://regshot.yeah.net/ 
 			http://regshot.isd.md/
+                        http://www.digitalnuke.com/
 -------------------------------------------------
               *: Note must read
               !: Changes made
               +: Function added
               -: Function deleted             
 -------------------------------------------------
+
+V1.7,1.7.1,1.7.2 2004/2/25-2004/03/05
+* Minimize file size from 44k to 28k, thanks to y0da
+! When shot file, "."&".." not show
+* Instead of using "rgst152.dat",the config moved to "regshot.ini"
++ Skip List function is added both for reg and file's shot
++ 1.7.1 add 2 languages
++ 1.7.2 fix language codepage bug thanks Bata György!
 
 V1.61a,b,c,d,e,e+,e1-e5 2002/07/13-2003/01/01
 + Add 2 languages[1 in 1.61b],Fixed 1.
@@ -19,7 +28,7 @@ V1.61a,b,c,d,e,e+,e1-e5 2002/07/13-2003/01/01
 + Add Polish language by Adam Mikusiñski!
 + Add Serbian language by Wiz from Yugoslavia!1.61e1
 + Add Hebrew language by Jack Gorji! 1.61e1
-+ Add Galego language by Xosé Antón Vicente Rodríguez [e2]
++ Add Galego language by Xos?Antón Vicente Rodríguez [e2]
 + Add Hrvatski language by Obelix[[e3]
 + Add Bulgarian language by Alex Simidchiev[e4]
 + Add Svenska language by joup@algonet.se[e5]
@@ -120,4 +129,3 @@ V1.40a	2001/09/01
 Version before 1.30c are omitted!
 
 (c) Copyright 2000-2002 TiANWEi
-      All rights reserved

@@ -1,12 +1,12 @@
 		---------------------------------------------------
-			Readme file of Regshot 1.61e5 Final 2003/1/1
+			Readme file of Regshot 1.7.2       2004/3/5
 		---------------------------------------------------
 			Please view whatsnew.txt for update info!!!
 
 -----------------
 Package includes:
 -----------------
-regshot.exe,language.ini,readme.txt,whatsnew.txt
+regshot.exe,language.ini,readme.txt,whatsnew.txt,regshot.ini
 
 
 -----------------
@@ -19,7 +19,9 @@ format and contains a list of all modifications that have taken place between  s
 and snapshot2.In addition, you can also specify folders (with sub filders) to be scanned
 for changes as well.In version 1.60+ you can save your whole registry in a *.hiv file for
 future use.
+
 Note: Regshot is a FREEWARE!
+Note: From regshot 1.7 (also regshot 1.6e5),Source code are released to to public.
 
 -----------------
 Usage:
@@ -63,11 +65,15 @@ Note:"Clear" does not erase the log files!
 (9)You can change the language of the regshot at main window,all words are saved in the 
 file "language.ini". View it for details!
 
+(10)New to 1.7+: regshot.dat now changed to regshot.ini, skipdirs and skip registry keys
+are included. exe size are smaller!
+
 -----------------
 Thanks:
 -----------------
 Special thanks:
 Alexander Romanenko	-- Space provider! http://www.ist.md/
+Ivan                    -- Space provider! http://www.digitalnuke.com/
 
 Toye			-- Release!
 zhangl			-- Debug!
@@ -95,17 +101,22 @@ Kentaro Okude		-- Japanese
 Adam Mikusiñski		-- Polish
 Computer Wizard[Wiz]	-- Serbian
 Jack Gorji		-- Hebrew
-Xosé Antón Vicente Rodríguez --Galego
+Xos?Antón Vicente Rodríguez --Galego
 Obelix			-- Hrvatski
 Alex Simidchiev		-- Bulgarian
 joup@algonet.se		-- Svenska
+Bata György             -- Hungarian
+Dmitry P.               -- Ukrainian
+
 
 Nick Reid		-- Advice
+tongjiawang		-- Many help!
 
 Franck Uberto, Patrick Whitted, Walter Bergner, Jim McMahon, Fred Bailey,
-Dchenka , itschy and all those I fogot to mention!!
+Dchenka , itschy and all those we fogot to mention!!
 ------------------------------------------------------------------------------------
-		Homepage:http://regshot.yeah.net/ http://regshot.ist.md
-				Email:regshot@ist.md
-			(c) Copyright 2000-2002 TiANWEi
+		             http://regshot.yeah.net/ 
+                         http://tianwei.digitalnuke.com/
+			(c) Copyright 2000-2002 TiANWEi  [spring_w@163.com] <=1.6e5
+			(c) Copyright 2004-2004 tulipfan [tulipfan@163.com] >=1.7
 				All rights reserved
