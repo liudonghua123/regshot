@@ -21,7 +21,7 @@
 
 #include "global.h"
 
-char str_DefResPre[]="~res";
+char str_DefResPre[]="~res" PLATFORM_SUFFIX;
 char str_filter[]={"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
 char str_RegFileSignature[]="REGSHOTHIVE"; //Need [] to use with sizeof()
 
@@ -211,7 +211,7 @@ LPSTR	GetWholeValueData(LPVALUECONTENT lpValueContent)
 					lpvaluedata=TransData(lpValueContent,REG_BINARY);
 				break;
 		default	:
-				lpvaluedata=TransData(lpValueContent,REG_BINARY);	
+				lpvaluedata=TransData(lpValueContent,REG_BINARY);
 	}
 	return lpvaluedata;
 }
@@ -226,7 +226,7 @@ VOID	CreateNewResult(DWORD actiontype,LPDWORD lpcount,LPSTR lpresult)
 	LPCOMRESULT	lpnew;
 	lpnew=(LPCOMRESULT)MYALLOC0(sizeof(COMRESULT));
 	lpnew->lpresult=lpresult;
-	
+
 	switch(actiontype)
 	{
 		case KEYADD:
@@ -294,7 +294,7 @@ VOID	LogToMem(DWORD actiontype,LPDWORD lpcount,LPVOID lp)
 	{
 		if(actiontype==VALADD||actiontype==VALDEL||actiontype==VALMODI)
 		{
-		
+
 			lpname=GetWholeValueName(lp);
 			lpdata=GetWholeValueData(lp);
 			lpall=MYALLOC(strlen(lpname)+strlen(lpdata)+2);
@@ -328,12 +328,12 @@ VOID	GetAllSubName(
 
 	LPVALUECONTENT lpv;
 	LogToMem(typekey,lpcountkey,lpKeyContent);
-	
+
 	if(lpKeyContent->lpfirstsubkey!=NULL)
 	{
 		GetAllSubName(TRUE,typekey,typevalue,lpcountkey,lpcountvalue,lpKeyContent->lpfirstsubkey);
 	}
-		
+
 	if(needbrother==TRUE)
 		if(lpKeyContent->lpbrotherkey!=NULL)
 		{
@@ -373,7 +373,7 @@ VOID	FreeAllCom(LPCOMRESULT lpComResult)
 		lp=lp->lpnextresult;
 		MYFREE(lpold);
 	}
-	
+
 }
 
 //-------------------------------------------------------------
@@ -415,12 +415,12 @@ VOID ClearKeyMatchTag(LPKEYCONTENT lpKey)
 		{
 			lpv->bvaluematch=0;
 		}
-		
+
 		//if(lpKey->lpfirstsubkey!=NULL) //notused in 1.8
 		{
 			ClearKeyMatchTag(lpKey->lpfirstsubkey);
 		}
-		
+
 		//if(lpKey->lpbrotherkey!=NULL) //notused in 1.8
 		{
 			ClearKeyMatchTag(lpKey->lpbrotherkey);
@@ -472,9 +472,10 @@ VOID FreeAllKeyContent1(void)
 	*lpComputerName1=0;*lpUserName1=0;
 
 }
+
 VOID FreeAllKeyContent2(void)
 {
-	
+
 	if(is2LoadFromHive)
 	{
 		MYFREE(lpTempHive2); //Note,together we free the filecontent!
@@ -489,9 +490,10 @@ VOID FreeAllKeyContent2(void)
 	lpHeadLocalMachine2=NULL;lpHeadUsers2=NULL;
 	*lpComputerName2=0;*lpUserName2=0;
 
-}	
+}
+
 VOID FreeAllCompareResults(void)
-{	
+{
 	FreeAllCom(lpKEYADDHEAD);
 	FreeAllCom(lpKEYDELHEAD);
 	FreeAllCom(lpVALADDHEAD);
@@ -503,13 +505,13 @@ VOID FreeAllCompareResults(void)
 	FreeAllCom(lpDIRADDHEAD);
 	FreeAllCom(lpDIRDELHEAD);
 	FreeAllCom(lpDIRMODIHEAD);
-	
+
 
 	nKEYADD=0;nKEYDEL=0;nVALADD=0;nVALDEL=0;nVALMODI=0;nFILEADD=0;nFILEDEL=0;nFILEMODI=0;nDIRADD=0;nDIRDEL=0;nDIRMODI=0;
 	lpKEYADDHEAD=NULL;lpKEYDELHEAD=NULL;lpVALADDHEAD=NULL;lpVALDELHEAD=NULL;lpVALMODIHEAD=NULL;
 	lpFILEADDHEAD=NULL;lpFILEDELHEAD=NULL;lpFILEMODIHEAD=NULL;lpDIRADDHEAD=NULL;lpDIRDELHEAD=NULL;lpDIRMODIHEAD=NULL;
 }
-				
+
 
 //-------------------------------------------------------------
 //Registry Compare Engine
@@ -520,7 +522,7 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 	LPKEYCONTENT	lp1,lp2;
 	LPVALUECONTENT	lpvalue1,lpvalue2;
 	//DWORD	i;
-	
+
 	for(lp1=lpHead1;lp1!=NULL;lp1=lp1->lpbrotherkey)
 	{
 		for(lp2=lpHead2;lp2!=NULL;lp2=lp2->lpbrotherkey)
@@ -560,7 +562,7 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 											if (i==lpvalue1->datasize)*/
 											if(memcmp(lpvalue1->lpvaluedata,lpvalue2->lpvaluedata,lpvalue1->datasize)==0) //1.8.2
 											{	//Same valuedata,keys are the same!
-												
+
 												lpvalue2->bvaluematch=ISMATCH;
 												break;//Be sure not to do lp2==NULL
 											}
@@ -595,12 +597,12 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 							if(lpvalue2->bvaluematch!=ISMATCH&&lpvalue2->bvaluematch!=ISMODI)
 							{	//We found a value in lp2's but not in lp1's,we found a added value****
 								LogToMem(VALADD,&nVALADD,lpvalue2);
-					
+
 							}
 						}
 					}
 				}
-				
+
 				//////////////////////////////////////////////////////////////
 				//After we walk through the values above,we now try to loop the sub keys of current key
 				if(lp1->lpfirstsubkey==NULL&&lp2->lpfirstsubkey!=NULL)
@@ -622,7 +624,7 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 		}
 
 	}
-	
+
 	//After we loop to end,we do extra loop use flag we previouse made to get added keys
 	for(lp2=lpHead2;lp2!=NULL;lp2=lp2->lpbrotherkey) //->lpbrotherkey
 	{
@@ -663,7 +665,7 @@ BOOL CompareShots(void)
 		MessageBox(hWnd,"Found two shots with different DIR chain!(or with different order)\r\nYou can continue,but file compare result would be abnormal!","Warning",MB_ICONWARNING);
 
 	InitProgressBar();
-	
+
 	SystemTimeToFileTime(lpSystemtime1,&ftime1);
 	SystemTimeToFileTime(lpSystemtime2,&ftime2);
 
@@ -678,7 +680,7 @@ BOOL CompareShots(void)
 		CompareFirstSubKey(lpHeadLocalMachine2,lpHeadLocalMachine1);
 		CompareFirstSubKey(lpHeadUsers2,lpHeadUsers1);
 	}
-	
+
 	SendDlgItemMessage(hWnd,IDC_PBCOMPARE,PBM_SETPOS,(WPARAM)0,(LPARAM)0);
 
 	//Dir compare v1.8.1
@@ -700,7 +702,7 @@ BOOL CompareShots(void)
 			if((lpfc2=SearchDirChain(lpfc1->lpfilename,lphf2))!=NULL) //note lphf2 should not changed here!
 				CompareFirstSubFile(lpfc1,lpfc2); //if found ,we do compare
 			else //can not find matched lpfc1 in lphf2 chain.
-				GetAllSubFile(FALSE,DIRDEL,FILEDEL,&nDIRDEL,&nFILEDEL,lpfc1); 
+				GetAllSubFile(FALSE,DIRDEL,FILEDEL,&nDIRDEL,&nFILEDEL,lpfc1);
 		}
 	}
 	//reset pointers
@@ -748,7 +750,7 @@ BOOL CompareShots(void)
 	}
 */
 	SendDlgItemMessage(hWnd,IDC_PBCOMPARE,PBM_SETPOS,(WPARAM)MAXPBPOSITION,(LPARAM)0);
-	
+
 	if(SendMessage(GetDlgItem(hWnd,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
 	{
 		isHTML=FALSE;
@@ -759,12 +761,12 @@ BOOL CompareShots(void)
 		isHTML=TRUE;
 		lpExt=".htm";
 	}
-	
+
 	lpDestFileName=MYALLOC0(MAX_PATH*2);
 	lpstrcomp=MYALLOC0(buffersize); //buffersize must> commentlength+10 .txt 0000
 	GetDlgItemText(hWnd,IDC_EDITCOMMENT,lpstrcomp,COMMENTLENGTH);
 	GetDlgItemText(hWnd,IDC_EDITPATH,lpOutputpath,MAX_PATH);
-	
+
 	nLengthofStr=strlen(lpOutputpath);
 
 	if (nLengthofStr>0&&*(lpOutputpath+nLengthofStr-1)!='\\')
@@ -780,11 +782,11 @@ BOOL CompareShots(void)
 		strcat(lpDestFileName,lpstrcomp);
 	else
 		strcat(lpDestFileName,str_DefResPre);
-	
+
 	nLengthofStr=strlen(lpDestFileName);
 	strcat(lpDestFileName,lpExt);
 	hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
-	if( hFile == INVALID_HANDLE_VALUE) 
+	if( hFile == INVALID_HANDLE_VALUE)
 	{
 		for (filetail=0;filetail<MAXAMOUNTOFFILE;filetail++)
 		{
@@ -793,7 +795,7 @@ BOOL CompareShots(void)
 			strcpy(lpDestFileName+nLengthofStr+4,lpExt);
 
 			hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
-			if( hFile == INVALID_HANDLE_VALUE) 
+			if( hFile == INVALID_HANDLE_VALUE)
 			{
 				if (GetLastError()==ERROR_FILE_EXISTS)	//My God! I use stupid ERROR_ALREADY_EXISTS first!!
 					continue;
@@ -820,7 +822,7 @@ BOOL CompareShots(void)
 		{
 			WriteHtmlbegin();
 		}
-		
+
 		WriteFile(hFile,str_prgname,strlen(str_prgname),&NBW,NULL);
 		WriteFile(hFile,str_CR,strlen(str_CR),&NBW,NULL);
 
@@ -828,7 +830,7 @@ BOOL CompareShots(void)
 		GetDlgItemText(hWnd,IDC_EDITCOMMENT,lpstrcomp,COMMENTLENGTH);
 		WriteTitle(lan_comments,lpstrcomp,isHTML);
 
-		
+
 		sprintf(lpstrcomp,"%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d",
 			lpSystemtime1->wYear,"/",
 			lpSystemtime1->wMonth,"/",
@@ -844,11 +846,11 @@ BOOL CompareShots(void)
 			lpSystemtime2->wSecond
 
 			);
-			
+
 		WriteTitle(lan_datetime,lpstrcomp,isHTML);
 
 
-		
+
 		*lpstrcomp=0x00; //ZeroMemory(lpstrcomp,buffersize);
 		//GetComputerName(lpstrcomp,&buffersize);
 		strcpy(lpstrcomp,lpComputerName1);
@@ -944,9 +946,9 @@ BOOL CompareShots(void)
 			WriteHtmlover();
 		}
 
-	
+
 		CloseHandle(hFile);
-		
+
 		if((DWORD)ShellExecute(hWnd,"open",lpDestFileName,NULL,NULL,SW_SHOW)<=32)
 			ErrMsg(lan_errorexecviewer);
 		MYFREE(lpDestFileName);
@@ -965,7 +967,7 @@ return TRUE;
 //------------------------------------------------------------
 VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 {
-    
+
 	HKEY  Subhkey;
 	DWORD i,NTr;
 	DWORD TypeCode;
@@ -1005,7 +1007,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 	//Get Values
 	for(i=0;;i++)
 	{
-		
+
 		*(LPBYTE)lpValueName=(BYTE)0x00;//That's the bug in 2000! thanks zhangl@digiark.com!
 		*(LPBYTE)lpValueData=(BYTE)0x00;
 		//DebugBreak();
@@ -1014,7 +1016,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		NTr=RegEnumValue(hkey,i,lpValueName,&LengthOfValueName,NULL,&TypeCode,lpValueData,&LengthOfValueData);
 		if	(NTr==ERROR_NO_MORE_ITEMS)
 			break;
-		else 
+		else
 		{
 			if	(NTr!=ERROR_SUCCESS)
 			{
@@ -1022,13 +1024,13 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 			}
 		}
 
-#ifdef DEBUGLOG		
+#ifdef DEBUGLOG
 		DebugLog("debug_trytogetvalue.log","trying:",hWnd,FALSE);
 		DebugLog("debug_trytogetvalue.log",lpValueName,hWnd,TRUE);
 #endif
 
 		lpValueContent=MYALLOC0(sizeof(VALUECONTENT));
-		//I had done if(i==0) in 1.50b- ! thanks fisttk@21cn.com and non-standard 
+		//I had done if(i==0) in 1.50b- ! thanks fisttk@21cn.com and non-standard
 		if(lpFatherKeyContent->lpfirstvalue==NULL)
 			lpFatherKeyContent->lpfirstvalue=lpValueContent;
 		else
@@ -1048,7 +1050,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		}
 		nGettingValue++;
 
-#ifdef DEBUGLOG		
+#ifdef DEBUGLOG
 		lstrdb1=MYALLOC0(100);
 		sprintf(lstrdb1,"LGVN:%08d LGVD:%08d VN:%08d VD:%08d",LengthOfLongestValueName,LengthOfLongestValueData,LengthOfValueName,LengthOfValueData);
 		DebugLog("debug_valuenamedata.log",lstrdb1,hWnd,TRUE);
@@ -1063,7 +1065,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 
 	MYFREE(lpValueName);
 	MYFREE(lpValueData);
-	
+
 	for(i=0;;i++)
 	{
 		LengthOfKeyName=LengthOfLongestSubkeyName;
@@ -1071,7 +1073,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		NTr=RegEnumKeyEx(hkey,i,lpKeyName,&LengthOfKeyName,NULL,NULL,NULL,&ftLastWrite);
 		if	(NTr==ERROR_NO_MORE_ITEMS)
 			break;
-		else 
+		else
 		{
 			if	(NTr!=ERROR_SUCCESS)
 			{
@@ -1089,7 +1091,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		lpKeyContent->lpfatherkey=lpFatherKeyContent;
 		//DebugLog("debug_getkey.log",lpKeyName,hWnd,TRUE);
 
-#ifdef DEBUGLOG		
+#ifdef DEBUGLOG
 		lstrdb1=MYALLOC0(100);
 		sprintf(lstrdb1,"LGKN:%08d KN:%08d",LengthOfLongestSubkeyName,LengthOfKeyName);
 		DebugLog("debug_key.log",lstrdb1,hWnd,TRUE);
@@ -1097,7 +1099,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		MYFREE(lstrdb1);
 
 #endif
-		
+
 		nGettingKey++;
 
 		if(RegOpenKeyEx(hkey,lpKeyName,0,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,&Subhkey)!=ERROR_SUCCESS)
@@ -1111,7 +1113,7 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 		GetRegistrySnap(Subhkey,lpKeyContent);
 		RegCloseKey(Subhkey);
 	}
-	
+
 	nGettingTime=GetTickCount();
 	if ((nGettingTime-nBASETIME1)>REFRESHINTERVAL)
 	{
@@ -1132,8 +1134,8 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 
 	DWORD	nFPHeader,nFPCurrent,nFPTemp4Write,nLenPlus1;
 	LPVALUECONTENT lpv;
-	
-	
+
+
 	nLenPlus1=strlen(lpKeyContent->lpkeyname)+1;											//get len+1
 	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
 	nFPTemp4Write=nFPHeader+21;								//5*4+1
@@ -1145,8 +1147,8 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	nFPTemp4Write=0;
 	WriteFile(hFileWholeReg,&nFPTemp4Write,1,&NBW,NULL);					//clear and save bkeymatch
 	WriteFile(hFileWholeReg,lpKeyContent->lpkeyname,nLenPlus1,&NBW,NULL);	//Save the current keyname
-	
-	
+
+
 
 	//Save the sub-value of current KeyContent
 	for(lpv=lpKeyContent->lpfirstvalue;lpv!=NULL;lpv=lpv->lpnextvalue)
@@ -1168,13 +1170,13 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 		WriteFile(hFileWholeReg,lpv->lpvaluedata,lpv->datasize,&NBW,NULL); //save lpvaluedata
 
 	}
-	
+
 	if(lpKeyContent->lpfirstsubkey!=NULL)
 	{
 		//pass this keycontent's position as subkey's fatherkey's position and pass the "lpfirstsubkey field"
-		SaveRegKey(lpKeyContent->lpfirstsubkey,nFPHeader,nFPHeader+8); 
+		SaveRegKey(lpKeyContent->lpfirstsubkey,nFPHeader,nFPHeader+8);
 	}
-		
+
 	if(lpKeyContent->lpbrotherkey!=NULL)
 	{
 		// pass this key's fatherkey's position as brother's father and pass "lpbrotherkey field"
@@ -1219,9 +1221,9 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 		opfn.lpstrDefExt="hiv";
 		opfn.Flags=OFN_OVERWRITEPROMPT|OFN_HIDEREADONLY;
 		if(GetSaveFileName(&opfn))
-		{					
+		{
 			hFileWholeReg = CreateFile(opfn.lpstrFile,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-			if( hFileWholeReg!= INVALID_HANDLE_VALUE) 
+			if( hFileWholeReg!= INVALID_HANDLE_VALUE)
 			{
 
 				UI_BeforeClear();
@@ -1232,7 +1234,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 //20  startoflpkeyuser(???)
 //24  fileheadchain begin (new) ->(file -> nextfilehead(4) next4bytes is filecontent) added in 1.8
 //28  future use!
-//32  computer name 
+//32  computer name
 //96  username
 //160 systemtime
 
@@ -1246,7 +1248,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 
 				if(lpKeyHLM!=NULL)
 					SaveRegKey(lpKeyHLM,0,0);
-				
+
 				//Save the position of hkeyUsr
 				nFPcurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);
 				SetFilePointer(hFileWholeReg,20,NULL,FILE_BEGIN);
@@ -1255,7 +1257,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 
 				if(lpKeyUSER!=NULL)
 					SaveRegKey(lpKeyUSER,0,0);
-				
+
 				if(lpHF!=NULL)
 				{	//Write start position of file chain
 					nFPcurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);
@@ -1269,7 +1271,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 						SetFilePointer(hFileWholeReg,4,NULL,FILE_CURRENT); //move 4 bytes,leave space for lpnextfilecontent
 						nFPcurrent1=nFPcurrent+8;
 						WriteFile(hFileWholeReg,&nFPcurrent1,4,&NBW,NULL); //write lpfilecontent
-					
+
 						SaveFileContent(lphf->lpfilecontent,0,0);
 						nFPcurrent1=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);
 						SetFilePointer(hFileWholeReg,nFPcurrent,NULL,FILE_BEGIN);
@@ -1286,7 +1288,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 					}
 				}
 
-				
+
 				SetFilePointer(hFileWholeReg,32,NULL,FILE_BEGIN);
 				WriteFile(hFileWholeReg,computer,strlen(computer)+1,&NBW,NULL);
 				SetFilePointer(hFileWholeReg,COMPUTERNAMELEN+32,NULL,FILE_BEGIN);
@@ -1296,7 +1298,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 
 				ShowWindow(GetDlgItem(hWnd,IDC_PBCOMPARE),SW_HIDE);
 
-				SetCursor(hSaveCursor);					
+				SetCursor(hSaveCursor);
 				MessageBeep(0xffffffff);
 				CloseHandle(hFileWholeReg);
 			}
@@ -1318,7 +1320,7 @@ VOID ReAlignReg(LPKEYCONTENT lpKey,DWORD nBase)
 	LPDWORD lp;
 	LPVALUECONTENT lpv;
 	lp=(LPDWORD)lpKey;
-	
+
 	if((*lp)!=0) (*lp)+=nBase;	lp++;
 	if((*lp)!=0) (*lp)+=nBase;	lp++;
 	if((*lp)!=0) (*lp)+=nBase;	lp++;
@@ -1334,12 +1336,12 @@ VOID ReAlignReg(LPKEYCONTENT lpKey,DWORD nBase)
 		if((*lp)!=0) (*lp)+=nBase;	lp++;
 		if((*lp)!=0) (*lp)+=nBase;
 	}
-		
+
 	if(lpKey->lpfirstsubkey!=NULL)
 	{
 		ReAlignReg(lpKey->lpfirstsubkey,nBase);
 	}
-		
+
 	if(lpKey->lpbrotherkey!=NULL)
 	{
 		ReAlignReg(lpKey->lpbrotherkey,nBase);
@@ -1363,13 +1365,13 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 	opfn.Flags=OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
 	opfn.lpstrDefExt="hiv";
 	if(GetOpenFileName(&opfn))
-	{					
+	{
 		hFileWholeReg=CreateFile(opfn.lpstrFile,GENERIC_READ ,FILE_SHARE_READ ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 		if (hFileWholeReg!=INVALID_HANDLE_VALUE)
 		{
 			*lpHive=MYALLOC0(16);
 			ReadFile(hFileWholeReg,*lpHive,16,&NBW,NULL);
-			
+
 			if(strcmp(str_RegFileSignature,*lpHive)!=0)
 			{
 				ErrMsg("It is not a valid Regshot hive file!");
@@ -1389,22 +1391,22 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 				nBase=(DWORD)(*lpHive);
 				ReadFile(hFileWholeReg,&nOffSet,4,&NBW,NULL);
 				*lplpKeyHLM=(LPKEYCONTENT)(nBase+nOffSet);
-				
+
 				ReadFile(hFileWholeReg,&nOffSet,4,&NBW,NULL);
 				*lplpKeyUSER=(LPKEYCONTENT)(nBase+nOffSet);
-				
+
 				ReadFile(hFileWholeReg,&nOffSet,4,&NBW,NULL);
 				if(nOffSet==0) //!!!
 					*lplpHeadFile=NULL;
 				else
 					*lplpHeadFile=(LPHEADFILE)(nBase+nOffSet);
-				
+
 				SetFilePointer(hFileWholeReg,0,NULL,FILE_BEGIN);
 
 				InitProgressBar();
 #define READ_BATCH_SIZE 8192
 				nFileStep=nFileSize/READ_BATCH_SIZE/MAXPBPOSITION;
-				
+
 				for(i=0,j=0,nRemain=nFileSize;;i+=READ_BATCH_SIZE,j++)
 				{
 					if(nRemain>=READ_BATCH_SIZE)
@@ -1431,11 +1433,11 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 				}
 #undef READ_BATCH_SIZE
 				ShowWindow(GetDlgItem(hWnd,IDC_PBCOMPARE),SW_HIDE);
-				
-				
+
+
 				ReAlignReg(*lplpKeyHLM,nBase);
 				ReAlignReg(*lplpKeyUSER,nBase);
-				
+
 				if(*lplpHeadFile!=NULL)
 				{
 					SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)BST_CHECKED,(LPARAM)0);
@@ -1446,12 +1448,12 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 				}
 				else
 					SetDlgItemText(hWnd,IDC_EDITDIR,"");
-				
-				
+
+
 
 				if(is1)
 				{
-					//Use copymemory in 1.8,old version direct point to ,which is wrong 
+					//Use copymemory in 1.8,old version direct point to ,which is wrong
 					CopyMemory(lpComputerName1,*lpHive+32,COMPUTERNAMELEN);
 					CopyMemory(lpUserName1,*lpHive+COMPUTERNAMELEN+32,COMPUTERNAMELEN);
 					CopyMemory(lpSystemtime1,(SYSTEMTIME FAR *)(*lpHive+COMPUTERNAMELEN*2+32),sizeof(SYSTEMTIME));
@@ -1475,7 +1477,7 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 			bRet=FALSE;
 		}
 
-		
+
 	}
 	else
 		bRet=FALSE;;
@@ -1487,4 +1489,3 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 	return(bRet);
 
 }
-

@@ -26,10 +26,9 @@
 
 #include "global.h"
 
-char *str_prgname="Regshot 1.8.2"; //tfx 程序标题
-char *str_aboutme="Regshot is a free and opensource registry compare utility.\n\n\
-http://regshot.yeah.net/\n\
-http://regshot.blog.googlepages.com/\n\n";
+char *str_prgname="Regshot" PLATFORM_SUFFIX " " REGSHOT_VERSION_STRING; //tfx 程序标题
+char *str_aboutme="Regshot is a free and open source registry compare utility.\n\n\
+http://sourceforge.net/projects/regshot/\n\n";
 LPSTR	REGSHOTINI			="regshot.ini"; //tfx
 LPSTR	REGSHOTLANGUAGEFILE	="language.ini";
 
@@ -55,14 +54,14 @@ int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 //Main Dialog Proc
 //--------------------------------------------------
 BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
-{					    
+{
 	UINT	nLengthofStr;
 //	BYTE	nFlag;
 
 	switch(message)
 	{
 	case	WM_INITDIALOG:
-			
+
 			SendDlgItemMessage(hDlg,IDC_EDITCOMMENT,EM_SETLIMITTEXT,(WPARAM)COMMENTLENGTH,(LPARAM)0);
 			SendDlgItemMessage(hDlg,IDC_EDITPATH,EM_SETLIMITTEXT,(WPARAM)MAX_PATH,(LPARAM)0);
 			SendDlgItemMessage(hDlg,IDC_EDITDIR,EM_SETLIMITTEXT,(WPARAM)EXTDIRLEN,(LPARAM)0);
@@ -87,7 +86,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			if (nLengthofStr>0&&*(lpWindowsDirName+nLengthofStr-1)=='\\')
 				*(lpWindowsDirName+nLengthofStr-1)=0x00;
 			GetTempPath(MAX_PATH,lpTempPath);
-			
+
 			//_asm int 3;
 			GetCurrentDirectory(MAX_PATH,lpStartDir); //fixed at 1.8.2 former version use getcommandline()
 			lpIni=MYALLOC0(MAX_PATH*2);
@@ -103,10 +102,10 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				GetLanguageStrings(hDlg);
 			else
 				GetDefaultStrings();
-			
+
 /*			//To get rgst152.dat which is the ini file of regshot,but it should  be a standard ini file in future!
 			hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-			if( hFile != INVALID_HANDLE_VALUE) 
+			if( hFile != INVALID_HANDLE_VALUE)
 			{
 				if((ReadFile(hFile,&nFlag,1,&NBW,NULL)==TRUE)&&NBW==1)
 				{
@@ -124,7 +123,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				if((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL)==TRUE)
 					&&NBW==sizeof(nLengthofStr)&&nLengthofStr!=0)
 				{
-					
+
 					if((ReadFile(hFile,lpExtDir,nLengthofStr,&NBW,NULL)==TRUE)&&NBW==nLengthofStr)
 					{
 						SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
@@ -135,12 +134,12 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				}
 				else
 					SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
-				
+
 				//the output temppath
 				if((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL)==TRUE)
 					&&NBW==sizeof(nLengthofStr)&&nLengthofStr!=0)
 				{
-					
+
 					if((ReadFile(hFile,lpOutputpath,nLengthofStr,&NBW,NULL)==TRUE)&&NBW==nLengthofStr)
 					{
 						SetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath);
@@ -169,7 +168,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 
 			lpLastSaveDir=lpOutputpath;
 			lpLastOpenDir=lpOutputpath;
-			
+
 			lpRegshotIni=MYALLOC0(3*MAX_PATH);
 			strcpy(lpRegshotIni,lpStartDir);
 			if (*(lpRegshotIni+strlen(lpRegshotIni)-1)!='\\')
@@ -177,9 +176,9 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			strcat(lpRegshotIni,REGSHOTINI);
 
 			GetSnapRegs(hDlg); //tfx
-			
+
 			return TRUE;
-			
+
 	case	WM_COMMAND:
 			switch(LOWORD(wParam))
 			{
@@ -189,7 +188,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					GetWindowRect(GetDlgItem(hDlg,IDC_1STSHOT),&rect);
 					TrackPopupMenu(hMenu,TPM_LEFTALIGN|TPM_LEFTBUTTON,rect.left+10,rect.top+10,0,hDlg,NULL);
 					DestroyMenu(hMenu);
-					
+
 					return(TRUE);
 			case	IDC_2NDSHOT:
 					CreateShotPopupMenu();
@@ -237,7 +236,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					//	SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
 
 					return(TRUE);
-					
+
 			//case	IDC_SAVEREG:
 					//SaveRegistry(lpHeadLocalMachine1,lpHeadUsers1);
 			//		return(TRUE);
@@ -249,7 +248,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					EnableWindow(GetDlgItem(hDlg,IDC_CLEAR1),TRUE);
 					SetFocus(GetDlgItem(hDlg,IDC_CLEAR1));
 					SendMessage(hDlg,DM_SETDEFID,(WPARAM)IDC_CLEAR1,(LPARAM)0);
-					SetCursor(hSaveCursor);					
+					SetCursor(hSaveCursor);
 					MessageBeep(0xffffffff);
 					return(TRUE);
 			case	IDC_CLEAR1:
@@ -260,8 +259,8 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					AppendMenu(hMenuClear,MF_STRING,IDM_CLEARSHOT2,lan_menuclearshot2);
 					//AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear compare result");
 					SetMenuDefaultItem(hMenuClear,IDM_CLEARALLSHOTS,FALSE);
-			
-					
+
+
 					//if(lpHeadFile!=NULL)
 					//{
 					//	EnableMenuItem(hMenuClear,IDM_CLEARSHOT1,MF_BYCOMMAND|MF_GRAYED);
@@ -288,7 +287,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					FreeAllKeyContent1();  //Note!! if loadfromhive and contains file,we should let lpHeadFile to NULL
 					FreeAllKeyContent2();
 					FreeAllCompareResults();
-					
+
 					FreeAllFileHead(lpHeadFile1);
 					FreeAllFileHead(lpHeadFile2);
 
@@ -349,9 +348,9 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			case	IDCANCEL:
 /*					SetCurrentDirectory(lpStartDir);
 					hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-					if( hFile != INVALID_HANDLE_VALUE) 
+					if( hFile != INVALID_HANDLE_VALUE)
 					{
-						
+
 						nFlag=(BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)|
 							SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1);
 						WriteFile(hFile,&nFlag,1,&NBW,NULL);
@@ -365,7 +364,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 
 						CloseHandle(hFile);
 					}
-*/	
+*/
 					SetSnapRegs(hDlg);//tfx
 					PostQuitMessage(0);
 					return(TRUE);
@@ -388,7 +387,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 						SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
 						nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
 						nWholeLen=nLengthofStr+strlen(BrowseInfo1.pszDisplayName);
-						
+
 						if (nWholeLen<EXTDIRLEN+1)
 						{
 							strcat(lpExtDir,";");
@@ -397,15 +396,15 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 						}
 						else
 							strcpy(lpExtDir,BrowseInfo1.pszDisplayName);
-						
+
 						SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
 						MYFREE(lpidlist);
 					}
-					
+
 					MYFREE(BrowseInfo1.pszDisplayName);
 				}
 				return(TRUE);
-					
+
 			case	IDC_BROWSE2:
 				{
 
@@ -431,16 +430,16 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 						SetDlgItemText(hDlg,IDC_EDITPATH,BrowseInfo1.pszDisplayName);
 						MYFREE(lpidlist);
 					}
-					
+
 					MYFREE(BrowseInfo1.pszDisplayName);
 				}
 				return(TRUE);
 			case	IDC_COMBOLANGUAGE:
 					GetLanguageStrings(hDlg);
 					return(TRUE);
-					
+
 			case	IDC_ABOUT:
-					{	
+					{
 					LPSTR	lpAboutBox;
 					//_asm int 3;
 					lpAboutBox=MYALLOC0(SIZEOF_ABOUTBOX);
@@ -495,19 +494,19 @@ int		PASCAL WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	GetVersionEx(&winver);
 	bWinNTDetected=(winver.dwPlatformId==VER_PLATFORM_WIN32_NT) ? TRUE : FALSE;
 	//hWndMonitor be created first for the multilanguage interface.
-	
-	//FARPROC		lpfnDlgProc;     
+
+	//FARPROC		lpfnDlgProc;
 	//lpfnDlgProc	=	MakeProcInstance((FARPROC)DialogProc,hInstance); //old style of create dialogproc
-	*/			
-			
+	*/
+
 	hHeap=GetProcessHeap(); //1.8.2
 	hWnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,(WNDPROC)DialogProc);
-	
+
 	SetClassLong(hWnd,GCL_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
 
 	SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
 	ShowWindow(hWnd,nCmdShow);
-	UpdateWindow(hWnd);		   
+	UpdateWindow(hWnd);
 	//SetPriorityClass(hInstance,31);
 	/*
 	if	(bWinNTDetected)
@@ -532,4 +531,3 @@ int		PASCAL WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	}
 	return(msg.wParam);
 }
-
