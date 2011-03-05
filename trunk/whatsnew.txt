@@ -7,11 +7,13 @@ Download new version : http://regshot.yeah.net/
               !: Changes made
               +: Function added
               -: Function deleted             
+
+-------------------------------------------------
+Version 1.60       2002/03/25
++ Snapshots can be saved into "Hive" files
 -------------------------------------------------
 Version 1.55       2002/03/11
-- Due to 3 bug reports that "Dynamic Monitor" may 
-  hang in some situations,I cut off the monitor codes
-  in this version.
+- Cut off "Dynamic Monitor" Function
 + Compare log file are saved with the name of the
   comment you input!
 -------------------------------------------------
