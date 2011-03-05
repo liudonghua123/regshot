@@ -1,17 +1,30 @@
 
-             What's new of Regshot
+History of Regshot
 
-Download new version at:http://regshot.yeah.net/ 
-			http://regshot.isd.md/
-                        http://www.digitalnuke.com/
 -------------------------------------------------
-              *: Note must read
-              !: Changes made
-              +: Function added
-              -: Function deleted             
+*: Note you may interest
+!: Changes made
++: Function added
+-: Function deleted             
 -------------------------------------------------
 
-V1.7,1.7.1,1.7.2 2004/2/25-2004/03/05
+V1.8.1 20070620
+! Fix a Crash bug in 1.8.0! (LoadHive()->ReadFile())
++ Dir chains comparison is more human.
++ "UseLongRegHead" option added in regshot.ini to compatible with undoReg(1.46)
+* "UseLongRegHead=1" means using "HKEY_LOCAL_MACHINE" instead of "HKLM",default 0
+* Do not compare shots saved with different "UseLongRegHead" option!
+
+V1.8.0 20070615 (Its TiANWEi reloaded;)
+! Fix filechain break bug in 1.7(.,..)
+! Fix several pointer mis-point(lpComputer,etc)
+! Code maintenance(split,rename,OMG)
+! file attribute dir code adjust
+! value modi section of html output is colored (Thanks HANDLE!)
++ fileshots are NOW SAVEed in hive(you must be waiting for this ^_^)
++ Use GPLv2 licence
+
+V1.7,1.7.1,1.7.2 2004/2/25-2004/03/05 This version is made by tulipfan[CCG]!
 * Minimize file size from 44k to 28k, thanks to y0da
 ! When shot file, "."&".." not show
 * Instead of using "rgst152.dat",the config moved to "regshot.ini"
@@ -125,7 +138,86 @@ V1.40a	2001/09/01
 ! New data structure,more detailed output.
 + HTML document compare log output.
 - Some checkbox.
--------------------------------------------------
-Version before 1.30c are omitted!
 
-(c) Copyright 2000-2002 TiANWEi
+-------------------------------------------------
+
+Version 1.30c 2001/08/2?
+! Getsystime -> Getlocaltime
+! H.L.K -> H.M
+! little changes
+
+Version 1.30b 2001/08/13
+- Some ASM code
+- Some exception handler
+- Some old function
+* Great Thanks to Mr.Zhangl!!!
+
+Debug Version 1.20b 2001/08/10
+* This is a debug version to Mr. ZhangL
+
+Debug Version 1.20a 2001/08/9
+* This is a debug version to Mr. ZhangL
+! Pointers unclear bug fixed
+! Dbytes bug fixed
+
+Debug Version 1.2  2001/08/08
+* This is a debug version to Mr. ZhangL
++ New debuglog output
+
+Debug Version 1.1  2001/08/07
+* This is a debug version to Mr. ZhangL
++ New debuglog "debug_keyqueryinfo.log" output
+
+Debug Version 1.0 2001/08/07
+* This is a debug version to Mr. ZhangL
+* Four month apart from my cute Regshot!
++ debug_keyopen.log
+  debug_keyclose.log
+  debug_keyqueryinfo.log
+  debug_keycannotbeopen.log
+* My PC has no Win2000 installed,so I email this
+  Version to Zhangl,and he email me the logfile!
+
+Version 1.10 2001/04/09
+* One and a half year apart from my regshot!
+! Fixed bugs on NT4
+
+Version 1.01j 1999/12/29
+- NT4 bug can not be found?? So sad!
+- Not packed by UPX any more
+
+Version 1.01i 1999/12/04
++ Compare log save to different files,max 10000!
++ Turtor file (turtor.txt) added in release pack.
+* Found bugs on NT,bug I cannot fix it
+
+Version 1.01h 1999/11/25
+! Found bugs on NT sp3
+
+Version 1.01g 1999/10
+! Windows version detect error fixed.
++ Exterviewer editbox.
+
+Version 1.01f 1999/10
+! New method of compare
++ ASM codes
++ Notpad.exe called to show the log
++ New Icon.
+- Bmp logo.
+
+Version 1.01e
+* Mostly like 1.01d,bugs fixed.
+
+Version 1.01d
+! Use direct "=" instead "lstrcat()",faster!
+! Larger listBox
+
+Version before 1.01c
+* I don't remember so much!:))
+
+-------------------------------------------------
+
+
+Download new version at:
+http://regshot.yeah.net/ 
+http://regshot.blog.googlepages.com/
