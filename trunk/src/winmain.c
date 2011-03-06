@@ -55,7 +55,7 @@ int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 //--------------------------------------------------
 BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
-	UINT	nLengthofStr;
+	size_t	nLengthofStr;
 //	BYTE	nFlag;
 
 	switch(message)
@@ -373,7 +373,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				{
 
 					LPITEMIDLIST lpidlist;
-					DWORD	nWholeLen;
+					size_t	nWholeLen;
 					BrowseInfo1.hwndOwner=hDlg;
 					BrowseInfo1.pszDisplayName=MYALLOC0(MAX_PATH+1);
 					//BrowseInfo1.lpszTitle="Select:";
@@ -483,8 +483,8 @@ BOOL	SetPrivilege(HANDLE hToken,LPCTSTR pString,BOOL bEnablePrivilege)
 
 
 //////////////////////////////////////////////////////////////////
-int		PASCAL WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
-					   LPSTR lpszCmdLine,INT nCmdShow)
+int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
+					   LPSTR lpszCmdLine,int nCmdShow)
 {
 	/*
 	BOOL	bWinNTDetected;
@@ -502,7 +502,7 @@ int		PASCAL WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	hHeap=GetProcessHeap(); //1.8.2
 	hWnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,(WNDPROC)DialogProc);
 
-	SetClassLong(hWnd,GCL_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
+	SetClassLong(hWnd,GCLP_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
 
 	SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
 	ShowWindow(hWnd,nCmdShow);

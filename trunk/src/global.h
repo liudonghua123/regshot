@@ -35,6 +35,10 @@
 #define PLATFORM_SUFFIX "32"
 #endif	// _WIN64
 
+#ifndef GCLP_HICON
+#define GCLP_HICON GCL_HICON
+#endif
+
 //!!!WARNING!!! HEAP_NO_SERIALIZE mean we can not use this in multithread.
 //added in 1.8.2 to gain a slightly faster speed but it is danger!
 #define	USEHEAPALLOC_DANGER
@@ -304,7 +308,7 @@ VOID WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor);
 VOID WriteTitle(LPSTR lph,LPSTR lpb,BOOL isHTML);
 VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWORD nFPCaller);
 VOID ClearHeadFileMatchTag(LPHEADFILE lpHF);
-VOID FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,int nMaxLen);
+VOID FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,size_t nMaxLen);
 BOOL DirChainMatch(LPHEADFILE lphf1,LPHEADFILE lphf2);
 VOID WriteHtmlbegin(void);
 VOID WriteHtmlover(void);

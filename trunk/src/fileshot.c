@@ -33,7 +33,7 @@ LPSTR	GetWholeFileName(LPFILECONTENT lpFileContent)
 {
 	LPFILECONTENT lpf;
 	LPSTR	lpName,lptail;
-	int	nLen=0;
+	size_t	nLen=0;
 
 	for(lpf=lpFileContent;lpf!=NULL;lpf=lpf->lpfatherfile)
 		nLen+=strlen(lpf->lpfilename)+1;
@@ -43,7 +43,7 @@ LPSTR	GetWholeFileName(LPFILECONTENT lpFileContent)
 
 	lptail=lpName+nLen-1;
 	*lptail=0x00;
-	
+
 	for(lpf=lpFileContent;lpf!=NULL;lpf=lpf->lpfatherfile)
 	{
 		nLen=strlen(lpf->lpfilename);
@@ -53,7 +53,7 @@ LPSTR	GetWholeFileName(LPFILECONTENT lpFileContent)
 	}
 	return lpName;
 }
-				
+
 
 //-------------------------------------------------------------
 // Routine to walk through all Sub tree of current Directory [File system]
@@ -66,7 +66,7 @@ VOID	GetAllSubFile(
 					  )
 {
 	LPSTR	lpTemp;
-	
+
 	if(ISDIR(lpFileContent->fileattr))
 	{
 		lpTemp=lpFileContent->lpfilename;
@@ -89,7 +89,7 @@ VOID	GetAllSubFile(
 			GetAllSubFile(TRUE,typedir,typefile,lpcountdir,lpcountfile,lpFileContent->lpbrotherfile);
 	}
 
-	
+
 }
 
 
@@ -125,7 +125,7 @@ VOID	GetFilesSnap(LPFILECONTENT lpFatherFile)
 	MYFREE(lpFilename);
 	if(filehandle==INVALID_HANDLE_VALUE)
 		return;
-	
+
 	lpTemp=finddata.cFileName; //1.8
 
 	lpFileContent=MYALLOC0(sizeof(FILECONTENT));
@@ -162,7 +162,7 @@ if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E &&
 		if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E && *(lpTemp+2)==0x00 )   //1.8.2
 			&&!IsInSkipList(lpFileContent->lpfilename,lpSnapFiles)) //tfx
 		{
-			
+
 			nGettingDir++;
 			GetFilesSnap(lpFileContent);
 		}
@@ -172,7 +172,7 @@ if( *(unsigned short *)lpTemp!=0x002E && !( *(unsigned short *)lpTemp==0x2E2E &&
 		nGettingFile++;
 	}
 
-	
+
 	for	(;FindNextFile(filehandle,&finddata)!=FALSE;)
 	{
 		lpFileContent=MYALLOC0(sizeof(FILECONTENT));
@@ -229,7 +229,7 @@ VOID	CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2)
 			{	//Two 'FILE's have same name,but we are not sure they are the same,so we compare it!
 				if( ISFILE(lp1->fileattr) && ISFILE(lp2->fileattr) )
 					////(lp1->fileattr&FILE_ATTRIBUTE_DIRECTORY)!=FILE_ATTRIBUTE_DIRECTORY&&(lp2->fileattr&FILE_ATTRIBUTE_DIRECTORY)!=FILE_ATTRIBUTE_DIRECTORY)
-				{	
+				{
 					//Lp1 is file,lp2 is file
 					if(lp1->writetimelow==lp2->writetimelow&&lp1->writetimehigh==lp2->writetimehigh&&
 						lp1->filesizelow==lp2->filesizelow&&lp1->filesizehigh==lp2->filesizehigh&&lp1->fileattr==lp2->fileattr)
@@ -242,14 +242,14 @@ VOID	CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2)
 						lp2->bfilematch=ISMODI;
 						LogToMem(FILEMODI,&nFILEMODI,lp1);
 					}
-					
+
 				}
 				else
 				{
 					//At least one file of the pair is directory,so we try to determine
 					if( ISDIR(lp1->fileattr) && ISDIR(lp2->fileattr))
 						////(lp1->fileattr&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY&&(lp2->fileattr&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY)
-					{	
+					{
 						//The two 'FILE's are all dirs
 						if(lp1->fileattr==lp2->fileattr)
 						{	//Same attributs of dirs,we compare their subfiles
@@ -274,7 +274,7 @@ VOID	CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2)
 							GetAllSubFile(FALSE,DIRADD,FILEADD,&nDIRADD,&nFILEADD,lp2);
 						}
 						else
-						{	
+						{
 							//Lp1 is dir,lp2 is file
 							lp2->bfilematch=ISADD;
 							LogToMem(FILEADD,&nFILEADD,lp2);
@@ -358,9 +358,10 @@ VOID FreeAllFiles(void)
 VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWORD nFPCaller)
 {
 
-	DWORD	nFPHeader,nFPCurrent,nFPTemp4Write,nLenPlus1;
-	
-	
+	DWORD	nFPHeader,nFPCurrent,nFPTemp4Write;
+	size_t	nLenPlus1;
+
+
 	nLenPlus1=strlen(lpFileContent->lpfilename)+1;											//get len+1
 	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
 	nFPTemp4Write=nFPHeader+41;								//10*4+1
@@ -374,14 +375,14 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 	nFPTemp4Write=0;
 	WriteFile(hFileWholeReg,&nFPTemp4Write,1,&NBW,NULL);					//clear and save bfilematch
 	WriteFile(hFileWholeReg,lpFileContent->lpfilename,nLenPlus1,&NBW,NULL);	//Save the current filename
-	
-	
+
+
 	if(lpFileContent->lpfirstsubfile!=NULL)
 	{
 		//pass this filecontent's position as subfile's fatherfile's position and pass the "lpfirstsubfile field"
-		SaveFileContent(lpFileContent->lpfirstsubfile,nFPHeader,nFPHeader+28); 
+		SaveFileContent(lpFileContent->lpfirstsubfile,nFPHeader,nFPHeader+28);
 	}
-		
+
 	if(lpFileContent->lpbrotherfile!=NULL)
 	{
 		// pass this file's fatherfile's position as brother's father and pass "lpbrotherfile field"
@@ -405,7 +406,7 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 		UpdateWindow(hWnd);
 		PeekMessage(&msg,hWnd,WM_ACTIVATE,WM_ACTIVATE,PM_REMOVE);
 	}
-	
+
 
 }
 //--------------------------------------------------
@@ -463,9 +464,9 @@ LPFILECONTENT SearchDirChain(LPSTR lpname,LPHEADFILE lpHF)
 //--------------------------------------------------
 // Walkthrough lpheadfile chain and collect it's first dirname to lpDir
 //--------------------------------------------------
-VOID FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,int nMaxLen)
+VOID FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,size_t nMaxLen)
 {
-	int nLen;
+	size_t nLen;
 	LPHEADFILE lphf;
 	*lpDir=0x00;
 	nLen=0;

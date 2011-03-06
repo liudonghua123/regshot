@@ -76,7 +76,8 @@ VOID	WriteHead(u_char * lpstr,DWORD count,BOOL isHTML)
 //------------------------------------------------------------
 VOID	WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
 {
-	DWORD n,nLen,i;
+	DWORD i;
+	size_t n,nLen;
 	LPBYTE lpstr;
 	LPCOMRESULT lp;
 	if(isHTML)
@@ -96,7 +97,7 @@ VOID	WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
 		else
 			WriteFile(hFile,htm_s2,sizeof(htm_s2)-1,&NBW,NULL);
 		}
-		
+
 		for(n=0;nLen>0;)
 		{
 			nLen<HTMLWRAPLENGTH? (n=nLen):(n=HTMLWRAPLENGTH);
