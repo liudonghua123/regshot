@@ -123,7 +123,7 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 	if(hTest==INVALID_HANDLE_VALUE)
 		return FALSE;
 	CloseHandle(hTest);
-	
+
 	//nFlag=(BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0) //1.7
 	//	|SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1
 	//	|SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<2);
@@ -133,7 +133,7 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 	lpString=MYALLOC0(EXTDIRLEN+2);
 	//sprintf(lpString,"%s=%d",INI_FLAG,nFlag); //1.7 solokey
 	//WritePrivateProfileSection(INI_SETUP,lpString,lpRegshotIni);  //1.7 solokey ,can only have one key.
-	
+
 	//1.8.1
 	sprintf(lpString,"%d",nFlag);
 	WritePrivateProfileString(INI_SETUP,INI_FLAG,lpString,lpRegshotIni);

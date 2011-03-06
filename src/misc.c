@@ -40,9 +40,9 @@ VOID	DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 {
 	DWORD	length;
 	DWORD	nPos;
-	
+
 	hFile = CreateFile(filename,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if( hFile == INVALID_HANDLE_VALUE) 
+	if( hFile == INVALID_HANDLE_VALUE)
 		ErrMsg(lan_errorcreatefile);
 	else
 	{
@@ -51,13 +51,13 @@ VOID	DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 			ErrMsg(lan_errormovefp);
 		else
 		{
-		
+
 			length=strlen(lpstr);
 			WriteFile(hFile,lpstr,length,&NBW,NULL);
 			if(NBW!=length)
 			{
 				//ErrMsg(lan_errorwritefile);
-				
+
 			}
 			if(bisCR==TRUE)
 			WriteFile(hFile,str_CR,sizeof(str_CR)-1,&NBW,NULL);
@@ -74,7 +74,8 @@ VOID	DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 BOOL ReplaceInValidFileName(LPSTR lpf)
 {
 	char lpInvalid[]="\\/:*?\"<>|"; //1.8.2
-	DWORD	i,j,nLen;
+	DWORD	i,j;
+	size_t	nLen;
 	BOOL	bLegal=FALSE;
 	nLen=strlen(lpf);
 	for(i=0;i<nLen;i++)
@@ -97,11 +98,12 @@ BOOL ReplaceInValidFileName(LPSTR lpf)
 //--------------------------------------------------
 LPSTR	AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
 {
-	DWORD	i,j,nsizelp;
+	DWORD	i,j;
+	size_t	nsizelp;
 	nsizelp=strlen(lp);
 	if (size<=nsizelp||nsizelp<1)
 		return NULL;
-	
+
 	for(i=0;i<size-nsizelp;i++)
 	{
 		for(j=0;j<nsizelp;j++)
@@ -114,10 +116,10 @@ LPSTR	AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
 			return lpMaster+i+nsizelp;
 	}
 	return NULL;
-		
+
 }
 
-				
+
 
 //-------------------------------------------------------------
 // Once, I think about to use own memory allocation method

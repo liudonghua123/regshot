@@ -41,7 +41,7 @@ void ShowHideCounters(int nCmdShow) //1.8.2
 	ShowWindow(GetDlgItem(hWnd,IDC_TEXTCOUNT1),nCmdShow);
 	ShowWindow(GetDlgItem(hWnd,IDC_TEXTCOUNT2),nCmdShow);
 	ShowWindow(GetDlgItem(hWnd,IDC_TEXTCOUNT3),nCmdShow);
-}	
+}
 
 //////////////////////////////////////////////////////////////////
 VOID InitProgressBar(VOID)
@@ -107,7 +107,7 @@ VOID	UI_AfterShot(VOID)
 	EnableWindow(GetDlgItem(hWnd,iddef),TRUE);
 	SendMessage(hWnd,DM_SETDEFID,(WPARAM)iddef,(LPARAM)0);
 	SetFocus(GetDlgItem(hWnd,iddef));
-	SetCursor(hSaveCursor);					
+	SetCursor(hSaveCursor);
 	MessageBeep(0xffffffff);
 }
 //--------------------------------------------------
@@ -134,7 +134,7 @@ VOID	UI_AfterClear(VOID)
 		iddef=IDC_2NDSHOT;
 	EnableWindow(GetDlgItem(hWnd,iddef),TRUE);
 	EnableWindow(GetDlgItem(hWnd,IDC_COMPARE),FALSE);
-	
+
 	if(lpHeadLocalMachine1==NULL&&lpHeadLocalMachine2==NULL)
 	{
 		EnableWindow(GetDlgItem(hWnd,IDC_2NDSHOT),FALSE);
@@ -149,16 +149,16 @@ VOID	UI_AfterClear(VOID)
 
 	SetFocus(GetDlgItem(hWnd,iddef));
 	SendMessage(hWnd,DM_SETDEFID,(WPARAM)iddef,(LPARAM)0);
-	SetCursor(hSaveCursor);					
+	SetCursor(hSaveCursor);
 	MessageBeep(0xffffffff);
 }
 
 VOID	Shot1(VOID)
 {
-	UINT	nLengthofStr;	
+	size_t	nLengthofStr;
 	lpHeadLocalMachine1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 	lpHeadUsers1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
-	
+
 	if(bUseLongRegHead) //1.8.1
 	{
 		lpHeadLocalMachine1->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING_LONG));
@@ -179,7 +179,7 @@ VOID	Shot1(VOID)
 	nBASETIME=GetTickCount();
 	nBASETIME1=nBASETIME;
 	UI_BeforeShot(IDC_1STSHOT);
-					
+
 	GetRegistrySnap(HKEY_LOCAL_MACHINE,lpHeadLocalMachine1);
 	GetRegistrySnap(HKEY_USERS,lpHeadUsers1);
 	nGettingTime=GetTickCount();
@@ -187,7 +187,8 @@ VOID	Shot1(VOID)
 
 	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
 	{
-		DWORD nSubExtDirLen,i;
+		size_t nSubExtDirLen;
+		DWORD i;
 		LPSTR lpSubExtDir;
 		LPHEADFILE lphf,lphftemp;
 
@@ -196,7 +197,7 @@ VOID	Shot1(VOID)
 
 		lphf=lphftemp=lpHeadFile1; // changed in 1.8
 		lpSubExtDir=lpExtDir;
-						
+
 		if(nLengthofStr>0)
 		for(i=0;i<=nLengthofStr;i++)
 		{
@@ -204,7 +205,7 @@ VOID	Shot1(VOID)
 			if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00)
 			{
 				*(lpExtDir+i)=0x00;
-								
+
 				if(*(lpExtDir+i-1)=='\\'&&i>0)
 					*(lpExtDir+i-1)=0x00;
 
@@ -216,7 +217,7 @@ VOID	Shot1(VOID)
 					else
 						lphftemp->lpnextheadfile=lphf;
 
-					lphftemp=lphf;	
+					lphftemp=lphf;
 					lphf->lpfilecontent=(LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
 					//lphf->lpfilecontent2=(LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
 
@@ -247,14 +248,14 @@ VOID	Shot1(VOID)
 	GetUserName(lpUserName1,&NBW);
 
 	UI_AfterShot();
-					
+
 
 }
 
 // -----------------------------
 VOID	Shot2(VOID)
 {
-	UINT	nLengthofStr;	
+	size_t	nLengthofStr;
 	lpHeadLocalMachine2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 	lpHeadUsers2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
@@ -272,8 +273,8 @@ VOID	Shot2(VOID)
 		strcpy(lpHeadLocalMachine2->lpkeyname,LOCALMACHINESTRING);
 		strcpy(lpHeadUsers2->lpkeyname,USERSSTRING);
 	}
-	
-	
+
+
 	nGettingKey=2;nGettingValue=0;nGettingTime=0;nGettingFile=0,nGettingDir=0;
 	nBASETIME=GetTickCount();
 	nBASETIME1=nBASETIME;
@@ -286,7 +287,8 @@ VOID	Shot2(VOID)
 
 	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
 	{
-		DWORD nSubExtDirLen,i;
+		size_t nSubExtDirLen;
+		DWORD i;
 		LPSTR lpSubExtDir;
 		LPHEADFILE lphf,lphftemp;
 
@@ -295,7 +297,7 @@ VOID	Shot2(VOID)
 
 		lphf=lphftemp=lpHeadFile1; // changed in 1.8
 		lpSubExtDir=lpExtDir;
-						
+
 		if(nLengthofStr>0)
 		for(i=0;i<=nLengthofStr;i++)
 		{
@@ -303,7 +305,7 @@ VOID	Shot2(VOID)
 			if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00)
 			{
 				*(lpExtDir+i)=0x00;
-								
+
 				if(*(lpExtDir+i-1)=='\\'&&i>0)
 					*(lpExtDir+i-1)=0x00;
 
@@ -315,7 +317,7 @@ VOID	Shot2(VOID)
 					else
 						lphftemp->lpnextheadfile=lphf;
 
-					lphftemp=lphf;	
+					lphftemp=lphf;
 					lphf->lpfilecontent=(LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
 
 					nSubExtDirLen=strlen(lpSubExtDir)+1;
@@ -336,13 +338,13 @@ VOID	Shot2(VOID)
 		}
 	}
 
-					
-	
+
+
 	NBW=COMPUTERNAMELEN;
 	GetSystemTime(lpSystemtime2);
 	GetComputerName(lpComputerName2,&NBW);
 	GetUserName(lpUserName2,&NBW);
-	UI_AfterShot();				
+	UI_AfterShot();
 }
 
 

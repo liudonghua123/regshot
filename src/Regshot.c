@@ -58,7 +58,7 @@ LPSTR	GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 {
 	LPKEYCONTENT lpf;
 	LPSTR	lpName,lptail;
-	int nLen=0;
+	size_t nLen=0;
 
 	for(lpf=lpKeyContent;lpf!=NULL;lpf=lpf->lpfatherkey)
 		nLen+=strlen(lpf->lpkeyname)+1;
@@ -86,7 +86,7 @@ LPSTR	GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 LPSTR	GetWholeValueName(LPVALUECONTENT lpValueContent)
 {
 	LPKEYCONTENT lpf;
-	int nWholeLen,nLen;
+	size_t	nWholeLen,nLen;
 	LPSTR	lpName,lptail;
 	nLen=strlen(lpValueContent->lpvaluename);
 	nWholeLen=nLen+1;
@@ -472,7 +472,6 @@ VOID FreeAllKeyContent1(void)
 	*lpComputerName1=0;*lpUserName1=0;
 
 }
-
 VOID FreeAllKeyContent2(void)
 {
 
@@ -491,7 +490,6 @@ VOID FreeAllKeyContent2(void)
 	*lpComputerName2=0;*lpUserName2=0;
 
 }
-
 VOID FreeAllCompareResults(void)
 {
 	FreeAllCom(lpKEYADDHEAD);
@@ -656,7 +654,8 @@ BOOL CompareShots(void)
 {
 	BOOL	isHTML,bshot2isnewer;//,bSaveWithCommentName;
 	LPSTR	lpstrcomp,lpExt,lpDestFileName;
-	DWORD	buffersize=2048,nTotal,filetail=0,nLengthofStr;
+	DWORD	buffersize=2048,nTotal,filetail=0;
+	size_t	nLengthofStr;
 	LPHEADFILE	lphf1,lphf2;
 	LPFILECONTENT lpfc1,lpfc2;
 	FILETIME ftime1,ftime2;
@@ -790,9 +789,9 @@ BOOL CompareShots(void)
 	{
 		for (filetail=0;filetail<MAXAMOUNTOFFILE;filetail++)
 		{
-			sprintf(lpDestFileName+nLengthofStr,"%04d",filetail);
-			//*(lpDestFileName+nLengthofStr+4)=0x00;
-			strcpy(lpDestFileName+nLengthofStr+4,lpExt);
+			sprintf(lpDestFileName+nLengthofStr,"_%04d",filetail);
+			//*(lpDestFileName+nLengthofStr+5)=0x00;
+			strcpy(lpDestFileName+nLengthofStr+5,lpExt);
 
 			hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile == INVALID_HANDLE_VALUE)
@@ -1132,7 +1131,8 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCaller)
 {
 
-	DWORD	nFPHeader,nFPCurrent,nFPTemp4Write,nLenPlus1;
+	DWORD	nFPHeader,nFPCurrent;
+	size_t	nFPTemp4Write,nLenPlus1;
 	LPVALUECONTENT lpv;
 
 
@@ -1489,3 +1489,4 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 	return(bRet);
 
 }
+

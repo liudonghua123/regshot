@@ -113,17 +113,17 @@ unsigned char lan_default[][22]=
 
 
 //--------------------------------------------------
-// Get language types 
+// Get language types
 //--------------------------------------------------
 BOOL	GetLanguageType(HWND hDlg)
 {
-	DWORD	nReturn;
+	LRESULT	nReturn;
 	BOOL	bRet;
 	LPSTR	lp;
 	LPSTR	lpSectionNames=MYALLOC0(SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER);
 	//LPSTR	lpCurrentLanguage=MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
 
-	
+
 	nReturn=GetPrivateProfileSectionNames(lpSectionNames,SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER,lpIni);
 	if (nReturn>1)
 	{
@@ -153,7 +153,7 @@ BOOL	GetLanguageType(HWND hDlg)
 	MYFREE(lpSectionNames);
 	//MYFREE(lpCurrentLanguage);
 	return bRet;
-	
+
 }
 //--------------------------------------------------
 // Routines that show multi language
@@ -240,13 +240,14 @@ VOID	PointToNewStrings(VOID)
 	lan_menuclearshot2	=(u_char *)(*lp);
 
 }
-				
+
 //--------------------------------------------------
 // Routines that show multi language
 //--------------------------------------------------
 BOOL	GetLanguageStrings(HWND hDlg)
 {
-	DWORD	nIndex,i;
+	LRESULT	nIndex;
+	DWORD	i;
 	BOOL	bRet;
 	LPSTR	lpReturn;
 	LPDWORD lp;
@@ -256,15 +257,15 @@ BOOL	GetLanguageStrings(HWND hDlg)
 	nIndex=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETCURSEL,(WPARAM)0,(LPARAM)0);
 	if (nIndex!=CB_ERR)
 	{
-		
+
 		SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETLBTEXT,(WPARAM)nIndex,(LPARAM)lpCurrentLanguage);
 		WritePrivateProfileString(str_SectionCurrent,str_SectionCurrent,lpCurrentLanguage,lpIni);
 		ZeroMemory(lpFreeStrings,SIZEOF_FREESTRINGS);
 		GetPrivateProfileSection(lpCurrentLanguage,lpFreeStrings,SIZEOF_FREESTRINGS,lpIni);
 		for(i=1,lp=ldwTempStrings;i<47;i++)
 		{
-			
-			sprintf(lpIniKey,"%d%s",i,"="); 
+
+			sprintf(lpIniKey,"%d%s",i,"=");
 			//pointer returned was pointed to char just after "="
 			if((lpReturn=AtPos(lpFreeStrings,lpIniKey,SIZEOF_FREESTRINGS))!=NULL)
 			{
@@ -273,7 +274,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 			}
 			else
 				*(lp+i-1)=(DWORD)lan_default[i-1];
-			
+
 			if(i>=28&&i<41&&i!=34)
 			{
 				SetDlgItemText(hDlg,ID_BASE+3+i-28,(LPSTR)(*(lp+i-1)));
@@ -281,7 +282,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 
 
 		}
-		
+
 		lpReturn=AtPos(lpFreeStrings,str_ItemTranslator,SIZEOF_FREESTRINGS);
 		lpCurrentTranslator=(lpReturn!=NULL)?(lpReturn+1):str_Original;
 		PointToNewStrings();
