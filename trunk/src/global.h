@@ -24,17 +24,6 @@
 #include <shlobj.h>
 #include "resource.h"
 
-// Platform suffix, see http://msdn.microsoft.com/library/b0084kay.aspx
-#ifdef _WIN64
-#ifdef _M_IA64
-#define PLATFORM_SUFFIX "IA64"
-#else	// _M_IA64
-#define PLATFORM_SUFFIX "64"
-#endif	// _M_IA64
-#else	// _WIN64
-#define PLATFORM_SUFFIX "32"
-#endif	// _WIN64
-
 #ifndef GCLP_HICON
 #define GCLP_HICON GCL_HICON
 #endif
