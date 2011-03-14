@@ -25,6 +25,7 @@
 */
 
 #include "global.h"
+#include "version.h"
 
 char *str_prgname="Regshot" PLATFORM_SUFFIX " " REGSHOT_VERSION_STRING; //tfx 程序标题
 char *str_aboutme="Regshot is a free and open source registry compare utility.\n\n\
@@ -514,7 +515,7 @@ int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	hHeap=GetProcessHeap(); //1.8.2
 	hWnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,(WNDPROC)DialogProc);
 
-	SetClassLong(hWnd,GCLP_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_ICON1)));
+	SetClassLong(hWnd,GCLP_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAINICON)));
 
 	SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
 	ShowWindow(hWnd,nCmdShow);
