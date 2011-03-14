@@ -63,52 +63,52 @@ u_char *	lan_menuclearshot2;
 //This is the dimension for MultiLanguage Default Strings[English]
 unsigned char lan_default[][22]=
 {
-"Keys:",
-"Values:",
-"Dirs:",
-"Files:",
-"Time:",
-"Keys added:",
-"Keys deleted:",
-"Values added:",
-"Values deleted:",
-"Values modified:",
-"Files added:",
-"Files deleted:",
-"Files[attr]modified:",
-"Folders added:",
-"Folders deleted:",
-"Folders[attr]changed:",
-"Total changes:",
-"Comments:",
-"Datetime:",
-"Computer:",
-"Username:",
-"About",
-"Error",
-"Error call ex-viewer",
-"Error create file",
-"Error open file",
-"Error move fp",
-"&1st shot",
-"&2nd shot",
-"c&Ompare",
-"&Clear",
-"&Quit",
-"&About",
-"&Monitor",
-"Compare logs save as:",
-"Output path:",
-"Add comment into log:",
-"Plain &TXT",
-"&HTML document",
-"&Scan dir1[;dir2;...]",
-"&Shot",
-"Shot and Sa&ve...",
-"Loa&d...",
-"&Clear All",
-"Clear &1st shot",
-"Clear &2nd shot"
+	"Keys:",
+	"Values:",
+	"Dirs:",
+	"Files:",
+	"Time:",
+	"Keys added:",
+	"Keys deleted:",
+	"Values added:",
+	"Values deleted:",
+	"Values modified:",
+	"Files added:",
+	"Files deleted:",
+	"Files[attr]modified:",
+	"Folders added:",
+	"Folders deleted:",
+	"Folders[attr]changed:",
+	"Total changes:",
+	"Comments:",
+	"Datetime:",
+	"Computer:",
+	"Username:",
+	"About",
+	"Error",
+	"Error call ex-viewer",
+	"Error create file",
+	"Error open file",
+	"Error move fp",
+	"&1st shot",
+	"&2nd shot",
+	"c&Ompare",
+	"&Clear",
+	"&Quit",
+	"&About",
+	"&Monitor",
+	"Compare logs save as:",
+	"Output path:",
+	"Add comment into log:",
+	"Plain &TXT",
+	"&HTML document",
+	"&Scan dir1[;dir2;...]",
+	"&Shot",
+	"Shot and Sa&ve...",
+	"Loa&d...",
+	"&Clear All",
+	"Clear &1st shot",
+	"Clear &2nd shot"
 };
 
 
@@ -128,13 +128,14 @@ BOOL	GetLanguageType(HWND hDlg)
 	if (nReturn>1)
 	{
 		bRet=TRUE;
-		for(lp=lpSectionNames;*lp!=0;lp=lp+strlen(lp)+1)
+		for(lp=lpSectionNames; *lp!=0; lp=lp+strlen(lp)+1)
 		{
-			if(strcmpi(lp,str_SectionCurrent)!=0)
-			SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_ADDSTRING,(WPARAM)0,(LPARAM)lp);
+			if(strcmpi(lp,str_SectionCurrent)!=0) {
+				SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_ADDSTRING,(WPARAM)0,(LPARAM)lp);
+			}
 		}
 		GetPrivateProfileString(str_SectionCurrent,str_SectionCurrent,
-							str_DefaultLanguage,lpCurrentLanguage,16,lpIni);
+								str_DefaultLanguage,lpCurrentLanguage,16,lpIni);
 
 		nReturn=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_FINDSTRINGEXACT,(WPARAM)0,(LPARAM)lpCurrentLanguage);
 		if (nReturn!=CB_ERR)
@@ -142,12 +143,14 @@ BOOL	GetLanguageType(HWND hDlg)
 			bRet=TRUE;
 			SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_SETCURSEL,(WPARAM)nReturn,(LPARAM)0);
 		}
-		else
+		else {
 			bRet=FALSE;
+		}
 
 	}
-	else
+	else {
 		bRet=FALSE;
+	}
 
 
 	MYFREE(lpSectionNames);
@@ -205,38 +208,70 @@ VOID	GetDefaultStrings(VOID)
 VOID	PointToNewStrings(VOID)
 {
 	LPDWORD	lp=ldwTempStrings;
-	lan_key				=(u_char *)(*lp);lp++;
-	lan_value			=(u_char *)(*lp);lp++;
-	lan_dir				=(u_char *)(*lp);lp++;
-	lan_file			=(u_char *)(*lp);lp++;
-	lan_time			=(u_char *)(*lp);lp++;
-	lan_keyadd			=(u_char *)(*lp);lp++;
-	lan_keydel			=(u_char *)(*lp);lp++;
-	lan_valadd			=(u_char *)(*lp);lp++;
-	lan_valdel			=(u_char *)(*lp);lp++;
-	lan_valmodi			=(u_char *)(*lp);lp++;
-	lan_fileadd			=(u_char *)(*lp);lp++;
-	lan_filedel			=(u_char *)(*lp);lp++;
-	lan_filemodi		=(u_char *)(*lp);lp++;
-	lan_diradd			=(u_char *)(*lp);lp++;
-	lan_dirdel			=(u_char *)(*lp);lp++;
-	lan_dirmodi			=(u_char *)(*lp);lp++;
-	lan_total			=(u_char *)(*lp);lp++;
-	lan_comments		=(u_char *)(*lp);lp++;
-	lan_datetime		=(u_char *)(*lp);lp++;
-	lan_computer		=(u_char *)(*lp);lp++;
-	lan_username		=(u_char *)(*lp);lp++;
-	lan_about			=(u_char *)(*lp);lp++;
-	lan_error			=(u_char *)(*lp);lp++;
-	lan_errorexecviewer	=(u_char *)(*lp);lp++;
-	lan_errorcreatefile	=(u_char *)(*lp);lp++;
-	lan_erroropenfile	=(u_char *)(*lp);lp++;
-	lan_errormovefp		=(u_char *)(*lp);lp+=14;
-	lan_menushot		=(u_char *)(*lp);lp++;
-	lan_menushotsave	=(u_char *)(*lp);lp++;
-	lan_menuload		=(u_char *)(*lp);lp++;
-	lan_menuclearallshots=(u_char *)(*lp);lp++;
-	lan_menuclearshot1	=(u_char *)(*lp);lp++;
+	lan_key				=(u_char *)(*lp);
+	lp++;
+	lan_value			=(u_char *)(*lp);
+	lp++;
+	lan_dir				=(u_char *)(*lp);
+	lp++;
+	lan_file			=(u_char *)(*lp);
+	lp++;
+	lan_time			=(u_char *)(*lp);
+	lp++;
+	lan_keyadd			=(u_char *)(*lp);
+	lp++;
+	lan_keydel			=(u_char *)(*lp);
+	lp++;
+	lan_valadd			=(u_char *)(*lp);
+	lp++;
+	lan_valdel			=(u_char *)(*lp);
+	lp++;
+	lan_valmodi			=(u_char *)(*lp);
+	lp++;
+	lan_fileadd			=(u_char *)(*lp);
+	lp++;
+	lan_filedel			=(u_char *)(*lp);
+	lp++;
+	lan_filemodi		=(u_char *)(*lp);
+	lp++;
+	lan_diradd			=(u_char *)(*lp);
+	lp++;
+	lan_dirdel			=(u_char *)(*lp);
+	lp++;
+	lan_dirmodi			=(u_char *)(*lp);
+	lp++;
+	lan_total			=(u_char *)(*lp);
+	lp++;
+	lan_comments		=(u_char *)(*lp);
+	lp++;
+	lan_datetime		=(u_char *)(*lp);
+	lp++;
+	lan_computer		=(u_char *)(*lp);
+	lp++;
+	lan_username		=(u_char *)(*lp);
+	lp++;
+	lan_about			=(u_char *)(*lp);
+	lp++;
+	lan_error			=(u_char *)(*lp);
+	lp++;
+	lan_errorexecviewer	=(u_char *)(*lp);
+	lp++;
+	lan_errorcreatefile	=(u_char *)(*lp);
+	lp++;
+	lan_erroropenfile	=(u_char *)(*lp);
+	lp++;
+	lan_errormovefp		=(u_char *)(*lp);
+	lp+=14;
+	lan_menushot		=(u_char *)(*lp);
+	lp++;
+	lan_menushotsave	=(u_char *)(*lp);
+	lp++;
+	lan_menuload		=(u_char *)(*lp);
+	lp++;
+	lan_menuclearallshots=(u_char *)(*lp);
+	lp++;
+	lan_menuclearshot1	=(u_char *)(*lp);
+	lp++;
 	lan_menuclearshot2	=(u_char *)(*lp);
 
 }
@@ -262,7 +297,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 		WritePrivateProfileString(str_SectionCurrent,str_SectionCurrent,lpCurrentLanguage,lpIni);
 		ZeroMemory(lpFreeStrings,SIZEOF_FREESTRINGS);
 		GetPrivateProfileSection(lpCurrentLanguage,lpFreeStrings,SIZEOF_FREESTRINGS,lpIni);
-		for(i=1,lp=ldwTempStrings;i<47;i++)
+		for(i=1,lp=ldwTempStrings; i<47; i++)
 		{
 
 			sprintf(lpIniKey,"%d%s",i,"=");
@@ -272,8 +307,9 @@ BOOL	GetLanguageStrings(HWND hDlg)
 				//_asm int 3;
 				*(lp+i-1)=(DWORD)lpReturn;
 			}
-			else
+			else {
 				*(lp+i-1)=(DWORD)lan_default[i-1];
+			}
 
 			if(i>=28&&i<41&&i!=34)
 			{
@@ -288,8 +324,9 @@ BOOL	GetLanguageStrings(HWND hDlg)
 		PointToNewStrings();
 		bRet=TRUE;
 	}
-	else
+	else {
 		bRet=FALSE;
+	}
 	//MYFREE(lpCurrentLanguage);
 	//MYFREE(lpIniKey);
 	return bRet;
