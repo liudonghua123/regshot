@@ -517,5 +517,5 @@ int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 			DispatchMessage(&msg);
 		}
 	}
-	return(msg.wParam);
+	return(int)(msg.wParam);
 }
