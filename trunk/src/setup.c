@@ -163,4 +163,3 @@ BOOL IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList) //tfx Ìø¹ýºÚÃûµ¥
 	}
 	return FALSE;
 }
-

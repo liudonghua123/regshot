@@ -52,6 +52,7 @@ extern u_char * lan_erroropenfile;
 extern char *str_prgname; // be careful of extern ref! must be the same when declare them,otherwise pointer would mis-point!
 extern char	str_CR[];
 
+
 //-------------------------------------------------------------
 //Routine to Get Whole Key Name from KEYCONTENT
 //-------------------------------------------------------------
@@ -112,6 +113,7 @@ LPSTR	GetWholeValueName(LPVALUECONTENT lpValueContent)
 	}
 	return lpName;
 }
+
 
 //-------------------------------------------------------------
 //Routine Trans VALUECONTENT.data[which in binary] into strings
@@ -224,7 +226,6 @@ LPSTR	GetWholeValueData(LPVALUECONTENT lpValueContent)
 //-------------------------------------------------------------
 //Routine to create new compare result,distribute to different lp???MODI
 //-------------------------------------------------------------
-
 VOID	CreateNewResult(DWORD actiontype,LPDWORD lpcount,LPSTR lpresult)
 {
 	LPCOMRESULT	lpnew;
@@ -340,6 +341,7 @@ VOID	GetAllSubName(
 	}
 }
 
+
 //-------------------------------------------------------------
 //Routine to walk through all values of current key
 //-------------------------------------------------------------
@@ -368,6 +370,7 @@ VOID	FreeAllCom(LPCOMRESULT lpComResult)
 	}
 
 }
+
 
 //-------------------------------------------------------------
 //Routine to Free All Keys and Values
@@ -417,6 +420,8 @@ VOID ClearKeyMatchTag(LPKEYCONTENT lpKey)
 		}
 	}
 }
+
+
 //-------------------------------------------------------------
 //Clear Filematch Flag (core)
 //-------------------------------------------------------------
@@ -430,6 +435,8 @@ VOID ClearFileContentMatchTag(LPFILECONTENT lpFC)
 		ClearFileContentMatchTag(lpFC->lpbrotherfile);
 	}
 }
+
+
 //-------------------------------------------------------------
 //Clear Filematch Flag previous made by Compare Routine for the next compare
 //-------------------------------------------------------------
@@ -459,6 +466,7 @@ VOID FreeAllKeyContent1(void)
 	*lpUserName1=0;
 
 }
+
 VOID FreeAllKeyContent2(void)
 {
 
@@ -476,6 +484,7 @@ VOID FreeAllKeyContent2(void)
 	*lpUserName2=0;
 
 }
+
 VOID FreeAllCompareResults(void)
 {
 	FreeAllCom(lpKEYADDHEAD);
@@ -519,7 +528,6 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 //Registry Compare Engine
 //-------------------------------------------------------------
-
 VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 {
 	LPKEYCONTENT	lp1,lp2;
@@ -639,8 +647,6 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1,LPKEYCONTENT lpHead2)
 	return NULL;
 }
 
-
-/**/
 
 //------------------------------------------------------------
 // Routine to call Registry/File Compare Engine
@@ -932,11 +938,7 @@ BOOL CompareShots(void)
 	return TRUE;
 }
 
-/**/
 
-
-
-/**/
 //------------------------------------------------------------
 //Registry Shot Engine
 //------------------------------------------------------------
@@ -1096,7 +1098,6 @@ VOID	GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent)
 }
 
 
-
 //--------------------------------------------------
 //Registry Save Engine (It is rather stupid!)
 //--------------------------------------------------
@@ -1108,9 +1109,9 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	LPVALUECONTENT lpv;
 
 
-	nLenPlus1=strlen(lpKeyContent->lpkeyname)+1;											//get len+1
-	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
-	nFPTemp4Write=nFPHeader+21;								//5*4+1
+	nLenPlus1=strlen(lpKeyContent->lpkeyname)+1;							//get len+1
+	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);			//save head fp
+	nFPTemp4Write=nFPHeader+21;												//5*4+1
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpkeyname
 	nFPTemp4Write=(lpKeyContent->lpfirstvalue!=NULL) ? (nFPHeader+21+nLenPlus1):0;			//We write lpkeyname plus a "\0"
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpfirstvalue
@@ -1125,11 +1126,11 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	//Save the sub-value of current KeyContent
 	for(lpv=lpKeyContent->lpfirstvalue; lpv!=NULL; lpv=lpv->lpnextvalue) {
 		nLenPlus1=strlen(lpv->lpvaluename)+1;
-		nFPCurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);						//save  fp
+		nFPCurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);		//save  fp
 		WriteFile(hFileWholeReg,(LPBYTE)lpv,8,&NBW,NULL);
-		nFPTemp4Write=nFPCurrent+25;														//6*4+1
+		nFPTemp4Write=nFPCurrent+25;										//6*4+1
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//save location of lpvaluename
-		nFPTemp4Write=(lpv->datasize>0)?(nFPCurrent+25+nLenPlus1):0;						//if no lpvaluedata,we write 0
+		nFPTemp4Write=(lpv->datasize>0)?(nFPCurrent+25+nLenPlus1):0;		//if no lpvaluedata,we write 0
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//save location of lpvaluedata
 		nFPTemp4Write=(lpv->lpnextvalue!=NULL)?(nFPCurrent+25+nLenPlus1+lpv->datasize):0;	//if no nextvalue we write 0
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//save location of next subvalue
@@ -1138,7 +1139,7 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 		nFPTemp4Write=0;
 		WriteFile(hFileWholeReg,&nFPTemp4Write,1,&NBW,NULL);				//clear and save bvaluematch
 		WriteFile(hFileWholeReg,lpv->lpvaluename,nLenPlus1,&NBW,NULL);		//save lpvaluename
-		WriteFile(hFileWholeReg,lpv->lpvaluedata,lpv->datasize,&NBW,NULL); //save lpvaluedata
+		WriteFile(hFileWholeReg,lpv->lpvaluedata,lpv->datasize,&NBW,NULL);	//save lpvaluedata
 
 	}
 
@@ -1168,6 +1169,8 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 		}
 
 }
+
+
 //--------------------------------------------------
 //Routine to call Registry Save Engine and file save engine
 //--------------------------------------------------
@@ -1276,6 +1279,7 @@ VOID	SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER,
 	}
 }
 
+
 //--------------------------------------------------
 //ReAlign key&value content after Loading from hive file
 //--------------------------------------------------
@@ -1333,6 +1337,7 @@ VOID ReAlignReg(LPKEYCONTENT lpKey,DWORD nBase)
 		ReAlignReg(lpKey->lpbrotherkey,nBase);
 	}
 }
+
 
 //----------------------------------------------------------------------------------------------------
 //Load Registry From HIVE file (After this,We should realign the data in memory)
@@ -1432,7 +1437,6 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 				}
 
 
-
 				if(is1) {
 					//Use copymemory in 1.8,old version direct point to ,which is wrong
 					CopyMemory(lpComputerName1,*lpHive+32,COMPUTERNAMELEN);
@@ -1454,7 +1458,6 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 			bRet=FALSE;
 		}
 
-
 	} else {
 		bRet=FALSE;
 	};
@@ -1466,4 +1469,3 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER,
 	return(bRet);
 
 }
-
