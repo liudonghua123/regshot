@@ -20,6 +20,7 @@
 */
 
 #include "global.h"
+
 extern LPSTR lan_time;
 extern LPSTR lan_key;
 extern LPSTR lan_value;
@@ -30,10 +31,10 @@ extern LPSTR lan_menushotsave;
 extern LPSTR lan_menuload;
 
 
-char USERSSTRING_LONG[]="HKEY_USERS";  //1.6 using long name, so in 1.8.1 an option in regshot.ini "UseLongRegHead" control this
+char USERSSTRING_LONG[]="HKEY_USERS"; 		//1.6 using long name, so in 1.8.1 an option in regshot.ini "UseLongRegHead" control this
 char LOCALMACHINESTRING_LONG[]="HKEY_LOCAL_MACHINE";
-char USERSSTRING[]="HKU"; //="HKEY_USERS"; // 1.7 using short name tfx, a good idea
-char LOCALMACHINESTRING[]="HKLM"; //="HKEY_LOCAL_MACHINE";
+char USERSSTRING[]="HKU"; //="HKEY_USERS";	// 1.7 using short name tfx, a good idea
+char LOCALMACHINESTRING[]="HKLM";			//="HKEY_LOCAL_MACHINE";
 
 
 void ShowHideCounters(int nCmdShow) //1.8.2
@@ -42,6 +43,7 @@ void ShowHideCounters(int nCmdShow) //1.8.2
 	ShowWindow(GetDlgItem(hWnd,IDC_TEXTCOUNT2),nCmdShow);
 	ShowWindow(GetDlgItem(hWnd,IDC_TEXTCOUNT3),nCmdShow);
 }
+
 
 //////////////////////////////////////////////////////////////////
 VOID InitProgressBar(VOID)
@@ -57,6 +59,7 @@ VOID InitProgressBar(VOID)
 	SendDlgItemMessage(hWnd,IDC_PBCOMPARE,PBM_SETSTEP,(WPARAM)1,(LPARAM)0);
 	ShowWindow(GetDlgItem(hWnd,IDC_PBCOMPARE),SW_SHOW);
 }
+
 
 ////////////////////////////////////////////////////////////////// renamed from showcounters() at 1.8.2
 void UpdateCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2)
@@ -91,6 +94,8 @@ VOID	UI_BeforeShot(DWORD id)
 	SendDlgItemMessage(hWnd,IDC_TEXTCOUNT3,WM_SETTEXT,(WPARAM)0,(LPARAM)lpMESSAGE);
 	ShowHideCounters(SW_SHOW);
 }
+
+
 //--------------------------------------------------
 // Reset the GUI after the shot had been taken
 //--------------------------------------------------
@@ -111,6 +116,8 @@ VOID	UI_AfterShot(VOID)
 	SetCursor(hSaveCursor);
 	MessageBeep(0xffffffff);
 }
+
+
 //--------------------------------------------------
 // Prepare the GUI for Clearing
 //--------------------------------------------------
@@ -122,6 +129,8 @@ VOID	UI_BeforeClear(VOID)
 	ShowHideCounters(SW_HIDE);
 	UpdateWindow(hWnd);
 }
+
+
 //--------------------------------------------------
 // Reset the GUI after the clearing
 //--------------------------------------------------
@@ -153,6 +162,7 @@ VOID	UI_AfterClear(VOID)
 	SetCursor(hSaveCursor);
 	MessageBeep(0xffffffff);
 }
+
 
 VOID	Shot1(VOID)
 {
@@ -235,9 +245,7 @@ VOID	Shot1(VOID)
 						UpdateCounters(lan_dir,lan_file,nGettingDir,nGettingFile);
 					}
 					lpSubExtDir=lpExtDir+i+1;
-
 				}
-
 			}
 	}
 
@@ -248,8 +256,8 @@ VOID	Shot1(VOID)
 
 	UI_AfterShot();
 
-
 }
+
 
 // -----------------------------
 VOID	Shot2(VOID)
@@ -329,13 +337,9 @@ VOID	Shot2(VOID)
 						UpdateCounters(lan_dir,lan_file,nGettingDir,nGettingFile);
 					}
 					lpSubExtDir=lpExtDir+i+1;
-
 				}
-
 			}
 	}
-
-
 
 	NBW=COMPUTERNAMELEN;
 	GetSystemTime(lpSystemtime2);
@@ -357,5 +361,3 @@ VOID CreateShotPopupMenu(VOID)
 	AppendMenu(hMenu,MF_STRING,IDM_LOAD,lan_menuload);
 	SetMenuDefaultItem(hMenu,IDM_SHOTONLY,FALSE);
 }
-
-

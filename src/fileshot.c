@@ -26,6 +26,7 @@
 extern u_char * lan_dir;
 extern u_char * lan_file;
 
+
 //-------------------------------------------------------------
 // Routine to get Whole File Name[root dir] from a FILECONTENT
 //-------------------------------------------------------------
@@ -93,7 +94,6 @@ VOID	GetAllSubFile(
 
 
 }
-
 
 
 //------------------------------------------------------------
@@ -298,6 +298,7 @@ VOID	CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2)
 
 }
 
+
 //-------------------------------------------------------------
 // Routines to Free All File tree
 //-------------------------------------------------------------
@@ -310,6 +311,7 @@ VOID FreeAllFileContent(LPFILECONTENT lpFile)
 		MYFREE(lpFile);
 	}
 }
+
 
 //-------------------------------------------------------------
 // Routines to Free Head Files
@@ -324,6 +326,7 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 	}
 
 }
+
 /*
 VOID FreeAllFiles(void)
 {
@@ -331,6 +334,7 @@ VOID FreeAllFiles(void)
 	lpHeadFile=NULL;
 }
 */
+
 
 //--------------------------------------------------
 //File Save Engine (It is stupid again!) added in 1.8
@@ -342,11 +346,11 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 	size_t	nLenPlus1;
 
 
-	nLenPlus1=strlen(lpFileContent->lpfilename)+1;											//get len+1
-	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);							//save head fp
-	nFPTemp4Write=nFPHeader+41;								//10*4+1
+	nLenPlus1=strlen(lpFileContent->lpfilename)+1;							//get len+1
+	nFPHeader=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);			//save head fp
+	nFPTemp4Write=nFPHeader+41;												//10*4+1
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpfilename
-	WriteFile(hFileWholeReg,(LPBYTE)lpFileContent+4,24,&NBW,NULL);	//Write time,size etc. 6*4
+	WriteFile(hFileWholeReg,(LPBYTE)lpFileContent+4,24,&NBW,NULL);			//Write time,size etc. 6*4
 
 	//nFPTemp4Write=(lpFileContent->lpfirstsubfile!=NULL) ? (nFPHeader+41+nLenPlus1):0;			//We write lpfilename plus a "\0"
 	//WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//save location of lpfirstsubfile
@@ -383,8 +387,9 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 			PeekMessage(&msg,hWnd,WM_ACTIVATE,WM_ACTIVATE,PM_REMOVE);
 		}
 
-
 }
+
+
 //--------------------------------------------------
 //ReAlign filecontent,called by realignfile()
 //--------------------------------------------------
@@ -416,6 +421,8 @@ VOID ReAlignFileContent(LPFILECONTENT lpFC,DWORD nBase)
 	}
 
 }
+
+
 //--------------------------------------------------
 //ReAlign file,walkthrough chain
 //--------------------------------------------------
@@ -455,6 +462,7 @@ LPFILECONTENT SearchDirChain(LPSTR lpname,LPHEADFILE lpHF)
 	return NULL;
 }
 
+
 //--------------------------------------------------
 // Walkthrough lpheadfile chain and collect it's first dirname to lpDir
 //--------------------------------------------------
@@ -491,4 +499,3 @@ BOOL DirChainMatch(LPHEADFILE lphf1,LPHEADFILE lphf2)
 		return TRUE;
 	}
 }
-

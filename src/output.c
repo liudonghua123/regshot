@@ -47,6 +47,7 @@ char htm_s2[]="<span class=n>";
 char htm_s3[]="</span>\r\n";
 //char htm_website[]="<FONT COLOR=C8C8C8>Bug reports to:<A HREF=\"http://regshot.yeah.net/\">regshot.yeah.net</FONT></A>";
 
+
 //------------------------------------------------------------
 //Several routines to write to output file
 //------------------------------------------------------------
@@ -70,6 +71,7 @@ VOID	WriteHead(u_char * lpstr,DWORD count,BOOL isHTML)
 		WriteFile(hFile,txt_line,sizeof(txt_line)-1,&NBW,NULL);
 	}
 }
+
 
 //------------------------------------------------------------
 VOID	WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
@@ -125,6 +127,8 @@ VOID	WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
 	}
 
 }
+
+
 //------------------------------------------------------------
 VOID	WriteTitle(LPSTR lph,LPSTR lpb,BOOL isHTML)
 {
@@ -141,6 +145,8 @@ VOID	WriteTitle(LPSTR lph,LPSTR lpb,BOOL isHTML)
 		WriteFile(hFile,str_CR,sizeof(str_CR)-1,&NBW,NULL);
 	}
 }
+
+
 // 1.8.0
 VOID WriteHtmlbegin(void)
 {
@@ -150,12 +156,16 @@ VOID WriteHtmlbegin(void)
 	WriteFile(hFile,htm_HEADover,sizeof(htm_HEADover)-1,&NBW,NULL);
 	WriteFile(hFile,htm_BodyBegin,sizeof(htm_BodyBegin)-1,&NBW,NULL);
 }
+
+
 VOID WriteHtmlover(void)
 {
 	//WriteFile(hFile,htm_website,sizeof(htm_website)-1,&NBW,NULL); //omit at 1.8
 	WriteFile(hFile,htm_BodyOver,sizeof(htm_BodyOver)-1,&NBW,NULL);
 	WriteFile(hFile,htm_HTMLover,sizeof(htm_HTMLover)-1,&NBW,NULL);
 }
+
+
 VOID WriteHtmlbr(void)
 {
 	WriteFile(hFile,htm_BR,sizeof(htm_BR)-1,&NBW,NULL);

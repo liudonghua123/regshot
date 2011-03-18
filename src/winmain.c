@@ -34,14 +34,14 @@ LPSTR	REGSHOTINI			="regshot.ini"; //tfx
 LPSTR	REGSHOTLANGUAGEFILE	="language.ini";
 
 extern u_char * lan_menuclearallshots;  // Be careful of extern ref! must be the same when declare them,otherwise pointer would mis-point
-extern u_char * lan_menuclearshot1;     //and I can not use sizeof to get real array size in extern ref
+extern u_char * lan_menuclearshot1;     // and I can not use sizeof to get real array size in extern ref
 extern u_char * lan_menuclearshot2;
 extern u_char * lan_about;
 extern LPSTR str_DefaultLanguage;
 extern LPSTR str_Original;
 
 
-// this new function Added by Youri in 1.8.2, for expand path in browse dialog
+// this new function added by Youri in 1.8.2, for expand path in browse dialog
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
 	if (uMsg == BFFM_INITIALIZED) {
@@ -49,6 +49,7 @@ int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 	}
 	return 0;
 }
+
 
 //--------------------------------------------------
 //Main Dialog Proc
@@ -444,6 +445,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 	}
 	return(FALSE);
 }
+
 /*
 BOOL	SetPrivilege(HANDLE hToken,LPCTSTR pString,BOOL bEnablePrivilege)
 {
@@ -468,9 +470,7 @@ BOOL	SetPrivilege(HANDLE hToken,LPCTSTR pString,BOOL bEnablePrivilege)
 		return FALSE;
 	return TRUE;
 }
-
 */
-
 
 //////////////////////////////////////////////////////////////////
 int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
@@ -492,7 +492,7 @@ int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 	hHeap=GetProcessHeap(); //1.8.2
 	hWnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,(WNDPROC)DialogProc);
 
-	SetClassLong(hWnd,GCLP_HICON,(LONG)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAINICON)));
+	SetClassLongPtr(hWnd,GCLP_HICON,(LONG_PTR)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAINICON)));
 
 	SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
 	ShowWindow(hWnd,nCmdShow);
