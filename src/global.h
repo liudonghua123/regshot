@@ -89,8 +89,7 @@
 
 
 //Struct used for Windows Registry Key
-struct	_KEYCONTENT
-{
+struct	_KEYCONTENT {
 	LPSTR	lpkeyname;							//Pointer to Key Name
 	struct	_VALUECONTENT FAR * lpfirstvalue;	//Pointer to Key's first Value
 	struct	_KEYCONTENT	FAR * lpfirstsubkey;	//Pointer to Key's first Sub Key
@@ -102,8 +101,7 @@ struct	_KEYCONTENT
 typedef struct _KEYCONTENT KEYCONTENT,FAR * LPKEYCONTENT;
 
 //Struct used for Windows Registry Value
-struct	_VALUECONTENT
-{
+struct	_VALUECONTENT {
 	DWORD	typecode;							//Type of Value [DWORD,STRING...]
 	DWORD	datasize;							//Value Data size in bytes
 	LPSTR	lpvaluename;						//Pointer to Value Name
@@ -115,8 +113,7 @@ struct	_VALUECONTENT
 typedef struct _VALUECONTENT VALUECONTENT,FAR * LPVALUECONTENT;
 
 //Struct used for Windows File System
-struct	_FILECONTENT
-{
+struct	_FILECONTENT {
 	LPSTR	lpfilename;							//Pointer to File Name
 	DWORD	writetimelow;						//File write time [LOW  DWORD]
 	DWORD	writetimehigh;						//File write time [HIGH DWORD]
@@ -141,16 +138,14 @@ struct	_HEADFILE
 };
 */
 //Adjusted for filecontent saving. 1.8
-struct	_HEADFILE
-{
+struct	_HEADFILE {
 	struct _HEADFILE	FAR *	lpnextheadfile;	//Pointer to next headfile struc
 	LPFILECONTENT	lpfilecontent;				//Pointer to filecontent
 };
 typedef	struct	_HEADFILE	HEADFILE,FAR * LPHEADFILE;
 
 //Struct use for compare result output
-struct  _COMRESULT
-{
+struct  _COMRESULT {
 	LPSTR	lpresult;							//Pointer to result string
 	struct	_COMRESULT FAR * lpnextresult;		//Pointer to next _COMRESULT
 };

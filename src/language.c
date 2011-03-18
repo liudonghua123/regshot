@@ -61,8 +61,7 @@ u_char *	lan_menuclearshot1;
 u_char *	lan_menuclearshot2;
 
 //This is the dimension for MultiLanguage Default Strings[English]
-unsigned char lan_default[][22]=
-{
+unsigned char lan_default[][22]= {
 	"Keys:",
 	"Values:",
 	"Dirs:",
@@ -125,11 +124,9 @@ BOOL	GetLanguageType(HWND hDlg)
 
 
 	nReturn=GetPrivateProfileSectionNames(lpSectionNames,SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER,lpIni);
-	if (nReturn>1)
-	{
+	if (nReturn>1) {
 		bRet=TRUE;
-		for(lp=lpSectionNames; *lp!=0; lp=lp+strlen(lp)+1)
-		{
+		for(lp=lpSectionNames; *lp!=0; lp=lp+strlen(lp)+1) {
 			if(strcmpi(lp,str_SectionCurrent)!=0) {
 				SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_ADDSTRING,(WPARAM)0,(LPARAM)lp);
 			}
@@ -138,17 +135,14 @@ BOOL	GetLanguageType(HWND hDlg)
 								str_DefaultLanguage,lpCurrentLanguage,16,lpIni);
 
 		nReturn=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_FINDSTRINGEXACT,(WPARAM)0,(LPARAM)lpCurrentLanguage);
-		if (nReturn!=CB_ERR)
-		{
+		if (nReturn!=CB_ERR) {
 			bRet=TRUE;
 			SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_SETCURSEL,(WPARAM)nReturn,(LPARAM)0);
-		}
-		else {
+		} else {
 			bRet=FALSE;
 		}
 
-	}
-	else {
+	} else {
 		bRet=FALSE;
 	}
 
@@ -290,29 +284,24 @@ BOOL	GetLanguageStrings(HWND hDlg)
 
 
 	nIndex=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETCURSEL,(WPARAM)0,(LPARAM)0);
-	if (nIndex!=CB_ERR)
-	{
+	if (nIndex!=CB_ERR) {
 
 		SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETLBTEXT,(WPARAM)nIndex,(LPARAM)lpCurrentLanguage);
 		WritePrivateProfileString(str_SectionCurrent,str_SectionCurrent,lpCurrentLanguage,lpIni);
 		ZeroMemory(lpFreeStrings,SIZEOF_FREESTRINGS);
 		GetPrivateProfileSection(lpCurrentLanguage,lpFreeStrings,SIZEOF_FREESTRINGS,lpIni);
-		for(i=1,lp=ldwTempStrings; i<47; i++)
-		{
+		for(i=1,lp=ldwTempStrings; i<47; i++) {
 
 			sprintf(lpIniKey,"%d%s",i,"=");
 			//pointer returned was pointed to char just after "="
-			if((lpReturn=AtPos(lpFreeStrings,lpIniKey,SIZEOF_FREESTRINGS))!=NULL)
-			{
+			if((lpReturn=AtPos(lpFreeStrings,lpIniKey,SIZEOF_FREESTRINGS))!=NULL) {
 				//_asm int 3;
 				*(lp+i-1)=(DWORD)lpReturn;
-			}
-			else {
+			} else {
 				*(lp+i-1)=(DWORD)lan_default[i-1];
 			}
 
-			if(i>=28&&i<41&&i!=34)
-			{
+			if(i>=28&&i<41&&i!=34) {
 				SetDlgItemText(hDlg,ID_BASE+3+i-28,(LPSTR)(*(lp+i-1)));
 			}
 
@@ -323,8 +312,7 @@ BOOL	GetLanguageStrings(HWND hDlg)
 		lpCurrentTranslator=(lpReturn!=NULL)?(lpReturn+1):str_Original;
 		PointToNewStrings();
 		bRet=TRUE;
-	}
-	else {
+	} else {
 		bRet=FALSE;
 	}
 	//MYFREE(lpCurrentLanguage);
