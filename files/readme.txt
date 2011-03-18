@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.8.2    (20071103)
+Readme file of Regshot 1.8.3    (2011-mm-dd)
 
 -----------------
 Introduction:
@@ -11,8 +11,6 @@ text or HTML format and contains a list of all modifications that have taken pla
 snapshot1 and snapshot2. In addition, you can also specify folders (with sub filders) to be
 scanned for changes as well.
 (Most of above text was copied from webattack.com,thanks :)
-
-MD5:AAA8FFBCACE9C4999A77D63E0FA80F85  regshot.exe
 
 
 -----------------
@@ -114,6 +112,7 @@ Dchenka , itschy, HANDLE and all those we fogot to mention!!
 LICENSE:
 -----------------
 
+Copyright 2011 The RegShot Team
 Copyright 1999-2003,2007 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri
@@ -135,10 +134,17 @@ along with Regshot; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 -----------------
-Contact:
+The RegShot Team:
 -----------------
-TiANWEi    spring_w@163.com
-tulipfan   tulipfan@163.com
-Youri      handle@wgapatcher.ru
-
 http://sourceforge.net/projects/regshot/
+
+TiANWEi
+ - Original Author of RegShot, 1999-now
+Maddes  http://www.maddes.net/
+ - Coder and Maintainer, 2011-now
+XhmikosR
+ - Coder, 2011-now
+Belogorokhov Youri <handle@wgapatcher.ru>
+ - Coder, 2007
+tulipfan <tulipfan@163.com>
+ - Coder and Maintainer, 2004
