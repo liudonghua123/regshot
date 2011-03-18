@@ -99,11 +99,9 @@ VOID	UI_AfterShot(VOID)
 	DWORD	iddef;
 	if(lpHeadLocalMachine1==NULL) {
 		iddef=IDC_1STSHOT;
-	}
-	else if(lpHeadLocalMachine2==NULL) {
+	} else if(lpHeadLocalMachine2==NULL) {
 		iddef=IDC_2NDSHOT;
-	}
-	else {
+	} else {
 		iddef=IDC_COMPARE;
 	}
 	EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),TRUE);
@@ -133,15 +131,13 @@ VOID	UI_AfterClear(VOID)
 	//BOOL  bChk; //used for file scan disable
 	if(lpHeadLocalMachine1==NULL) {
 		iddef=IDC_1STSHOT;
-	}
-	else if(lpHeadLocalMachine2==NULL) {
+	} else if(lpHeadLocalMachine2==NULL) {
 		iddef=IDC_2NDSHOT;
 	}
 	EnableWindow(GetDlgItem(hWnd,iddef),TRUE);
 	EnableWindow(GetDlgItem(hWnd,IDC_COMPARE),FALSE);
 
-	if(lpHeadLocalMachine1==NULL&&lpHeadLocalMachine2==NULL)
-	{
+	if(lpHeadLocalMachine1==NULL&&lpHeadLocalMachine2==NULL) {
 		EnableWindow(GetDlgItem(hWnd,IDC_2NDSHOT),FALSE);
 		EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
 		//bChk=TRUE;
@@ -164,15 +160,12 @@ VOID	Shot1(VOID)
 	lpHeadLocalMachine1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 	lpHeadUsers1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
-	if(bUseLongRegHead) //1.8.1
-	{
+	if(bUseLongRegHead) { //1.8.1
 		lpHeadLocalMachine1->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING_LONG));
 		lpHeadUsers1->lpkeyname=MYALLOC(sizeof(USERSSTRING_LONG));
 		strcpy(lpHeadLocalMachine1->lpkeyname,LOCALMACHINESTRING_LONG);
 		strcpy(lpHeadUsers1->lpkeyname,USERSSTRING_LONG);
-	}
-	else
-	{
+	} else {
 		lpHeadLocalMachine1->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING));
 		lpHeadUsers1->lpkeyname=MYALLOC(sizeof(USERSSTRING));
 		strcpy(lpHeadLocalMachine1->lpkeyname,LOCALMACHINESTRING);
@@ -193,8 +186,7 @@ VOID	Shot1(VOID)
 	nGettingTime=GetTickCount();
 	UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
-	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
-	{
+	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
 		size_t nSubExtDirLen;
 		DWORD i;
 		LPSTR lpSubExtDir;
@@ -207,24 +199,20 @@ VOID	Shot1(VOID)
 		lpSubExtDir=lpExtDir;
 
 		if(nLengthofStr>0)
-			for(i=0; i<=nLengthofStr; i++)
-			{
+			for(i=0; i<=nLengthofStr; i++) {
 				//This is the stupid File Name Detect Routine,[seperate with ";"]
-				if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00)
-				{
+				if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00) {
 					*(lpExtDir+i)=0x00;
 
 					if(*(lpExtDir+i-1)=='\\'&&i>0) {
 						*(lpExtDir+i-1)=0x00;
 					}
 
-					if(*lpSubExtDir!=0x00)
-					{
+					if(*lpSubExtDir!=0x00) {
 						lphf=(LPHEADFILE)MYALLOC0(sizeof(HEADFILE));
 						if(lpHeadFile1==NULL) {
 							lpHeadFile1=lphf;
-						}
-						else {
+						} else {
 							lphftemp->lpnextheadfile=lphf;
 						}
 
@@ -270,15 +258,12 @@ VOID	Shot2(VOID)
 	lpHeadLocalMachine2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 	lpHeadUsers2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
-	if(bUseLongRegHead) //1.8.1
-	{
+	if(bUseLongRegHead) { //1.8.1
 		lpHeadLocalMachine2->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING_LONG));
 		lpHeadUsers2->lpkeyname=MYALLOC(sizeof(USERSSTRING_LONG));
 		strcpy(lpHeadLocalMachine2->lpkeyname,LOCALMACHINESTRING_LONG);
 		strcpy(lpHeadUsers2->lpkeyname,USERSSTRING_LONG);
-	}
-	else
-	{
+	} else {
 		lpHeadLocalMachine2->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING));
 		lpHeadUsers2->lpkeyname=MYALLOC(sizeof(USERSSTRING));
 		strcpy(lpHeadLocalMachine2->lpkeyname,LOCALMACHINESTRING);
@@ -299,8 +284,7 @@ VOID	Shot2(VOID)
 	nGettingTime=GetTickCount();
 	UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
-	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
-	{
+	if(SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
 		size_t nSubExtDirLen;
 		DWORD i;
 		LPSTR lpSubExtDir;
@@ -313,24 +297,20 @@ VOID	Shot2(VOID)
 		lpSubExtDir=lpExtDir;
 
 		if(nLengthofStr>0)
-			for(i=0; i<=nLengthofStr; i++)
-			{
+			for(i=0; i<=nLengthofStr; i++) {
 				//This is the stupid File Name Detect Routine,[seperate with ";"]
-				if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00)
-				{
+				if(*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00) {
 					*(lpExtDir+i)=0x00;
 
 					if(*(lpExtDir+i-1)=='\\'&&i>0) {
 						*(lpExtDir+i-1)=0x00;
 					}
 
-					if(*lpSubExtDir!=0x00)
-					{
+					if(*lpSubExtDir!=0x00) {
 						lphf=(LPHEADFILE)MYALLOC0(sizeof(HEADFILE));
 						if(lpHeadFile2==NULL) {
 							lpHeadFile2=lphf;
-						}
-						else {
+						} else {
 							lphftemp->lpnextheadfile=lphf;
 						}
 

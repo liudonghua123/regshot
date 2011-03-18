@@ -44,8 +44,7 @@ extern LPSTR str_Original;
 // this new function Added by Youri in 1.8.2, for expand path in browse dialog
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-	if (uMsg == BFFM_INITIALIZED)
-	{
+	if (uMsg == BFFM_INITIALIZED) {
 		SendMessage(hWnd, BFFM_SETSELECTION, 1, lpData);
 	}
 	return 0;
@@ -59,8 +58,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 	size_t	nLengthofStr;
 	//	BYTE	nFlag;
 
-	switch(message)
-	{
+	switch(message) {
 		case	WM_INITDIALOG:
 
 			SendDlgItemMessage(hDlg,IDC_EDITCOMMENT,EM_SETLIMITTEXT,(WPARAM)COMMENTLENGTH,(LPARAM)0);
@@ -103,8 +101,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 
 			if(GetLanguageType(hDlg)) {
 				GetLanguageStrings(hDlg);
-			}
-			else {
+			} else {
 				GetDefaultStrings();
 			}
 
@@ -186,8 +183,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 			return TRUE;
 
 		case	WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
+			switch(LOWORD(wParam)) {
 				case	IDC_1STSHOT:
 					CreateShotPopupMenu();
 					is1=TRUE;
@@ -204,27 +200,21 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					DestroyMenu(hMenu);
 					return(TRUE);
 				case	IDM_SHOTONLY:
-					if(is1)
-					{
+					if(is1) {
 						is1LoadFromHive=FALSE;
 						Shot1();
-					}
-					else
-					{
+					} else {
 						is2LoadFromHive=FALSE;
 						Shot2();
 					}
 
 					return(TRUE);
 				case	IDM_SHOTSAVE:
-					if(is1)
-					{
+					if(is1) {
 						is1LoadFromHive=FALSE;
 						Shot1();
 						SaveHive(lpHeadLocalMachine1,lpHeadUsers1,lpHeadFile1,lpComputerName1,lpUserName1,lpSystemtime1); //I might use a struct in future!
-					}
-					else
-					{
+					} else {
 						is2LoadFromHive=FALSE;
 						Shot2();
 						SaveHive(lpHeadLocalMachine2,lpHeadUsers2,lpHeadFile2,lpComputerName2,lpUserName2,lpSystemtime2);
@@ -235,8 +225,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				case	IDM_LOAD:
 					if(is1) {
 						is1LoadFromHive=LoadHive(&lpHeadLocalMachine1,&lpHeadUsers1,&lpHeadFile1,&lpTempHive1);
-					}
-					else {
+					} else {
 						is2LoadFromHive=LoadHive(&lpHeadLocalMachine2,&lpHeadUsers2,&lpHeadFile2,&lpTempHive2);
 					}
 
@@ -278,15 +267,13 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					{
 						if(lpHeadLocalMachine1!=NULL) {
 							EnableMenuItem(hMenuClear,IDM_CLEARSHOT1,MF_BYCOMMAND|MF_ENABLED);
-						}
-						else {
+						} else {
 							EnableMenuItem(hMenuClear,IDM_CLEARSHOT1,MF_BYCOMMAND|MF_GRAYED);
 						}
 
 						if(lpHeadLocalMachine2!=NULL) {
 							EnableMenuItem(hMenuClear,IDM_CLEARSHOT2,MF_BYCOMMAND|MF_ENABLED);
-						}
-						else {
+						} else {
 							EnableMenuItem(hMenuClear,IDM_CLEARSHOT2,MF_BYCOMMAND|MF_GRAYED);
 						}
 					}
@@ -345,13 +332,10 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					*/
 
 				case	IDC_CHECKDIR:
-					if(SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1)
-					{
+					if(SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
 						EnableWindow(GetDlgItem(hDlg,IDC_EDITDIR),TRUE);
 						EnableWindow(GetDlgItem(hDlg,IDC_BROWSE1),TRUE);
-					}
-					else
-					{
+					} else {
 						EnableWindow(GetDlgItem(hDlg,IDC_EDITDIR),FALSE);
 						EnableWindow(GetDlgItem(hDlg,IDC_BROWSE1),FALSE);
 					}
@@ -381,8 +365,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					PostQuitMessage(0);
 					return(TRUE);
 
-				case	IDC_BROWSE1:
-				{
+				case	IDC_BROWSE1: {
 
 					LPITEMIDLIST lpidlist;
 					size_t	nWholeLen;
@@ -394,19 +377,16 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					BrowseInfo1.lParam = 0;
 
 					lpidlist=SHBrowseForFolder(&BrowseInfo1);
-					if (lpidlist!=NULL)
-					{
+					if (lpidlist!=NULL) {
 						SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
 						nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
 						nWholeLen=nLengthofStr+strlen(BrowseInfo1.pszDisplayName);
 
-						if (nWholeLen<EXTDIRLEN+1)
-						{
+						if (nWholeLen<EXTDIRLEN+1) {
 							strcat(lpExtDir,";");
 							strcat(lpExtDir,BrowseInfo1.pszDisplayName);
 
-						}
-						else {
+						} else {
 							strcpy(lpExtDir,BrowseInfo1.pszDisplayName);
 						}
 
@@ -418,8 +398,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 				}
 				return(TRUE);
 
-				case	IDC_BROWSE2:
-				{
+				case	IDC_BROWSE2: {
 
 					LPITEMIDLIST lpidlist;
 					BrowseInfo1.hwndOwner=hDlg;
@@ -437,8 +416,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					//-----------------
 
 					lpidlist=SHBrowseForFolder(&BrowseInfo1);
-					if (lpidlist!=NULL)
-					{
+					if (lpidlist!=NULL) {
 						SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
 						SetDlgItemText(hDlg,IDC_EDITPATH,BrowseInfo1.pszDisplayName);
 						MYFREE(lpidlist);
@@ -451,8 +429,7 @@ BOOL	CALLBACK	DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
 					GetLanguageStrings(hDlg);
 					return(TRUE);
 
-				case	IDC_ABOUT:
-				{
+				case	IDC_ABOUT: {
 					LPSTR	lpAboutBox;
 					//_asm int 3;
 					lpAboutBox=MYALLOC0(SIZEOF_ABOUTBOX);
@@ -534,10 +511,8 @@ int	WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 		}
 	}
 	*/
-	while(GetMessage(&msg,NULL,(WPARAM)NULL,(LPARAM)NULL))
-	{
-		if(!IsDialogMessage(hWnd,&msg))
-		{
+	while(GetMessage(&msg,NULL,(WPARAM)NULL,(LPARAM)NULL)) {
+		if(!IsDialogMessage(hWnd,&msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}

@@ -41,9 +41,9 @@
 #endif
 
 #ifdef _WIN64
-    #define PLATFORM_SUFFIX  " x64"
+#define PLATFORM_SUFFIX  " x64"
 #else
-    #define PLATFORM_SUFFIX  " x86"
+#define PLATFORM_SUFFIX  " x86"
 #endif	// _WIN64
 
 

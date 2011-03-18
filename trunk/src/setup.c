@@ -41,18 +41,13 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 
 	lpSnapRegs=MYALLOC0(sizeof(LPSTR)*MAXREGSHOT);
 	lpSnapRegsStr=MYALLOC0(SIZEOF_REGSHOT);
-	if(GetPrivateProfileSection(INI_SKIPREGKEY,lpSnapRegsStr,SIZEOF_REGSHOT,lpRegshotIni)>0)
-	{
-		for(i=0; i<MAXREGSHOT-1; i++)
-		{
+	if(GetPrivateProfileSection(INI_SKIPREGKEY,lpSnapRegsStr,SIZEOF_REGSHOT,lpRegshotIni)>0) {
+		for(i=0; i<MAXREGSHOT-1; i++) {
 			sprintf(lpSnapKey,"%d%s",i,"=");
-			if((lpSnapReturn=AtPos(lpSnapRegsStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
-			{
+			if((lpSnapReturn=AtPos(lpSnapRegsStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL) {
 				*(lpSnapRegs+i)=(DWORD)lpSnapReturn;
 				//dwSnapFiles++;
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
@@ -60,18 +55,13 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 
 	lpSnapFiles=MYALLOC0(sizeof(LPSTR)*MAXREGSHOT);
 	lpSnapFilesStr=MYALLOC0(SIZEOF_REGSHOT);
-	if(GetPrivateProfileSection(INI_SKIPDIR,lpSnapFilesStr,SIZEOF_REGSHOT,lpRegshotIni))
-	{
-		for(i=0; i<MAXREGSHOT-1; i++)
-		{
+	if(GetPrivateProfileSection(INI_SKIPDIR,lpSnapFilesStr,SIZEOF_REGSHOT,lpRegshotIni)) {
+		for(i=0; i<MAXREGSHOT-1; i++) {
 			sprintf(lpSnapKey,"%d%s",i,"=");
-			if((lpSnapReturn=AtPos(lpSnapFilesStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL)
-			{
+			if((lpSnapReturn=AtPos(lpSnapFilesStr,lpSnapKey,SIZEOF_REGSHOT))!=NULL) {
 				*(lpSnapFiles+i)=(DWORD)lpSnapReturn;
 				//dwSnapFiles++;
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
@@ -97,15 +87,13 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 
 	if(GetPrivateProfileString(INI_SETUP,INI_EXTDIR,NULL,lpExtDir,MAX_PATH,lpRegshotIni)!=0) {
 		SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
-	}
-	else {
+	} else {
 		SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
 	}
 
 	if(GetPrivateProfileString(INI_SETUP,INI_OUTDIR,NULL,lpOutputpath,MAX_PATH,lpRegshotIni)!=0) {
 		SetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath);
-	}
-	else {
+	} else {
 		SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
 	}
 
@@ -168,10 +156,8 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 BOOL IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList) //tfx 跳过黑名单
 {
 	int i;
-	for(i=0; (LPSTR)(*(lpSkipList+i))!=NULL && i<=MAXREGSHOT-1; i++)
-	{
-		if(strcmpi(lpSnap, (LPSTR)*(lpSkipList+i))==0)
-		{
+	for(i=0; (LPSTR)(*(lpSkipList+i))!=NULL && i<=MAXREGSHOT-1; i++) {
+		if(strcmpi(lpSnap, (LPSTR)*(lpSkipList+i))==0) {
 			return TRUE;
 		}
 	}
