@@ -50,10 +50,10 @@ CALL :SUBMSG "INFO" "Creating the %2 ZIP file..."
 
 MD "temp_zip" >NUL 2>&1
 COPY /Y /V "..\gpl.txt" "temp_zip\GPL.txt"
-COPY /Y /V "..\history.txt" "temp_zip\History.txt"
-COPY /Y /V "..\language.ini" "temp_zip\"
-COPY /Y /V "..\readme.txt" "temp_zip\Readme.txt"
-COPY /Y /V "..\regshot.ini" "temp_zip\"
+COPY /Y /V "..\files\history.txt" "temp_zip\History.txt"
+COPY /Y /V "..\files\language.ini" "temp_zip\"
+COPY /Y /V "..\files\readme.txt" "temp_zip\Readme.txt"
+COPY /Y /V "..\files\regshot.ini" "temp_zip\"
 COPY /Y /V "..\bin\WDK\%1\Regshot.exe" "temp_zip\"
 
 PUSHD "temp_zip"
