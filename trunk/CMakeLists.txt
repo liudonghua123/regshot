@@ -10,11 +10,7 @@ cmake_minimum_required(VERSION 2.8)
 ###
 project(RegShot)
 
-set(REGSHOT_VERSION_MAJOR "1")
-set(REGSHOT_VERSION_MINOR "8")
-set(REGSHOT_VERSION_PATCH "3")
-set(REGSHOT_VERSION "${REGSHOT_VERSION_MAJOR}.${REGSHOT_VERSION_MINOR}.${REGSHOT_VERSION_PATCH}")
-set(REGSHOT_VERSION_STRING "${REGSHOT_VERSION}-trunk")
+set(EXE_SUFFIX "-trunk")
 
 
 ###
@@ -35,6 +31,7 @@ option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (
 file(GLOB sources "src/[a-zA-Z]*.c")
 file(GLOB private_headers "src/[a-zA-Z]*.h")
 file(GLOB resources "src/[a-zA-Z]*.rc")
+file(GLOB manifests "src/[a-zA-Z]*.manifest")
 
 
 ###
@@ -89,27 +86,25 @@ if(MSVC)
 	endif()
 
 	if(CMAKE_CL_64)
-		set(PLATFORM_SUFFIX "64")
+		set(PLATFORM_SUFFIX "-x64")
 	else()
-		set(PLATFORM_SUFFIX "32")
+		set(PLATFORM_SUFFIX "")
 	endif()
 endif()
-
-add_definitions(-DREGSHOT_VERSION_STRING="${REGSHOT_VERSION_STRING}")
 
 
 ###
 ### Executable
 ###
-add_executable(${PROJECT_NAME}${PLATFORM_SUFFIX}_${REGSHOT_VERSION_STRING}
+add_executable(${PROJECT_NAME}${PLATFORM_SUFFIX}${EXE_SUFFIX}
 	WIN32
 	${sources}
 	${private_headers}
 	${resources}
+	${manifests}
 )
 
-set_target_properties(${PROJECT_NAME}${PLATFORM_SUFFIX}_${REGSHOT_VERSION_STRING}
+set_target_properties(${PROJECT_NAME}${PLATFORM_SUFFIX}${EXE_SUFFIX}
 	PROPERTIES
-		VERSION "${REGSHOT_VERSION}"
-		PROJECT_LABEL "${PROJECT_NAME}${PLATFORM_SUFFIX}${LABEL_SUFFIX}"
+		PROJECT_LABEL "${PROJECT_NAME}${PLATFORM_SUFFIX}${EXE_SUFFIX}${LABEL_SUFFIX}"
 )
