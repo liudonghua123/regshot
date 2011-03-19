@@ -44,10 +44,10 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 		</Linker>
-		<Unit filename="..\..\src\Regshot.c">
+		<Unit filename="..\src\Regshot.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\..\src\fileshot.c">
+		<Unit filename="..\src\fileshot.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\src\global.h" />
