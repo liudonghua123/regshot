@@ -27,6 +27,13 @@
 #include <shlobj.h>
 #include "resource.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)	// before VS 2002 .NET (e.g. VS 6)
+#define SetClassLongPtr SetClassLong
+#ifndef GCLP_HICON
+#define GCLP_HICON GCL_HICON
+#endif
+#endif	// _MSC_VER
+
 //!!!WARNING!!! HEAP_NO_SERIALIZE mean we can not use this in multithread.
 //added in 1.8.2 to gain a slightly faster speed but it is danger!
 #define USEHEAPALLOC_DANGER

@@ -61,5 +61,6 @@ Creating project files:
 
 Tested compilers:
 =================
-VS 6 (32-Bit, Maddes)
+VS 6 (32-Bit, Maddes, just remove DS_SHELLFONT from src/regshot.rc)
+VS 2002 (32-Bit, Maddes)
 VS 2008 (32-Bit & 64-Bit, Maddes)
