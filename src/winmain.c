@@ -27,7 +27,7 @@
 #include "global.h"
 #include "version.h"
 
-char *str_prgname="Regshot" PLATFORM_SUFFIX " " REGSHOT_VERSION_STRING; //tfx 程序标题
+char *str_prgname=REGSHOT_FILEDESCRIPTION " " REGSHOT_VERSION_STRING; //tfx 程序标题
 char *str_aboutme="Regshot is a free and open source registry compare utility.\n\n\
 http://sourceforge.net/projects/regshot/\n\n";
 LPSTR	REGSHOTINI			="regshot.ini"; //tfx
