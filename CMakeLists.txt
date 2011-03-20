@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 2.8)
 ###
 project(RegShot)
 
-set(EXE_SUFFIX "-trunk")
+set(EXE_SUFFIX "-alpha")
 
 
 ###
