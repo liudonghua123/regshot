@@ -67,7 +67,7 @@ BOOL GetSnapRegs(HWND hDlg) //tfx 取配置文件信息
 		}
 	}
 
-	nFlag=(BYTE)GetPrivateProfileInt(INI_SETUP,INI_FLAG,1,lpRegshotIni); //default from 0 to 1 in 1.8.2 (TEXT)
+	nFlag=(BYTE)GetPrivateProfileInt(INI_SETUP,INI_FLAG,1,lpRegshotIni);	//default from 0 to 1 in 1.8.2 (TEXT)
 	//if(nFlag!=0)
 	{
 		SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)(nFlag&0x01),(LPARAM)0);
@@ -109,7 +109,7 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 	LPSTR lpString;
 	HANDLE hTest;
 
-	//1.8.2,someone do not want to create a regshot.ini when there isn't one. :O
+	//1.8.2, someone might not want to create a regshot.ini when there isn't one. :O
 	hTest = CreateFile(lpRegshotIni,GENERIC_READ | GENERIC_WRITE,
 					   FILE_SHARE_READ | FILE_SHARE_WRITE,	NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(hTest==INVALID_HANDLE_VALUE) {
@@ -124,8 +124,8 @@ BOOL SetSnapRegs(HWND hDlg) //tfx 保存信息到配置文件
 				 SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1);
 
 	lpString=MYALLOC0(EXTDIRLEN+2);
-	//sprintf(lpString,"%s=%d",INI_FLAG,nFlag); //1.7 solokey
-	//WritePrivateProfileSection(INI_SETUP,lpString,lpRegshotIni);  //1.7 solokey ,can only have one key.
+	//sprintf(lpString,"%s=%d",INI_FLAG,nFlag);	//1.7 solokey
+	//WritePrivateProfileSection(INI_SETUP,lpString,lpRegshotIni);	//1.7 solokey, can only have one key.
 
 	//1.8.1
 	sprintf(lpString,"%d",nFlag);
