@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding="windows-1253"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="Regshot"
-	ProjectGUID="{4C971282-E758-4BA4-B2EF-905613EAADD8}"
+	ProjectGUID="{A7D5D156-E803-459D-B768-7EBBC5D09DC6}"
 	RootNamespace="Regshot"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -21,8 +21,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(VS_OUTPUT)obj\VC2008\$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(OutDir)\Intermediate"
+			OutputDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\obj\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -31,9 +31,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\..\bin\VS2008d\$(TargetFileName);$(SolutionDir)\..\bin\VS2008d\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -47,31 +44,28 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\$(TargetName).pdb"
 				WarningLevel="3"
-				DebugInformationFormat="3"
-				CompileAs="0"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="WIN32"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName)d-alpha.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
 				TargetMachine="1"
 			/>
@@ -80,6 +74,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -95,14 +90,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(VS_OUTPUT)obj\VC2008\$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(OutDir)\Intermediate"
+			OutputDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\obj\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -111,9 +104,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\..\bin\VS2008d\$(TargetFileName);$(SolutionDir)\..\bin\VS2008d\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -128,31 +118,28 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\$(TargetName).pdb"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_WIN64"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName)-x64d-alpha.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
 				TargetMachine="17"
 			/>
@@ -161,6 +148,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -176,14 +164,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(VS_OUTPUT)obj\VC2008\$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(OutDir)\Intermediate"
+			OutputDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\obj\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -193,9 +179,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\..\bin\VS2008\$(TargetFileName);$(SolutionDir)\..\bin\VS2008\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -208,32 +191,29 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
-				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\$(TargetName).pdb"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				CompileAs="0"
+				DisableSpecificWarnings="4819"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="WIN32"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName)-alpha.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -244,6 +224,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -259,14 +240,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(VS_OUTPUT)obj\VC2008\$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(OutDir)\Intermediate"
+			OutputDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="..\bin\VS2008\$(ConfigurationName)_$(PlatformName)\obj\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -276,9 +255,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\..\bin\VS2008\$(TargetFileName);$(SolutionDir)\..\bin\VS2008\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -292,32 +268,29 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="_WIN64;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\$(TargetName).pdb"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				CompileAs="0"
+				DisableSpecificWarnings="4267;4819"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_WIN64"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName)-x64-alpha.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -328,6 +301,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -343,8 +317,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
-				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
@@ -412,10 +384,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath="..\src\Regshot.exe.manifest"
-				>
-			</File>
 			<File
 				RelativePath="..\src\regshot.ico"
 				>
