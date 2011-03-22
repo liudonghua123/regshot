@@ -56,7 +56,7 @@ Creating project files:
 * mkdir bin\%TDIR%
 * cd bin\%TDIR%
 * del /s /q * & rmdir /s /q .
-* cmake %CMOPTS% -G %CMGEN% ..\..
+* cmake %CMOPTS% -G %CMGEN% ..\..\build
 
 
 Tested compilers:
