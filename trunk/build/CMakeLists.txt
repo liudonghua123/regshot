@@ -28,10 +28,10 @@ option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (
 ###
 ### Sources, headers, directories and libs
 ###
-file(GLOB sources "src/[a-zA-Z]*.c")
-file(GLOB private_headers "src/[a-zA-Z]*.h")
-file(GLOB resources "src/[a-zA-Z]*.rc")
-file(GLOB manifests "src/[a-zA-Z]*.manifest")
+file(GLOB sources "../src/[a-zA-Z]*.c")
+file(GLOB private_headers "../src/[a-zA-Z]*.h")
+file(GLOB resources "../src/[a-zA-Z]*.rc")
+file(GLOB manifests "../src/[a-zA-Z]*.manifest")
 
 
 ###
@@ -52,17 +52,21 @@ endif()
 if(MSVC)
 	### General stuff
 	# a) Change MSVC runtime library settings (/MD[d], /MT[d], /ML[d] (single-threaded until VS 2003))
+	#    plus set lib suffix for later use and project label accordingly
 	# see http://msdn.microsoft.com/en-us/library/aa278396(v=VS.60).aspx
 	#     http://msdn.microsoft.com/en-us/library/2kzt1wy3(v=VS.71).aspx
+	set(LIB_RT_SUFFIX "md")	# CMake defaults to /MD for MSVC
 	set(LIB_RT_OPTION "/MD")
 	#
 	if(NOT MSVC_SHARED_RT)	# User wants to have static runtime libraries (/MT, /ML)
 		if(MSVC_STHREADED_RT)	# User wants to have old single-threaded static runtime libraries
+			set(LIB_RT_SUFFIX "ml")
 			set(LIB_RT_OPTION "/ML")
 			if(NOT ${MSVC_VERSION} LESS 1400)
 				message(FATAL_ERROR "Single-threaded static runtime libraries (/ML) only available until VS .NET 2003 (7.1).")
 			endif()
 		else()
+			set(LIB_RT_SUFFIX "mt")
 			set(LIB_RT_OPTION "/MT")
 		endif()
 
@@ -78,7 +82,7 @@ if(MSVC)
 		endforeach()
 	endif()
 	#
-	set(LABEL_SUFFIX "${LABEL_SUFFIX} ${LIB_RT_OPTION}")
+	set(LABEL_SUFFIX "${LABEL_SUFFIX} ${LIB_RT_SUFFIX}")
 
 	### Project stuff
 	if(NOT ${MSVC_VERSION} LESS 1400)
