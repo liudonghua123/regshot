@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="Regshot"
-	ProjectGUID="{59626B3A-78DB-4851-9878-8F3EA87CE35A}"
+	ProjectGUID="{4C971282-E758-4BA4-B2EF-905613EAADD8}"
 	RootNamespace="Regshot"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -32,8 +32,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\bin\VS2008d&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\bin\VS2008d\$(TargetFileName);$(SolutionDir)\bin\VS2008d\$(TargetName).pdb"
+				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;"
+				Outputs="$(SolutionDir)\..\bin\VS2008d\$(TargetFileName);$(SolutionDir)\..\bin\VS2008d\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -112,8 +112,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\bin\VS2008d&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\bin\VS2008d\$(TargetFileName);$(SolutionDir)\bin\VS2008d\$(TargetName).pdb"
+				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008d&#x0D;&#x0A;"
+				Outputs="$(SolutionDir)\..\bin\VS2008d\$(TargetFileName);$(SolutionDir)\..\bin\VS2008d\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -194,8 +194,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\bin\VS2008&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\bin\VS2008\$(TargetFileName);$(SolutionDir)\bin\VS2008\$(TargetName).pdb"
+				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;"
+				Outputs="$(SolutionDir)\..\bin\VS2008\$(TargetFileName);$(SolutionDir)\..\bin\VS2008\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -277,8 +277,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying build to bin folder"
-				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\bin\VS2008&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)\bin\VS2008\$(TargetFileName);$(SolutionDir)\bin\VS2008\$(TargetName).pdb"
+				CommandLine="copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;copy $(TargetDir)\$(TargetName).pdb $(SolutionDir)\..\bin\VS2008&#x0D;&#x0A;"
+				Outputs="$(SolutionDir)\..\bin\VS2008\$(TargetFileName);$(SolutionDir)\..\bin\VS2008\$(TargetName).pdb"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -357,35 +357,35 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\fileshot.c"
+				RelativePath="..\src\fileshot.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\language.c"
+				RelativePath="..\src\language.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\misc.c"
+				RelativePath="..\src\misc.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\output.c"
+				RelativePath="..\src\output.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Regshot.c"
+				RelativePath="..\src\Regshot.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\setup.c"
+				RelativePath="..\src\setup.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ui.c"
+				RelativePath="..\src\ui.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\winmain.c"
+				RelativePath="..\src\winmain.c"
 				>
 			</File>
 		</Filter>
@@ -395,15 +395,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\src\global.h"
+				RelativePath="..\src\global.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\resource.h"
+				RelativePath="..\src\resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\version.h"
+				RelativePath="..\src\version.h"
 				>
 			</File>
 		</Filter>
@@ -413,15 +413,15 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\src\Regshot.exe.manifest"
+				RelativePath="..\src\Regshot.exe.manifest"
 				>
 			</File>
 			<File
-				RelativePath=".\src\regshot.ico"
+				RelativePath="..\src\regshot.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\src\regshot.rc"
+				RelativePath="..\src\regshot.rc"
 				>
 			</File>
 		</Filter>
