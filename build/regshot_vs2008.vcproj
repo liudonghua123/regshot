@@ -345,7 +345,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\Regshot.c"
+				RelativePath="..\src\regshot.c"
 				>
 			</File>
 			<File

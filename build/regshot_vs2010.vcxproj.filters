@@ -48,7 +48,7 @@
     <ClCompile Include="..\src\output.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Regshot.c">
+    <ClCompile Include="..\src\regshot.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\setup.c">

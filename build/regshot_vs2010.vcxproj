@@ -182,7 +182,7 @@
     <ClCompile Include="..\src\language.c" />
     <ClCompile Include="..\src\misc.c" />
     <ClCompile Include="..\src\output.c" />
-    <ClCompile Include="..\src\Regshot.c" />
+    <ClCompile Include="..\src\regshot.c" />
     <ClCompile Include="..\src\setup.c" />
     <ClCompile Include="..\src\ui.c" />
     <ClCompile Include="..\src\winmain.c" />
