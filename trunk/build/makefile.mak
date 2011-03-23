@@ -71,8 +71,8 @@ CHECKDIRS:
 
 CLEAN:
 	ECHO Cleaning... & ECHO.
-	-DEL "$(EXE)" "$(OBJDIR)\regshot.idb" "$(OBJDIR)\*.obj" \
-	"$(BINDIR)\regshot.pdb" "$(OBJDIR)\regshot.res" >NUL 2>&1
+	-DEL "$(EXE)" "$(OBJDIR)\*.obj" "$(OBJDIR)\regshot.res" \
+	"$(BINDIR)\Regshot.pdb" >NUL 2>&1
 	-RMDIR /Q "$(OBJDIR)" "$(BINDIR)" >NUL 2>&1
 
 REBUILD:	CLEAN BUILD
