@@ -36,6 +36,7 @@ BINDIR  = ..\bin\WDK\Release_x86
 OBJDIR  = $(BINDIR)\obj
 EXE     = $(BINDIR)\Regshot.exe
 SRC     = ..\src
+RES     = $(SRC)\res
 
 
 DEFINES = /D "_WINDOWS" /D "NDEBUG" /D "_CRT_SECURE_NO_WARNINGS"
@@ -106,7 +107,7 @@ OBJECTS= \
 $(EXE): $(OBJECTS)
 	rc $(RFLAGS) /fo"$(OBJDIR)\regshot.res" "$(SRC)\regshot.rc" >NUL
 	link $(LDFLAGS) $(LIBS) $(OBJECTS) /OUT:"$(EXE)"
-	mt $(MTFLAGS) -manifest "$(SRC)\regshot.exe.manifest" -outputresource:"$(EXE);#1"
+	mt $(MTFLAGS) -manifest "$(RES)\regshot.exe.manifest" -outputresource:"$(EXE);#1"
 
 
 ####################

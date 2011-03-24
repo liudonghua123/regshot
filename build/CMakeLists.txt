@@ -31,7 +31,7 @@ option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (
 file(GLOB sources "../src/[a-zA-Z]*.c")
 file(GLOB private_headers "../src/[a-zA-Z]*.h")
 file(GLOB resources "../src/[a-zA-Z]*.rc")
-file(GLOB manifests "../src/[a-zA-Z]*.manifest")
+file(GLOB manifests "../src/res/[a-zA-Z]*.manifest")
 
 
 ###

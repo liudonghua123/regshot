@@ -74,7 +74,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
+				AdditionalManifestFiles="..\src\res\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -148,7 +148,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
+				AdditionalManifestFiles="..\src\res\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
+				AdditionalManifestFiles="..\src\res\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -301,7 +301,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="..\src\RegShot.exe.manifest"
+				AdditionalManifestFiles="..\src\res\RegShot.exe.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -385,7 +385,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\src\regshot.ico"
+				RelativePath="..\src\res\regshot.ico"
 				>
 			</File>
 			<File
