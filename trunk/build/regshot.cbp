@@ -76,7 +76,7 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 		</Linker>
-		<Unit filename="..\src\Regshot.c">
+		<Unit filename="..\src\regshot.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\src\fileshot.c">
@@ -92,7 +92,7 @@
 		<Unit filename="..\src\output.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\src\regshot.ico" />
+		<Unit filename="..\src\res\regshot.ico" />
 		<Unit filename="..\src\regshot.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
