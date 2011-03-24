@@ -37,6 +37,9 @@ VOID    ErrMsg(char * note)
 //-------------------------------------------------------------
 #ifdef  DEBUGLOG
 extern char * str_CR;
+extern u_char * lan_errorcreatefile;
+extern u_char * lan_errormovefp;
+
 VOID    DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 {
     DWORD   length;
