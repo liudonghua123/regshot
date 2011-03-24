@@ -67,24 +67,28 @@
     <OutDir>..\bin\VS2010\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>..\bin\VS2010\$(Configuration)_$(Platform)\obj\</IntDir>
     <TargetName>Regshot</TargetName>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\bin\VS2010\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>..\bin\VS2010\$(Configuration)_$(Platform)\obj\</IntDir>
     <TargetName>Regshot</TargetName>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\bin\VS2010\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>..\bin\VS2010\$(Configuration)_$(Platform)\obj\</IntDir>
     <TargetName>Regshot</TargetName>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\bin\VS2010\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>..\bin\VS2010\$(Configuration)_$(Platform)\obj\</IntDir>
     <TargetName>Regshot</TargetName>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -97,9 +101,6 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest>
-      <AdditionalManifestFiles>..\src\res\RegShot.exe.manifest</AdditionalManifestFiles>
-    </Manifest>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
@@ -118,9 +119,6 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
-    <Manifest>
-      <AdditionalManifestFiles>..\src\res\RegShot.exe.manifest</AdditionalManifestFiles>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -137,9 +135,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <Manifest>
-      <AdditionalManifestFiles>..\src\res\RegShot.exe.manifest</AdditionalManifestFiles>
-    </Manifest>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
@@ -162,9 +157,6 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
-    <Manifest>
-      <AdditionalManifestFiles>..\src\res\RegShot.exe.manifest</AdditionalManifestFiles>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\global.h" />
