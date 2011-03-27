@@ -21,7 +21,7 @@
 #*  makefile.mak
 #*    makefile for building Regshot with WDK
 #*
-#*    Use build.cmd and set there your WDK directory.
+#*    Use build_wdk.bat and set there your WDK directory.
 #******************************************************************************
 
 
