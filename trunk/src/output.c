@@ -51,7 +51,7 @@ char htm_s3[]="</span>\r\n";
 //------------------------------------------------------------
 //Several routines to write to output file
 //------------------------------------------------------------
-VOID    WriteHead(u_char * lpstr,DWORD count,BOOL isHTML)
+VOID WriteHead(u_char * lpstr, DWORD count, BOOL isHTML)
 {
     unsigned char lpcount[8];
     sprintf(lpcount,"%d",count);
@@ -74,18 +74,19 @@ VOID    WriteHead(u_char * lpstr,DWORD count,BOOL isHTML)
 
 
 //------------------------------------------------------------
-VOID    WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
+VOID WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor)
 {
-    DWORD i;
-    size_t n,nLen;
-    LPBYTE lpstr;
+    DWORD   i;
+    size_t  n,nLen;
+    LPBYTE  lpstr;
     LPCOMRESULT lp;
+
     if (isHTML) {
         WriteFile(hFile,htm_TableBegin,sizeof(htm_TableBegin)-1,&NBW,NULL);
         WriteFile(hFile,htm_Td2Begin,sizeof(htm_Td2Begin)-1,&NBW,NULL);
     }
 
-    for(i=0,lp=lpcomhead; lp!=NULL; i++,lp=lp->lpnextresult) {
+    for (i=0,lp=lpcomhead; lp!=NULL; i++,lp=lp->lpnextresult) {
         nLen=strlen(lp->lpresult);
         lpstr=lp->lpresult;
         if (isHTML) {
@@ -97,7 +98,7 @@ VOID    WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
             }
         }
 
-        for(n=0; nLen>0;) {
+        for (n=0; nLen>0;) {
             nLen<HTMLWRAPLENGTH? (n=nLen):(n=HTMLWRAPLENGTH);
 
             WriteFile(hFile,lpstr,n,&NBW,NULL);
@@ -130,7 +131,7 @@ VOID    WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor)
 
 
 //------------------------------------------------------------
-VOID    WriteTitle(LPSTR lph,LPSTR lpb,BOOL isHTML)
+VOID WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML)
 {
     if (isHTML) {
         WriteFile(hFile,htm_TableBegin,sizeof(htm_TableBegin)-1,&NBW,NULL);
