@@ -54,13 +54,13 @@ int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 //--------------------------------------------------
 //Main Dialog Proc
 //--------------------------------------------------
-BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam)
+BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     size_t  nLengthofStr;
     //BYTE  nFlag;
 
-    switch(message) {
-        case    WM_INITDIALOG:
+    switch (message) {
+        case WM_INITDIALOG:
 
             SendDlgItemMessage(hDlg,IDC_EDITCOMMENT,EM_SETLIMITTEXT,(WPARAM)COMMENTLENGTH,(LPARAM)0);
             SendDlgItemMessage(hDlg,IDC_EDITPATH,EM_SETLIMITTEXT,(WPARAM)MAX_PATH,(LPARAM)0);
@@ -183,9 +183,9 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
 
             return TRUE;
 
-        case    WM_COMMAND:
-            switch(LOWORD(wParam)) {
-                case    IDC_1STSHOT:
+        case WM_COMMAND:
+            switch (LOWORD(wParam)) {
+                case IDC_1STSHOT:
                     CreateShotPopupMenu();
                     is1=TRUE;
                     GetWindowRect(GetDlgItem(hDlg,IDC_1STSHOT),&rect);
@@ -193,14 +193,14 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     DestroyMenu(hMenu);
 
                     return(TRUE);
-                case    IDC_2NDSHOT:
+                case IDC_2NDSHOT:
                     CreateShotPopupMenu();
                     is1=FALSE;
                     GetWindowRect(GetDlgItem(hDlg,IDC_2NDSHOT),&rect);
                     TrackPopupMenu(hMenu,TPM_LEFTALIGN|TPM_LEFTBUTTON,rect.left+10,rect.top+10,0,hDlg,NULL);
                     DestroyMenu(hMenu);
                     return(TRUE);
-                case    IDM_SHOTONLY:
+                case IDM_SHOTONLY:
                     if (is1) {
                         is1LoadFromHive=FALSE;
                         Shot1();
@@ -210,7 +210,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     }
 
                     return(TRUE);
-                case    IDM_SHOTSAVE:
+                case IDM_SHOTSAVE:
                     if (is1) {
                         is1LoadFromHive=FALSE;
                         Shot1();
@@ -223,7 +223,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
 
                     return(TRUE);
 
-                case    IDM_LOAD:
+                case IDM_LOAD:
                     if (is1) {
                         is1LoadFromHive=LoadHive(&lpHeadLocalMachine1,&lpHeadUsers1,&lpHeadFile1,&lpTempHive1);
                     } else {
@@ -238,7 +238,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     //case  IDC_SAVEREG:
                     //SaveRegistry(lpHeadLocalMachine1,lpHeadUsers1);
                     //      return(TRUE);
-                case    IDC_COMPARE:
+                case IDC_COMPARE:
                     EnableWindow(GetDlgItem(hDlg,IDC_COMPARE),FALSE);
                     UI_BeforeClear();
                     CompareShots();
@@ -249,13 +249,13 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     SetCursor(hSaveCursor);
                     MessageBeep(0xffffffff);
                     return(TRUE);
-                case    IDC_CLEAR1:
+                case IDC_CLEAR1:
                     hMenuClear=CreatePopupMenu();
                     AppendMenu(hMenuClear,MF_STRING,IDM_CLEARALLSHOTS,lan_menuclearallshots);
                     AppendMenu(hMenuClear,MF_MENUBARBREAK,IDM_BREAK,NULL);
                     AppendMenu(hMenuClear,MF_STRING,IDM_CLEARSHOT1,lan_menuclearshot1);
                     AppendMenu(hMenuClear,MF_STRING,IDM_CLEARSHOT2,lan_menuclearshot2);
-                    //AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear compare result");
+                    //AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear comparison result");
                     SetMenuDefaultItem(hMenuClear,IDM_CLEARALLSHOTS,FALSE);
 
 
@@ -282,7 +282,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     TrackPopupMenu(hMenuClear,TPM_LEFTALIGN|TPM_LEFTBUTTON,rect.left+10,rect.top+10,0,hDlg,NULL);
                     DestroyMenu(hMenuClear);
                     return(TRUE);
-                case    IDM_CLEARALLSHOTS:
+                case IDM_CLEARALLSHOTS:
                     UI_BeforeClear();
                     FreeAllKeyContent1();  //Note!! if loadfromhive and contains file, we should let lpHeadFile to NULL
                     FreeAllKeyContent2();
@@ -296,7 +296,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     UI_AfterClear();
                     EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
                     return(TRUE);
-                case    IDM_CLEARSHOT1:
+                case IDM_CLEARSHOT1:
                     UI_BeforeClear();
                     FreeAllKeyContent1();
                     FreeAllCompareResults();
@@ -307,7 +307,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     ClearHeadFileMatchTag(lpHeadFile2);
                     UI_AfterClear();
                     return(TRUE);
-                case    IDM_CLEARSHOT2:
+                case IDM_CLEARSHOT2:
                     UI_BeforeClear();
                     FreeAllKeyContent2();
                     FreeAllCompareResults();
@@ -319,7 +319,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     UI_AfterClear();
                     return(TRUE);
                     /*
-                    case    IDM_CLEARRESULT:
+                    case IDM_CLEARRESULT:
                     UI_BeforeClear();
                     FreeAllCompareResults();
                     ClearKeyMatchTag(lpHeadLocalMachine1);
@@ -332,7 +332,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     return(TRUE);
                     */
 
-                case    IDC_CHECKDIR:
+                case IDC_CHECKDIR:
                     if (SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
                         EnableWindow(GetDlgItem(hDlg,IDC_EDITDIR),TRUE);
                         EnableWindow(GetDlgItem(hDlg,IDC_BROWSE1),TRUE);
@@ -341,8 +341,8 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                         EnableWindow(GetDlgItem(hDlg,IDC_BROWSE1),FALSE);
                     }
                     return(TRUE);
-                case    IDC_CANCEL1:
-                case    IDCANCEL:
+                case IDC_CANCEL1:
+                case IDCANCEL:
                     /*                  SetCurrentDirectory(lpStartDir);
                                         hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
                                         if (hFile != INVALID_HANDLE_VALUE)
@@ -362,11 +362,11 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                                             CloseHandle(hFile);
                                         }
                     */
-                    SetSnapRegs(hDlg);//tfx
+                    SetSnapRegs(hDlg);  //tfx
                     PostQuitMessage(0);
                     return(TRUE);
 
-                case    IDC_BROWSE1: {
+                case IDC_BROWSE1: {
 
                     LPITEMIDLIST lpidlist;
                     size_t  nWholeLen;
@@ -399,7 +399,7 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                 }
                 return(TRUE);
 
-                case    IDC_BROWSE2: {
+                case IDC_BROWSE2: {
 
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner=hDlg;
@@ -426,11 +426,11 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
                     MYFREE(BrowseInfo1.pszDisplayName);
                 }
                 return(TRUE);
-                case    IDC_COMBOLANGUAGE:
+                case IDC_COMBOLANGUAGE:
                     GetLanguageStrings(hDlg);
                     return(TRUE);
 
-                case    IDC_ABOUT: {
+                case IDC_ABOUT: {
                     LPSTR   lpAboutBox;
                     //_asm int 3;
                     lpAboutBox=MYALLOC0(SIZEOF_ABOUTBOX);
@@ -447,12 +447,13 @@ BOOL    CALLBACK    DialogProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lPara
 }
 
 /*
-BOOL    SetPrivilege(HANDLE hToken,LPCTSTR pString,BOOL bEnablePrivilege)
+BOOL SetPrivilege(HANDLE hToken, LPCTSTR pString, BOOL bEnablePrivilege)
 {
     TOKEN_PRIVILEGES    tp;
     LUID    luid;
     TOKEN_PRIVILEGES    tpPrevious;
     DWORD   cbSize=sizeof(TOKEN_PRIVILEGES);
+
     if (!LookupPrivilegeValue(NULL,pString,&luid))
         return FALSE;
     tp.PrivilegeCount=1;
@@ -473,8 +474,8 @@ BOOL    SetPrivilege(HANDLE hToken,LPCTSTR pString,BOOL bEnablePrivilege)
 */
 
 //////////////////////////////////////////////////////////////////
-int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
-                   LPSTR lpszCmdLine,int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                   LPSTR lpszCmdLine, int nCmdShow)
 {
     /*
     BOOL    bWinNTDetected;
@@ -486,7 +487,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
     //hWndMonitor be created first for the multilanguage interface.
 
     //FARPROC       lpfnDlgProc;
-    //lpfnDlgProc   =   MakeProcInstance((FARPROC)DialogProc,hInstance); //old style of create dialogproc
+    //lpfnDlgProc = MakeProcInstance((FARPROC)DialogProc,hInstance);    //old style of create dialogproc
     */
 
     hHeap=GetProcessHeap(); //1.8.2
@@ -494,12 +495,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
 
     SetClassLongPtr(hWnd,GCLP_HICON,(LONG_PTR)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAINICON)));
 
-    SetWindowText(hWnd, str_prgname); //tfx 设置程序标题为str_prgname，避免修改资源文件
+    SetWindowText(hWnd, str_prgname);   //tfx 设置程序标题为str_prgname，避免修改资源文件
     ShowWindow(hWnd,nCmdShow);
     UpdateWindow(hWnd);
     //SetPriorityClass(hInstance,31);
-    /*
-    if (bWinNTDetected)
+  /*if (bWinNTDetected)
     {
         if (OpenProcessToken(GetCurrentProcess(),TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&hToken)==TRUE)
         {
@@ -509,8 +509,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
             }
             CloseHandle(hToken);
         }
-    }
-    */
+    }*/
     while(GetMessage(&msg,NULL,(WPARAM)NULL,(LPARAM)NULL)) {
         if (!IsDialogMessage(hWnd,&msg)) {
             TranslateMessage(&msg);

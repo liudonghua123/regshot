@@ -53,9 +53,10 @@
 
 #endif
 
+
 //Some definations
 #define SIZEOFREG_DWORD 4       //In current windows, reg_dword's size=4
-#define NOTMATCH        0       //Define modification type in compare results
+#define NOTMATCH        0       //Define modification type in comparison results
 #define ISMATCH         1
 #define ISDEL           2
 #define ISADD           3
@@ -83,7 +84,7 @@
 #define HIVEBEGINOFFSET 512         //Hive file out put header computerlen*2+sizeof(systemtime)+32 must <hivebeginoffset!!!!!!!!!!!!!!
 
 
-//Some definations of MutiLanguage strings [Free space length]
+//Some definitions of MutiLanguage strings [Free space length]
 #define SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER 2048
 #define SIZEOF_SINGLE_LANGUAGENAME          64
 #define SIZEOF_FREESTRINGS                  16384
@@ -133,7 +134,7 @@ struct  _FILECONTENT {
 typedef struct _FILECONTENT FILECONTENT,FAR * LPFILECONTENT;
 
 
-//Struct use for file tree compare
+//Struct used for file tree comparison
 /* <=1.7.3
 struct  _HEADFILE
 {
@@ -152,7 +153,7 @@ struct  _HEADFILE {
 typedef struct  _HEADFILE   HEADFILE,FAR * LPHEADFILE;
 
 
-//Struct use for compare result output
+//Struct used for comparing result output
 struct  _COMRESULT {
     LPSTR   lpresult;                           //Pointer to result string
     struct  _COMRESULT FAR * lpnextresult;      //Pointer to next _COMRESULT
@@ -160,7 +161,7 @@ struct  _COMRESULT {
 typedef struct _COMRESULT COMRESULT,FAR * LPCOMRESULT;
 
 
-//Pointers to compare result [see above.]
+//Pointers to compare result [see above]
 LPCOMRESULT lpKEYADD;
 LPCOMRESULT lpKEYDEL;
 LPCOMRESULT lpVALADD;
@@ -186,6 +187,7 @@ LPCOMRESULT lpDIRADDHEAD;
 LPCOMRESULT lpDIRDELHEAD;
 LPCOMRESULT lpDIRMODIHEAD;
 
+
 //Number of Modification detected
 DWORD   nKEYADD;
 DWORD   nKEYDEL;
@@ -209,6 +211,7 @@ DWORD   nGettingFile,nGettingDir,nSavingFile;
 //DWORD nRegMessageCount=0;
 DWORD   NBW; //that is: NumberOfBytesWritten;
 
+
 //Pointers to Registry Key
 LPKEYCONTENT    lpHeadLocalMachine1;        //Pointer to HKEY_LOCAL_MACHINE 1
 LPKEYCONTENT    lpHeadLocalMachine2;        //Pointer to HKEY_LOCAL_MACHINE 2
@@ -218,6 +221,7 @@ LPHEADFILE      lpHeadFile1,lpHeadFile2;    //Pointer to Headfile
 LPSTR           lpTempHive1,lpTempHive2;    //Pointer for load hive files
 LPSTR           lpComputerName1,lpComputerName2,lpUserName1,lpUserName2;
 SYSTEMTIME FAR * lpSystemtime1,* lpSystemtime2;
+
 
 //Some pointers need to allocate enough space to working
 LPSTR   lpKeyName,lpMESSAGE,lpExtDir,lpOutputpath,lpLastSaveDir,lpLastOpenDir,lpCurrentLanguage;
@@ -260,12 +264,12 @@ OPENFILENAME    opfn;                           //Openfilename struct
 BOOL            bUseLongRegHead;                //1.8.1 for compatible to 1.61e5 and undoreg1.46
 HANDLE          hHeap;                          //1.8.2
 
-VOID    LogToMem(DWORD actiontype,LPDWORD lpcount,LPVOID lp);
+VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    GetSnapRegs(HWND hDlg);
 BOOL    SetSnapRegs(HWND hDlg);
 BOOL    IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList);
-VOID    UpdateCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2);
-LPSTR   AtPos(LPSTR lpMaster,LPSTR lp,DWORD size);
+VOID    UpdateCounters(LPSTR title1, LPSTR title2, DWORD count1, DWORD count2);
+LPSTR   AtPos(LPSTR lpMaster, LPSTR lp, DWORD size);
 BOOL    GetLanguageType(HWND hDlg);
 VOID    GetDefaultStrings(VOID);
 VOID    PointToNewStrings(VOID);
@@ -279,30 +283,30 @@ VOID    UI_AfterClear(VOID);
 VOID    Shot1(void);
 VOID    Shot2(void);
 BOOL    CompareShots(void);
-VOID    SaveHive(LPKEYCONTENT lpKeyHLM,LPKEYCONTENT lpKeyUSER, LPHEADFILE lpHF,LPSTR computer,LPSTR user,LPVOID time);
-BOOL    LoadHive(LPKEYCONTENT FAR * lplpKeyHLM,LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lpHF,LPSTR FAR * lpHive);
+VOID    SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER, LPHEADFILE lpHF, LPSTR computer, LPSTR user, LPVOID time);
+BOOL    LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lpHF, LPSTR FAR * lpHive);
 VOID    FreeAllCompareResults(void);
 VOID    FreeAllKeyContent1(void);
 VOID    FreeAllKeyContent2(void);
 VOID    FreeAllFileHead(LPHEADFILE lp);
 VOID    ClearKeyMatchTag(LPKEYCONTENT lpKey);
-VOID    GetRegistrySnap(HKEY hkey,LPKEYCONTENT lpFatherKeyContent);     //HWND hDlg, first para deleted in 1.8, return from void * to void
+VOID    GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent);    //HWND hDlg, first para deleted in 1.8, return from void * to void
 VOID    GetFilesSnap(LPFILECONTENT lpFatherFile);                       //HWND hDlg, first para deleted in 1.8
 LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
-VOID    CompareFirstSubFile(LPFILECONTENT lpHead1,LPFILECONTENT lpHead2);
+VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
 BOOL    ReplaceInValidFileName(LPSTR lpf);
 VOID    ErrMsg(char * note);
-VOID    WriteHead(u_char * lpstr,DWORD count,BOOL isHTML);
-VOID    WritePart(LPCOMRESULT lpcomhead,BOOL isHTML,BOOL usecolor);
-VOID    WriteTitle(LPSTR lph,LPSTR lpb,BOOL isHTML);
-VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWORD nFPCaller);
+VOID    WriteHead(u_char * lpstr,DWORD count, BOOL isHTML);
+VOID    WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor);
+VOID    WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML);
+VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DWORD nFPCaller);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
-VOID    FindDirChain(LPHEADFILE lpHF,LPSTR lpDir,size_t nMaxLen);
-BOOL    DirChainMatch(LPHEADFILE lphf1,LPHEADFILE lphf2);
+VOID    FindDirChain(LPHEADFILE lpHF, LPSTR lpDir, size_t nMaxLen);
+BOOL    DirChainMatch(LPHEADFILE lphf1, LPHEADFILE lphf2);
 VOID    WriteHtmlbegin(void);
 VOID    WriteHtmlover(void);
 VOID    WriteHtmlbr(void);
-VOID    ReAlignFile(LPHEADFILE lpHF,DWORD nBase);
-LPFILECONTENT SearchDirChain(LPSTR lpname,LPHEADFILE lpHF);
-VOID    GetAllSubFile(BOOL needbrother,DWORD typedir,DWORD typefile,LPDWORD lpcountdir,LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
+VOID    ReAlignFile(LPHEADFILE lpHF, DWORD nBase);
+LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
+VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);

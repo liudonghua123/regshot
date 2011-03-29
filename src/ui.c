@@ -62,7 +62,7 @@ VOID InitProgressBar(VOID)
 
 
 ////////////////////////////////////////////////////////////////// renamed from showcounters() at 1.8.2
-void UpdateCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2)
+void UpdateCounters(LPSTR title1, LPSTR title2, DWORD count1, DWORD count2)
 {
     //nGettingTime=GetTickCount();
     nBASETIME1=nGettingTime;
@@ -82,7 +82,7 @@ void UpdateCounters(LPSTR title1,LPSTR title2,DWORD count1,DWORD count2)
 //--------------------------------------------------
 // Prepare the GUI for the shot about to be taken
 //--------------------------------------------------
-VOID    UI_BeforeShot(DWORD id)
+VOID UI_BeforeShot(DWORD id)
 {
     hHourGlass=LoadCursor(NULL,IDC_WAIT);
     hSaveCursor=SetCursor(hHourGlass);
@@ -99,9 +99,10 @@ VOID    UI_BeforeShot(DWORD id)
 //--------------------------------------------------
 // Reset the GUI after the shot has been taken
 //--------------------------------------------------
-VOID    UI_AfterShot(VOID)
+VOID UI_AfterShot(VOID)
 {
-    DWORD   iddef;
+    DWORD iddef;
+
     if (lpHeadLocalMachine1==NULL) {
         iddef=IDC_1STSHOT;
     } else if (lpHeadLocalMachine2==NULL) {
@@ -121,7 +122,7 @@ VOID    UI_AfterShot(VOID)
 //--------------------------------------------------
 // Prepare the GUI for Clearing
 //--------------------------------------------------
-VOID    UI_BeforeClear(VOID)
+VOID UI_BeforeClear(VOID)
 {
     //EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
     hHourGlass=LoadCursor(NULL,IDC_WAIT);
@@ -134,10 +135,11 @@ VOID    UI_BeforeClear(VOID)
 //--------------------------------------------------
 // Reset the GUI after the clearing
 //--------------------------------------------------
-VOID    UI_AfterClear(VOID)
+VOID UI_AfterClear(VOID)
 {
-    DWORD iddef=0;
-    //BOOL  bChk; //used for file scan disable
+    DWORD   iddef=0;
+    //BOOL    bChk; //used for file scan disable
+
     if (lpHeadLocalMachine1==NULL) {
         iddef=IDC_1STSHOT;
     } else if (lpHeadLocalMachine2==NULL) {
@@ -151,10 +153,10 @@ VOID    UI_AfterClear(VOID)
         EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
         //bChk=TRUE;
     }
-    //else  I fogot to comment out this,fixed at 1.8.2
+    //else  //I fogot to comment out this, fixed at 1.8.2
     //bChk=FALSE;
 
-    //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); //Not used 1.8 //we only enable chk when clear all
+    //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); //Not used 1.8; we only enable chk when clear all
     //SendMessage(hWnd,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
 
     SetFocus(GetDlgItem(hWnd,iddef));
@@ -164,13 +166,14 @@ VOID    UI_AfterClear(VOID)
 }
 
 
-VOID    Shot1(VOID)
+// -----------------------------
+VOID Shot1(VOID)
 {
     size_t  nLengthofStr;
     lpHeadLocalMachine1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
     lpHeadUsers1=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
-    if (bUseLongRegHead) { //1.8.1
+    if (bUseLongRegHead) {  //1.8.1
         lpHeadLocalMachine1->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING_LONG));
         lpHeadUsers1->lpkeyname=MYALLOC(sizeof(USERSSTRING_LONG));
         strcpy(lpHeadLocalMachine1->lpkeyname,LOCALMACHINESTRING_LONG);
@@ -197,20 +200,20 @@ VOID    Shot1(VOID)
     UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
     if (SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
-        size_t nSubExtDirLen;
-        DWORD i;
-        LPSTR lpSubExtDir;
+        size_t  nSubExtDirLen;
+        DWORD   i;
+        LPSTR   lpSubExtDir;
         LPHEADFILE lphf,lphftemp;
 
         GetDlgItemText(hWnd,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
         nLengthofStr=strlen(lpExtDir);
 
-        lphf=lphftemp=lpHeadFile1; // changed in 1.8
+        lphf=lphftemp=lpHeadFile1;  // changed in 1.8
         lpSubExtDir=lpExtDir;
 
         if (nLengthofStr>0)
-            for(i=0; i<=nLengthofStr; i++) {
-                //This is the stupid File Name Detect Routine,[seperate with ";"]
+            for (i=0; i<=nLengthofStr; i++) {
+                //This is the stupid filename detection routine, [seperate with ";"]
                 if (*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00) {
                     *(lpExtDir+i)=0x00;
 
@@ -260,13 +263,13 @@ VOID    Shot1(VOID)
 
 
 // -----------------------------
-VOID    Shot2(VOID)
+VOID Shot2(VOID)
 {
     size_t  nLengthofStr;
     lpHeadLocalMachine2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
     lpHeadUsers2=(LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
-    if (bUseLongRegHead) { //1.8.1
+    if (bUseLongRegHead) {  //1.8.1
         lpHeadLocalMachine2->lpkeyname=MYALLOC(sizeof(LOCALMACHINESTRING_LONG));
         lpHeadUsers2->lpkeyname=MYALLOC(sizeof(USERSSTRING_LONG));
         strcpy(lpHeadLocalMachine2->lpkeyname,LOCALMACHINESTRING_LONG);
@@ -293,20 +296,20 @@ VOID    Shot2(VOID)
     UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
     if (SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)==1) {
-        size_t nSubExtDirLen;
-        DWORD i;
-        LPSTR lpSubExtDir;
+        size_t  nSubExtDirLen;
+        DWORD   i;
+        LPSTR   lpSubExtDir;
         LPHEADFILE lphf,lphftemp;
 
         GetDlgItemText(hWnd,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
         nLengthofStr=strlen(lpExtDir);
 
-        lphf=lphftemp=lpHeadFile1; // changed in 1.8
+        lphf=lphftemp=lpHeadFile1;  // changed in 1.8
         lpSubExtDir=lpExtDir;
 
         if (nLengthofStr>0)
-            for(i=0; i<=nLengthofStr; i++) {
-                //This is the stupid File Name Detect Routine,[seperate with ";"]
+            for (i=0; i<=nLengthofStr; i++) {
+                //This is the stupid filename detection routine, [seperate with ";"]
                 if (*(lpExtDir+i)==0x3b||*(lpExtDir+i)==0x00) {
                     *(lpExtDir+i)=0x00;
 

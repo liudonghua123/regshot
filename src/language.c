@@ -114,19 +114,19 @@ unsigned char lan_default[][22]= {
 //--------------------------------------------------
 // Get language types
 //--------------------------------------------------
-BOOL    GetLanguageType(HWND hDlg)
+BOOL GetLanguageType(HWND hDlg)
 {
     LRESULT nReturn;
     BOOL    bRet;
     LPSTR   lp;
     LPSTR   lpSectionNames=MYALLOC0(SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER);
-    //LPSTR lpCurrentLanguage=MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
+    //LPSTR   lpCurrentLanguage=MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
 
 
     nReturn=GetPrivateProfileSectionNames(lpSectionNames,SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER,lpIni);
     if (nReturn>1) {
         bRet=TRUE;
-        for(lp=lpSectionNames; *lp!=0; lp=lp+strlen(lp)+1) {
+        for (lp=lpSectionNames; *lp!=0; lp=lp+strlen(lp)+1) {
             if (_stricmp(lp,str_SectionCurrent)!=0) {
                 SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_ADDSTRING,(WPARAM)0,(LPARAM)lp);
             }
@@ -146,7 +146,6 @@ BOOL    GetLanguageType(HWND hDlg)
         bRet=FALSE;
     }
 
-
     MYFREE(lpSectionNames);
     //MYFREE(lpCurrentLanguage);
     return bRet;
@@ -157,8 +156,7 @@ BOOL    GetLanguageType(HWND hDlg)
 //--------------------------------------------------
 // Routines that show multi language
 //--------------------------------------------------
-
-VOID    GetDefaultStrings(VOID)
+VOID GetDefaultStrings(VOID)
 {
     //_asm int 3
     lan_key              =lan_default[0];
@@ -195,15 +193,13 @@ VOID    GetDefaultStrings(VOID)
     lan_menuclearshot1   =lan_default[44];
     lan_menuclearshot2   =lan_default[45];
 
-
 }
 
 
 //--------------------------------------------------
 // Routines that show multi language
 //--------------------------------------------------
-
-VOID    PointToNewStrings(VOID)
+VOID PointToNewStrings(VOID)
 {
     LPDWORD lp=ldwTempStrings;
     lan_key             =(u_char *)(*lp);
@@ -271,14 +267,13 @@ VOID    PointToNewStrings(VOID)
     lan_menuclearshot1  =(u_char *)(*lp);
     lp++;
     lan_menuclearshot2  =(u_char *)(*lp);
-
 }
 
 
 //--------------------------------------------------
 // Routines that show multi language
 //--------------------------------------------------
-BOOL    GetLanguageStrings(HWND hDlg)
+BOOL GetLanguageStrings(HWND hDlg)
 {
     LRESULT nIndex;
     DWORD   i;
@@ -287,7 +282,6 @@ BOOL    GetLanguageStrings(HWND hDlg)
     LPDWORD lp;
     char    lpIniKey[8];    //1.8.2 LPSTR   lpIniKey=MYALLOC0(8);
 
-
     nIndex=SendDlgItemMessage(hDlg,IDC_COMBOLANGUAGE,CB_GETCURSEL,(WPARAM)0,(LPARAM)0);
     if (nIndex!=CB_ERR) {
 
@@ -295,7 +289,7 @@ BOOL    GetLanguageStrings(HWND hDlg)
         WritePrivateProfileString(str_SectionCurrent,str_SectionCurrent,lpCurrentLanguage,lpIni);
         ZeroMemory(lpFreeStrings,SIZEOF_FREESTRINGS);
         GetPrivateProfileSection(lpCurrentLanguage,lpFreeStrings,SIZEOF_FREESTRINGS,lpIni);
-        for(i=1,lp=ldwTempStrings; i<47; i++) {
+        for (i=1,lp=ldwTempStrings; i<47; i++) {
 
             sprintf(lpIniKey,"%d%s",i,"=");
             //pointer returned was pointed to char just after "="
@@ -309,7 +303,6 @@ BOOL    GetLanguageStrings(HWND hDlg)
             if (i>=28&&i<41&&i!=34) {
                 SetDlgItemText(hDlg,ID_BASE+3+i-28,(LPSTR)(*(lp+i-1)));
             }
-
 
         }
 

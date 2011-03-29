@@ -26,7 +26,7 @@ extern u_char * lan_error;
 //-------------------------------------------------------------
 // Show error message
 //-------------------------------------------------------------
-VOID    ErrMsg(char * note)
+VOID ErrMsg(char * note)
 {
     MessageBox(hWnd,note,lan_error,MB_ICONHAND);
 }
@@ -40,7 +40,7 @@ extern char * str_CR;
 extern u_char * lan_errorcreatefile;
 extern u_char * lan_errormovefp;
 
-VOID    DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
+VOID DebugLog(LPSTR filename, LPSTR lpstr, HWND hDlg, BOOL bisCR)
 {
     DWORD   length;
     DWORD   nPos;
@@ -71,7 +71,7 @@ VOID    DebugLog(LPSTR filename,LPSTR lpstr,HWND hDlg,BOOL bisCR)
 
 
 //------------------------------------------------------------
-//routine to replace invalid chars in comment fields
+//Routine to replace invalid chars in comment fields
 //------------------------------------------------------------
 BOOL ReplaceInValidFileName(LPSTR lpf)
 {
@@ -80,11 +80,12 @@ BOOL ReplaceInValidFileName(LPSTR lpf)
     size_t  nLen;
     BOOL    bLegal=FALSE;
     nLen=strlen(lpf);
-    for(i=0; i<nLen; i++) {
-        for(j=0; j<sizeof(lpInvalid)-1; j++) { //changed at 1.8.2 from 9 to sizeof()-1
+
+    for (i=0; i<nLen; i++) {
+        for (j=0; j<sizeof(lpInvalid)-1; j++) { //changed at 1.8.2 from 9 to sizeof()-1
             if (*(lpf+i)==*(lpInvalid+j)) {
                 *(lpf+i)='-';                   //0x2D; check for invalid chars and replace it (return FALSE;)
-            } else if (*(lpf+i)!=0x20&&*(lpf+i)!=0x09) { //At least one non-space,non-tab char needed!
+            } else if (*(lpf+i)!=0x20&&*(lpf+i)!=0x09) { //At least one non-space, non-tab char needed!
                 bLegal=TRUE;
             }
 
@@ -95,19 +96,20 @@ BOOL ReplaceInValidFileName(LPSTR lpf)
 
 
 //--------------------------------------------------
-// Find lp's position in lpMaster (like At(),but not limit to str)
+// Find lp's position in lpMaster (like At(), but not limit to str)
 //--------------------------------------------------
-LPSTR   AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
+LPSTR AtPos(LPSTR lpMaster, LPSTR lp, DWORD size)
 {
     DWORD   i,j;
     size_t  nsizelp;
     nsizelp=strlen(lp);
+
     if (size<=nsizelp||nsizelp<1) {
         return NULL;
     }
 
-    for(i=0; i<size-nsizelp; i++) {
-        for(j=0; j<nsizelp; j++) {
+    for (i=0; i<size-nsizelp; i++) {
+        for (j=0; j<nsizelp; j++) {
             if (*(lp+j)!=*(lpMaster+i+j)) {
                 break;
             }
@@ -122,11 +124,10 @@ LPSTR   AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
 }
 
 
-
 //-------------------------------------------------------------
 // Once, I think about to use own memory allocation method
 //-------------------------------------------------------------
-/*LPVOID    MyHeapAlloc(DWORD type,DWORD size)
+/*LPVOID MyHeapAlloc(DWORD type, DWORD size)
 {
     if ((bTurboMode==FALSE)&&((lpMyHeap+size)<(lpMyHeap+MYHEAPSIZE)))
     {
@@ -139,5 +140,4 @@ LPSTR   AtPos(LPSTR lpMaster,LPSTR lp,DWORD size)
         lpMyHeap=GlobalAlloc(type,size);
     }
     return lpMyHeap;
-}
- */
+}*/
