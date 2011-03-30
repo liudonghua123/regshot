@@ -59,7 +59,8 @@ extern char str_CR[];
 LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 {
     LPKEYCONTENT lpf;
-    LPSTR   lpName,lptail;
+    LPSTR   lpName;
+    LPSTR   lptail;
     size_t  nLen=0;
 
     for (lpf=lpKeyContent; lpf!=NULL; lpf=lpf->lpfatherkey) {
@@ -90,8 +91,10 @@ LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 {
     LPKEYCONTENT lpf;
-    size_t  nWholeLen,nLen;
-    LPSTR   lpName,lptail;
+    size_t  nWholeLen;
+    size_t  nLen;
+    LPSTR   lpName;
+    LPSTR   lptail;
 
     nLen=strlen(lpValueContent->lpvaluename);
     nWholeLen=nLen+1;
@@ -122,7 +125,8 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
 {
     LPSTR   lpvaluedata=NULL;
-    DWORD   c,size=lpValueContent->datasize;
+    DWORD   c;
+    DWORD   size=lpValueContent->datasize;
 
     switch (type) {
 
@@ -180,7 +184,8 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
 LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
 {
     LPSTR   lpvaluedata=NULL;
-    DWORD   c,size=lpValueContent->datasize;
+    DWORD   c;
+    DWORD   size=lpValueContent->datasize;
 
     switch (lpValueContent->typecode) {
 
@@ -292,7 +297,9 @@ VOID CreateNewResult(DWORD actiontype, LPDWORD lpcount, LPSTR lpresult)
 //-------------------------------------------------------------
 VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
 {
-    LPSTR   lpname,lpdata,lpall;
+    LPSTR   lpname;
+    LPSTR   lpdata;
+    LPSTR   lpall;
 
     if (actiontype==KEYADD||actiontype==KEYDEL) {
         lpname=GetWholeKeyName(lp);
@@ -323,8 +330,10 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
 //-------------------------------------------------------------
 VOID GetAllSubName(
     BOOL    needbrother,
-    DWORD   typekey,DWORD typevalue,
-    LPDWORD lpcountkey,LPDWORD lpcountvalue,
+    DWORD   typekey,
+    DWORD   typevalue,
+    LPDWORD lpcountkey,
+    LPDWORD lpcountvalue,
     LPKEYCONTENT lpKeyContent
 )
 {
@@ -364,7 +373,8 @@ VOID GetAllValue(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKeyConten
 //-------------------------------------------------------------
 VOID FreeAllCom(LPCOMRESULT lpComResult)
 {
-    LPCOMRESULT lp,lpold;
+    LPCOMRESULT lp;
+    LPCOMRESULT lpold;
 
     for (lp=lpComResult; lp!=NULL;) {
         if (lp->lpresult!=NULL) {
@@ -383,7 +393,8 @@ VOID FreeAllCom(LPCOMRESULT lpComResult)
 //-------------------------------------------------------------
 VOID FreeAllKey(LPKEYCONTENT lpKey)
 {
-    LPVALUECONTENT lpv,lpvold;
+    LPVALUECONTENT lpv;
+    LPVALUECONTENT lpvold;
 
     if (lpKey!=NULL) {
         FreeAllKey(lpKey->lpfirstsubkey);
@@ -540,8 +551,10 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1, LPKEYCONTENT lpHead2)
 {
-    LPKEYCONTENT    lp1,lp2;
-    LPVALUECONTENT  lpvalue1,lpvalue2;
+    LPKEYCONTENT    lp1;
+    LPKEYCONTENT    lp2;
+    LPVALUECONTENT  lpvalue1;
+    LPVALUECONTENT  lpvalue2;
     //DWORD i;
 
     for (lp1=lpHead1; lp1!=NULL; lp1=lp1->lpbrotherkey) {
@@ -663,13 +676,22 @@ VOID * CompareFirstSubKey(LPKEYCONTENT lpHead1, LPKEYCONTENT lpHead2)
 //------------------------------------------------------------
 BOOL CompareShots(void)
 {
-    BOOL    isHTML,bshot2isnewer;//,bSaveWithCommentName;
-    LPSTR   lpstrcomp,lpExt,lpDestFileName;
-    DWORD   buffersize=2048,nTotal,filetail=0;
+    BOOL    isHTML;
+    BOOL    bshot2isnewer;
+    //BOOL    bSaveWithCommentName;
+    LPSTR   lpstrcomp;
+    LPSTR   lpExt;
+    LPSTR   lpDestFileName;
+    DWORD   buffersize=2048;
+    DWORD   nTotal;
+    DWORD   filetail=0;
     size_t  nLengthofStr;
-    LPHEADFILE  lphf1,lphf2;
-    LPFILECONTENT lpfc1,lpfc2;
-    FILETIME ftime1,ftime2;
+    LPHEADFILE  lphf1;
+    LPHEADFILE  lphf2;
+    LPFILECONTENT lpfc1;
+    LPFILECONTENT lpfc2;
+    FILETIME ftime1;
+    FILETIME ftime2;
 
     if (!DirChainMatch(lpHeadFile1,lpHeadFile2)) {
         MessageBox(hWnd,"Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!","Warning",MB_ICONWARNING);
@@ -860,7 +882,7 @@ BOOL CompareShots(void)
     strcat(lpstrcomp,lpComputerName2);
     WriteTitle(lan_computer,lpstrcomp,isHTML);
 
-    *lpstrcomp=0x00;//ZeroMemory(lpstrcomp,buffersize);
+    *lpstrcomp=0x00;    //ZeroMemory(lpstrcomp,buffersize);
     //GetUserName(lpstrcomp,&buffersize);
     strcpy(lpstrcomp,lpUserName1);
     strcat(lpstrcomp," , ");
@@ -954,19 +976,22 @@ BOOL CompareShots(void)
 VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
 {
 
-    HKEY  Subhkey;
-    DWORD i,NTr;
-    DWORD TypeCode;
-    DWORD LengthOfKeyName;
-    DWORD LengthOfValueName;
-    DWORD LengthOfValueData;
-    DWORD LengthOfLongestValueName;
-    DWORD LengthOfLongestValueData;
-    DWORD LengthOfLongestSubkeyName;
-    LPSTR lpValueName;
-    LPSTR lpValueData;
-    LPKEYCONTENT    lpKeyContent,lpKeyContentLast;
-    LPVALUECONTENT  lpValueContent,lpValueContentLast;
+    HKEY    Subhkey;
+    DWORD   i;
+    DWORD   NTr;
+    DWORD   TypeCode;
+    DWORD   LengthOfKeyName;
+    DWORD   LengthOfValueName;
+    DWORD   LengthOfValueData;
+    DWORD   LengthOfLongestValueName;
+    DWORD   LengthOfLongestValueData;
+    DWORD   LengthOfLongestSubkeyName;
+    LPSTR   lpValueName;
+    LPSTR   lpValueData;
+    LPKEYCONTENT    lpKeyContent;
+    LPKEYCONTENT    lpKeyContentLast;
+    LPVALUECONTENT  lpValueContent;
+    LPVALUECONTENT  lpValueContentLast;
 
     //To detemine MAX length
     if (RegQueryInfoKey(
@@ -1113,8 +1138,10 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
 VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPCaller)
 {
 
-    DWORD   nFPHeader,nFPCurrent;
-    size_t  nFPTemp4Write,nLenPlus1;
+    DWORD   nFPHeader;
+    DWORD   nFPCurrent;
+    size_t  nFPTemp4Write;
+    size_t  nLenPlus1;
     LPVALUECONTENT lpv;
 
 
@@ -1186,7 +1213,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
 VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
               LPHEADFILE lpHF, LPSTR computer, LPSTR user, LPVOID time)
 {
-    DWORD nFPcurrent,nFPcurrent1;
+    DWORD nFPcurrent;
+    DWORD nFPcurrent1;
     LPHEADFILE lphf;
 
     if (lpKeyHLM!=NULL||lpKeyUSER!=NULL) {
@@ -1241,7 +1269,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                     //Write start position of file chain
                     nFPcurrent=SetFilePointer(hFileWholeReg,0,NULL,FILE_CURRENT);
                     SetFilePointer(hFileWholeReg,24,NULL,FILE_BEGIN);
-                    WriteFile(hFileWholeReg,&nFPcurrent,4,&NBW,NULL);   //write start pos at 24
+                    WriteFile(hFileWholeReg,&nFPcurrent,4,&NBW,NULL);       //write start pos at 24
                     SetFilePointer(hFileWholeReg,nFPcurrent,NULL,FILE_BEGIN);
 
                     for (lphf=lpHF; lphf!=NULL;) {
@@ -1355,7 +1383,13 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, DWORD nBase)
 BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
               LPHEADFILE FAR * lplpHeadFile, LPSTR FAR * lpHive)
 {
-    DWORD   nFileSize,nOffSet=0,nBase,i,j,nRemain,nReadSize;
+    DWORD   nFileSize;
+    DWORD   nOffSet=0;
+    DWORD   nBase;
+    DWORD   i;
+    DWORD   j;
+    DWORD   nRemain;
+    DWORD   nReadSize;
     BOOL    bRet=FALSE;
 
     opfn.lStructSize=sizeof(opfn);

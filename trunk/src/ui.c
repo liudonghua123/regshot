@@ -153,7 +153,7 @@ VOID UI_AfterClear(VOID)
         EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
         //bChk=TRUE;
     }
-    //else  //I fogot to comment out this, fixed at 1.8.2
+    //else  //I forgot to comment out this, fixed at 1.8.2
     //bChk=FALSE;
 
     //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); //Not used 1.8; we only enable chk when clear all
@@ -203,7 +203,8 @@ VOID Shot1(VOID)
         size_t  nSubExtDirLen;
         DWORD   i;
         LPSTR   lpSubExtDir;
-        LPHEADFILE lphf,lphftemp;
+        LPHEADFILE lphf;
+        LPHEADFILE lphftemp;
 
         GetDlgItemText(hWnd,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
         nLengthofStr=strlen(lpExtDir);
@@ -299,7 +300,8 @@ VOID Shot2(VOID)
         size_t  nSubExtDirLen;
         DWORD   i;
         LPSTR   lpSubExtDir;
-        LPHEADFILE lphf,lphftemp;
+        LPHEADFILE lphf;
+        LPHEADFILE lphftemp;
 
         GetDlgItemText(hWnd,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
         nLengthofStr=strlen(lpExtDir);
