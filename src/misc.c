@@ -76,7 +76,7 @@ VOID DebugLog(LPSTR filename, LPSTR lpstr, HWND hDlg, BOOL bisCR)
 BOOL ReplaceInValidFileName(LPSTR lpf)
 {
     char lpInvalid[]="\\/:*?\"<>|"; //1.8.2
-    DWORD   i,j;
+    DWORD   i, j;
     size_t  nLen;
     BOOL    bLegal=FALSE;
     nLen=strlen(lpf);
@@ -100,7 +100,7 @@ BOOL ReplaceInValidFileName(LPSTR lpf)
 //--------------------------------------------------
 LPSTR AtPos(LPSTR lpMaster, LPSTR lp, DWORD size)
 {
-    DWORD   i,j;
+    DWORD   i, j;
     size_t  nsizelp;
     nsizelp=strlen(lp);
 

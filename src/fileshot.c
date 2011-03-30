@@ -33,7 +33,8 @@ extern u_char * lan_file;
 LPSTR GetWholeFileName(LPFILECONTENT lpFileContent)
 {
     LPFILECONTENT lpf;
-    LPSTR   lpName,lptail;
+    LPSTR   lpName;
+    LPSTR   lptail;
     size_t  nLen=0;
 
     for (lpf=lpFileContent; lpf!=NULL; lpf=lpf->lpfatherfile) {
@@ -63,8 +64,10 @@ LPSTR GetWholeFileName(LPFILECONTENT lpFileContent)
 //-------------------------------------------------------------
 VOID GetAllSubFile(
     BOOL    needbrother,
-    DWORD   typedir,DWORD typefile,
-    LPDWORD lpcountdir,LPDWORD lpcountfile,
+    DWORD   typedir,
+    DWORD   typefile,
+    LPDWORD lpcountdir,
+    LPDWORD lpcountfile,
     LPFILECONTENT lpFileContent
 )
 {
@@ -101,10 +104,12 @@ VOID GetAllSubFile(
 //------------------------------------------------------------
 VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
 {
-    LPSTR   lpFilename,lpTemp;
+    LPSTR   lpFilename;
+    LPSTR   lpTemp;
     HANDLE  filehandle;
     WIN32_FIND_DATA finddata;
-    LPFILECONTENT  lpFileContent,lpFileContentTemp;
+    LPFILECONTENT   lpFileContent;
+    LPFILECONTENT   lpFileContentTemp;
 
     lpTemp=GetWholeFileName(lpFatherFile);
     //Not used
@@ -213,7 +218,8 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
 //-------------------------------------------------------------
 VOID CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2)
 {
-    LPFILECONTENT   lp1,lp2;
+    LPFILECONTENT   lp1;
+    LPFILECONTENT   lp2;
 
     for (lp1=lpHead1; lp1!=NULL; lp1=lp1->lpbrotherfile) {
         for (lp2=lpHead2; lp2!=NULL; lp2=lp2->lpbrotherfile) {
@@ -342,7 +348,9 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DWORD nFPCaller)
 {
 
-    DWORD   nFPHeader,nFPCurrent,nFPTemp4Write;
+    DWORD   nFPHeader;
+    DWORD   nFPCurrent;
+    DWORD   nFPTemp4Write;
     size_t  nLenPlus1;
 
     nLenPlus1=strlen(lpFileContent->lpfilename)+1;                          //get len+1

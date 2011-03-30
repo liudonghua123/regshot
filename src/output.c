@@ -77,7 +77,8 @@ VOID WriteHead(u_char * lpstr, DWORD count, BOOL isHTML)
 VOID WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor)
 {
     DWORD   i;
-    size_t  n,nLen;
+    size_t  n;
+    size_t  nLen;
     LPBYTE  lpstr;
     LPCOMRESULT lp;
 

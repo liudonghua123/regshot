@@ -79,7 +79,7 @@
 #define COMMENTLENGTH   50          //Define commentfield length on the MainForm
 #define HTMLWRAPLENGTH  1000        //Define html out put wrap length
 #define MAXAMOUNTOFFILE 10000       //Define out put file counts
-#define EXTDIRLEN       MAX_PATH*3  //Define Searching Directory field length
+#define EXTDIRLEN       MAX_PATH*3  //Define searching directory field length
 #define COMPUTERNAMELEN 64          //Define COMPUTER name length
 #define HIVEBEGINOFFSET 512         //Hive file out put header computerlen*2+sizeof(systemtime)+32 must <hivebeginoffset!!!!!!!!!!!!!!
 
@@ -93,11 +93,11 @@
 
 //Struct used for Windows Registry Key
 struct  _KEYCONTENT {
-    LPSTR   lpkeyname;                          //Pointer to Key Name
-    struct  _VALUECONTENT FAR * lpfirstvalue;   //Pointer to Key's first Value
-    struct  _KEYCONTENT FAR * lpfirstsubkey;    //Pointer to Key's first Sub Key
-    struct  _KEYCONTENT FAR * lpbrotherkey;     //Pointer to Key's brother
-    struct  _KEYCONTENT FAR * lpfatherkey;      //Pointer to Key's father
+    LPSTR   lpkeyname;                          //Pointer to key's name
+    struct  _VALUECONTENT FAR * lpfirstvalue;   //Pointer to key's first value
+    struct  _KEYCONTENT FAR * lpfirstsubkey;    //Pointer to key's first subkey
+    struct  _KEYCONTENT FAR * lpbrotherkey;     //Pointer to key's brother
+    struct  _KEYCONTENT FAR * lpfatherkey;      //Pointer to key's father
     BYTE    bkeymatch;                          //Flag used at comparing
 
 };
@@ -106,12 +106,12 @@ typedef struct _KEYCONTENT KEYCONTENT,FAR * LPKEYCONTENT;
 
 //Struct used for Windows Registry Value
 struct  _VALUECONTENT {
-    DWORD   typecode;                           //Type of Value [DWORD,STRING...]
-    DWORD   datasize;                           //Value Data size in bytes
-    LPSTR   lpvaluename;                        //Pointer to Value Name
-    LPBYTE  lpvaluedata;                        //Pointer to Value Data
-    struct  _VALUECONTENT FAR * lpnextvalue;    //Pointer to Value's brother
-    struct  _KEYCONTENT FAR * lpfatherkey;      //Pointer to Value's father[Key]
+    DWORD   typecode;                           //Type of value [DWORD,STRING...]
+    DWORD   datasize;                           //Value data size in bytes
+    LPSTR   lpvaluename;                        //Pointer to value name
+    LPBYTE  lpvaluedata;                        //Pointer to value data
+    struct  _VALUECONTENT FAR * lpnextvalue;    //Pointer to value's brother
+    struct  _KEYCONTENT FAR * lpfatherkey;      //Pointer to value's father[Key]
     BYTE    bvaluematch;                        //Flag used at comparing
 };
 typedef struct _VALUECONTENT VALUECONTENT,FAR * LPVALUECONTENT;
@@ -119,16 +119,16 @@ typedef struct _VALUECONTENT VALUECONTENT,FAR * LPVALUECONTENT;
 
 //Struct used for Windows File System
 struct  _FILECONTENT {
-    LPSTR   lpfilename;                         //Pointer to File Name
+    LPSTR   lpfilename;                         //Pointer to filename
     DWORD   writetimelow;                       //File write time [LOW  DWORD]
     DWORD   writetimehigh;                      //File write time [HIGH DWORD]
     DWORD   filesizelow;                        //File size [LOW  DWORD]
     DWORD   filesizehigh;                       //File size [HIGH DWORD]
-    DWORD   fileattr;                           //File Attributes
+    DWORD   fileattr;                           //File attributes
     DWORD   cksum;                              //File checksum(plan to add in 1.8 not used now)
-    struct  _FILECONTENT FAR * lpfirstsubfile;  //Pointer to Files[DIRS] first sub file
-    struct  _FILECONTENT FAR * lpbrotherfile;   //Pointer to Files[DIRS] brother
-    struct  _FILECONTENT FAR * lpfatherfile;    //Pointer to Files father
+    struct  _FILECONTENT FAR * lpfirstsubfile;  //Pointer to files[DIRS] first sub file
+    struct  _FILECONTENT FAR * lpbrotherfile;   //Pointer to files[DIRS] brother
+    struct  _FILECONTENT FAR * lpfatherfile;    //Pointer to files father
     BYTE    bfilematch;                         //Flag used at comparing
 };
 typedef struct _FILECONTENT FILECONTENT,FAR * LPFILECONTENT;
@@ -138,8 +138,8 @@ typedef struct _FILECONTENT FILECONTENT,FAR * LPFILECONTENT;
 /* <=1.7.3
 struct  _HEADFILE
 {
-    LPFILECONTENT   lpfilecontent1;             //Pointer to filecontent at 1st shot
-    LPFILECONTENT   lpfilecontent2;             //Pointer to filecontent at 2nd shot
+    LPFILECONTENT   lpfilecontent1;             //Pointer to file content at 1st shot
+    LPFILECONTENT   lpfilecontent2;             //Pointer to file content at 2nd shot
     struct _HEADFILE    FAR *   lpnextheadfile; //Pointer to next headfile struc
 };
 */
@@ -204,34 +204,61 @@ DWORD   nDIRMODI;
 
 //Some DWORD used to show the progress bar and etc
 DWORD   nGettingValue;
-DWORD   nGettingKey,nComparing,nRegStep,nFileStep,nSavingKey;
-DWORD   nGettingTime,nBASETIME,nBASETIME1;
-DWORD   nGettingFile,nGettingDir,nSavingFile;
-//DWORD nMask=0xf7fd;   //not used now, but should be added
-//DWORD nRegMessageCount=0;
+DWORD   nGettingKey;
+DWORD   nComparing;
+DWORD   nRegStep;
+DWORD   nFileStep;
+DWORD   nSavingKey;
+DWORD   nGettingTime;
+DWORD   nBASETIME;
+DWORD   nBASETIME1;
+DWORD   nGettingFile;
+DWORD   nGettingDir;
+DWORD   nSavingFile;
+//DWORD   nMask=0xf7fd;   //not used now, but should be added
+//DWORD   nRegMessageCount=0;
 DWORD   NBW; //that is: NumberOfBytesWritten;
 
 
 //Pointers to Registry Key
-LPKEYCONTENT    lpHeadLocalMachine1;        //Pointer to HKEY_LOCAL_MACHINE 1
-LPKEYCONTENT    lpHeadLocalMachine2;        //Pointer to HKEY_LOCAL_MACHINE 2
-LPKEYCONTENT    lpHeadUsers1;               //Pointer to HKEY_USERS 1
-LPKEYCONTENT    lpHeadUsers2;               //Pointer to HKEY_USERS 1
-LPHEADFILE      lpHeadFile1,lpHeadFile2;    //Pointer to Headfile
-LPSTR           lpTempHive1,lpTempHive2;    //Pointer for load hive files
-LPSTR           lpComputerName1,lpComputerName2,lpUserName1,lpUserName2;
+LPKEYCONTENT    lpHeadLocalMachine1;    //Pointer to HKEY_LOCAL_MACHINE 1
+LPKEYCONTENT    lpHeadLocalMachine2;    //Pointer to HKEY_LOCAL_MACHINE 2
+LPKEYCONTENT    lpHeadUsers1;           //Pointer to HKEY_USERS 1
+LPKEYCONTENT    lpHeadUsers2;
+LPHEADFILE      lpHeadFile1;            //Pointer to headfile
+LPHEADFILE      lpHeadFile2;
+LPSTR           lpTempHive1;            //Pointer for loading hive files
+LPSTR           lpTempHive2;
+LPSTR           lpComputerName1;
+LPSTR           lpComputerName2;
+LPSTR           lpUserName1;
+LPSTR           lpUserName2;
 SYSTEMTIME FAR * lpSystemtime1,* lpSystemtime2;
 
 
 //Some pointers need to allocate enough space to working
-LPSTR   lpKeyName,lpMESSAGE,lpExtDir,lpOutputpath,lpLastSaveDir,lpLastOpenDir,lpCurrentLanguage;
-LPSTR   lpWindowsDirName,lpTempPath,lpStartDir,lpIni,lpFreeStrings,lpCurrentTranslator;
-
+LPSTR   lpKeyName;
+LPSTR   lpMESSAGE;
+LPSTR   lpExtDir;
+LPSTR   lpOutputpath;
+LPSTR   lpLastSaveDir;
+LPSTR   lpLastOpenDir;
+LPSTR   lpCurrentLanguage;
+LPSTR   lpWindowsDirName;
+LPSTR   lpTempPath;
+LPSTR   lpStartDir;
+LPSTR   lpIni;
+LPSTR   lpFreeStrings;
+LPSTR   lpCurrentTranslator;
 //LPSTR REGSHOTDATFILE    ="rgst152.dat";
 LPSTR   lpProgramDir;   //tfx ¶¨Òå
-LPDWORD lpSnapRegs, lpSnapFiles;
+LPDWORD lpSnapRegs;
+LPDWORD lpSnapFiles;
 LPSTR   lpRegshotIni;
-LPSTR   lpSnapRegsStr,lpSnapFilesStr,lpSnapKey,lpSnapReturn;
+LPSTR   lpSnapRegsStr;
+LPSTR   lpSnapFilesStr;
+LPSTR   lpSnapKey;
+LPSTR   lpSnapReturn;
 
 LPDWORD ldwTempStrings;
 
@@ -249,20 +276,23 @@ LPDWORD ldwTempStrings;
 LPSTR   lstrdb1;
 #endif
 
-MSG             msg;                            //Windows MSG struct
-HWND            hWnd;                           //The handle of REGSHOT
-HMENU           hMenu,hMenuClear;               //The handles of shortcut menus
-HANDLE          hFile,hFileWholeReg;            //Handle of file regshot use
-HCURSOR         hHourGlass;                     //Handle of cursor
-HCURSOR         hSaveCursor;                    //Handle of cursor
-BOOL            is1;                            //Flag to determine is the 1st shot
-BOOL            is1LoadFromHive,is2LoadFromHive;//Flag to determine are shots load from hive files
-RECT            rect;                           //Window RECT
-FILETIME        ftLastWrite;                    //Filetime struct
-BROWSEINFO      BrowseInfo1;                    //BrowseINFO struct
-OPENFILENAME    opfn;                           //Openfilename struct
-BOOL            bUseLongRegHead;                //1.8.1 for compatible to 1.61e5 and undoreg1.46
-HANDLE          hHeap;                          //1.8.2
+MSG             msg;                //Windows MSG struct
+HWND            hWnd;               //The handle of REGSHOT
+HMENU           hMenu;              //The handles of shortcut menus
+HMENU           hMenuClear;         //The handles of shortcut menus
+HANDLE          hFile;              //Handle of file regshot use
+HANDLE          hFileWholeReg;      //Handle of file regshot use
+HCURSOR         hHourGlass;         //Handle of cursor
+HCURSOR         hSaveCursor;        //Handle of cursor
+BOOL            is1;                //Flag to determine is the 1st shot
+BOOL            is1LoadFromHive;    //Flag to determine are shots load from hive files
+BOOL            is2LoadFromHive;    //Flag to determine are shots load from hive files
+RECT            rect;               //Window RECT
+FILETIME        ftLastWrite;        //Filetime struct
+BROWSEINFO      BrowseInfo1;        //BrowseINFO struct
+OPENFILENAME    opfn;               //Openfilename struct
+BOOL            bUseLongRegHead;    //1.8.1 for compatible to 1.61e5 and undoreg1.46
+HANDLE          hHeap;              //1.8.2
 
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    GetSnapRegs(HWND hDlg);
