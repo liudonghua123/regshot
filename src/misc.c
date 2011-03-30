@@ -104,7 +104,7 @@ LPSTR AtPos(LPSTR lpMaster, LPSTR lp, DWORD size)
     size_t  nsizelp;
     nsizelp = strlen(lp);
 
-    if (size <= nsizelp||nsizelp<1) {
+    if (size <= nsizelp || nsizelp < 1) {
         return NULL;
     }
 

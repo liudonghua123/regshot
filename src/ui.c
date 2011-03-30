@@ -169,7 +169,6 @@ VOID UI_AfterClear(VOID)
 // -----------------------------
 VOID Shot1(VOID)
 {
-    size_t  nLengthofStr;
     lpHeadLocalMachine1 = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
     lpHeadUsers1 = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
@@ -200,7 +199,7 @@ VOID Shot1(VOID)
     UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
     if (SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0) == 1) {
-        size_t  nSubExtDirLen;
+        size_t  nLengthofStr;
         DWORD   i;
         LPSTR   lpSubExtDir;
         LPHEADFILE lphf;
@@ -214,8 +213,10 @@ VOID Shot1(VOID)
 
         if (nLengthofStr>0)
             for (i = 0; i <= nLengthofStr; i++) {
+                size_t  nSubExtDirLen;
+
                 // This is the stupid filename detection routine, [seperate with ";"]
-                if (*(lpExtDir+i) == 0x3b||*(lpExtDir+i) == 0x00) {
+                if (*(lpExtDir+i) == 0x3b || *(lpExtDir+i) == 0x00) {
                     *(lpExtDir+i) = 0x00;
 
                     if (*(lpExtDir+i-1) == '\\' && i>0) {
@@ -266,7 +267,6 @@ VOID Shot1(VOID)
 // -----------------------------
 VOID Shot2(VOID)
 {
-    size_t  nLengthofStr;
     lpHeadLocalMachine2 = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
     lpHeadUsers2 = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
 
@@ -297,7 +297,7 @@ VOID Shot2(VOID)
     UpdateCounters(lan_key,lan_value,nGettingKey,nGettingValue);
 
     if (SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0) == 1) {
-        size_t  nSubExtDirLen;
+        size_t  nLengthofStr;
         DWORD   i;
         LPSTR   lpSubExtDir;
         LPHEADFILE lphf;
@@ -311,8 +311,10 @@ VOID Shot2(VOID)
 
         if (nLengthofStr>0)
             for (i = 0; i <= nLengthofStr; i++) {
+                size_t  nSubExtDirLen;
+
                 // This is the stupid filename detection routine, [seperate with ";"]
-                if (*(lpExtDir+i) == 0x3b||*(lpExtDir+i) == 0x00) {
+                if (*(lpExtDir+i) == 0x3b || *(lpExtDir+i) == 0x00) {
                     *(lpExtDir+i) = 0x00;
 
                     if (*(lpExtDir+i-1) == '\\' && i>0) {
