@@ -230,7 +230,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         is2LoadFromHive = LoadHive(&lpHeadLocalMachine2,&lpHeadUsers2,&lpHeadFile2,&lpTempHive2);
                     }
 
-                    //if (is1LoadFromHive||is2LoadFromHive)
+                    //if (is1LoadFromHive || is2LoadFromHive)
                     //  SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
 
                     return(TRUE);
@@ -369,7 +369,6 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDC_BROWSE1: {
 
                     LPITEMIDLIST lpidlist;
-                    size_t  nWholeLen;
                     BrowseInfo1.hwndOwner = hDlg;
                     BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH+1);
                     //BrowseInfo1.lpszTitle = "Select:";
@@ -379,6 +378,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
                     if (lpidlist != NULL) {
+                        size_t  nWholeLen;
+
                         SHGetPathFromIDList(lpidlist,BrowseInfo1.pszDisplayName);
                         nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
                         nWholeLen = nLengthofStr+strlen(BrowseInfo1.pszDisplayName);

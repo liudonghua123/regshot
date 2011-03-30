@@ -301,11 +301,11 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
     LPSTR   lpdata;
     LPSTR   lpall;
 
-    if (actiontype == KEYADD||actiontype == KEYDEL) {
+    if (actiontype == KEYADD || actiontype == KEYDEL) {
         lpname = GetWholeKeyName(lp);
         CreateNewResult(actiontype,lpcount,lpname);
     } else {
-        if (actiontype == VALADD||actiontype == VALDEL||actiontype == VALMODI) {
+        if (actiontype == VALADD || actiontype == VALDEL || actiontype == VALMODI) {
 
             lpname = GetWholeValueName(lp);
             lpdata = GetWholeValueData(lp);
@@ -684,7 +684,6 @@ BOOL CompareShots(void)
     LPSTR   lpDestFileName;
     DWORD   buffersize = 2048;
     DWORD   nTotal;
-    DWORD   filetail = 0;
     size_t  nLengthofStr;
     LPHEADFILE  lphf1;
     LPHEADFILE  lphf2;
@@ -820,6 +819,7 @@ BOOL CompareShots(void)
     strcat(lpDestFileName,lpExt);
     hFile = CreateFile(lpDestFileName,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
+        DWORD   filetail = 0;
         for (filetail = 0; filetail<MAXAMOUNTOFFILE; filetail++) {
             sprintf(lpDestFileName+nLengthofStr,"_%04d",filetail);
             //*(lpDestFileName+nLengthofStr+5) = 0x00;
@@ -1217,7 +1217,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
     DWORD nFPcurrent1;
     LPHEADFILE lphf;
 
-    if (lpKeyHLM != NULL||lpKeyUSER != NULL) {
+    if (lpKeyHLM != NULL || lpKeyUSER != NULL) {
 
         opfn.lStructSize = sizeof(opfn);
         opfn.hwndOwner = hWnd;

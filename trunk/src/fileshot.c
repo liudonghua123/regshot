@@ -51,7 +51,7 @@ LPSTR GetWholeFileName(LPFILECONTENT lpFileContent)
     for (lpf = lpFileContent; lpf != NULL; lpf = lpf->lpfatherfile) {
         nLen = strlen(lpf->lpfilename);
         memcpy(lptail -= nLen,lpf->lpfilename,nLen);
-        if (lptail>lpName) {
+        if (lptail > lpName) {
             *--lptail = '\\';    // 0x5c;
         }
     }
@@ -205,7 +205,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
     FindClose(filehandle);
 
     nGettingTime = GetTickCount();
-    if ((nGettingTime-nBASETIME1)>REFRESHINTERVAL) {
+    if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
         UpdateCounters(lan_dir,lan_file,nGettingDir,nGettingFile);
     }
 
