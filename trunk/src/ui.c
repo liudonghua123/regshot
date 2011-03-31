@@ -212,8 +212,6 @@ VOID Shot1(VOID)
 
         if (nLengthofStr > 0)
             for (i = 0; i <= nLengthofStr; i++) {
-                size_t  nSubExtDirLen;
-
                 // This is the stupid filename detection routine, [seperate with ";"]
                 if (*(lpExtDir+i) == 0x3b || *(lpExtDir+i) == 0x00) {
                     *(lpExtDir+i) = 0x00;
@@ -223,6 +221,8 @@ VOID Shot1(VOID)
                     }
 
                     if (*lpSubExtDir != 0x00) {
+                        size_t  nSubExtDirLen;
+
                         lphf = (LPHEADFILE)MYALLOC0(sizeof(HEADFILE));
                         if (lpHeadFile1 == NULL) {
                             lpHeadFile1 = lphf;
@@ -310,8 +310,6 @@ VOID Shot2(VOID)
 
         if (nLengthofStr > 0)
             for (i = 0; i <= nLengthofStr; i++) {
-                size_t  nSubExtDirLen;
-
                 // This is the stupid filename detection routine, [seperate with ";"]
                 if (*(lpExtDir+i) == 0x3b || *(lpExtDir+i) == 0x00) {
                     *(lpExtDir+i) = 0x00;
@@ -321,6 +319,8 @@ VOID Shot2(VOID)
                     }
 
                     if (*lpSubExtDir != 0x00) {
+                        size_t  nSubExtDirLen;
+
                         lphf = (LPHEADFILE)MYALLOC0(sizeof(HEADFILE));
                         if (lpHeadFile2 == NULL) {
                             lpHeadFile2 = lphf;
