@@ -20,9 +20,7 @@
     along with Regshot; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-/*
-    Other information Please view Readme.txt and history.txt.
-*/
+
 
 #include "global.h"
 #include "version.h"
@@ -106,67 +104,66 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 GetDefaultStrings();
             }
 
-            /*          // To get rgst152.dat which is the ini file of regshot,but it should  be a standard ini file in future!
-                        hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-                        if (hFile != INVALID_HANDLE_VALUE)
-                        {
-                            if ((ReadFile(hFile,&nFlag,1,&NBW,NULL) == TRUE) && NBW == 1)
-                            {
-                                SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)(nFlag&0x01),(LPARAM)0);
-                                SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)((nFlag&0x01)^0x01),(LPARAM)0);
-                                SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)((nFlag&0x02)>>1),(LPARAM)0);
-                                //SendMessage(GetDlgItem(hDlg,IDC_CHECKTURBO),BM_SETCHECK,(WPARAM)((nFlag&0x02)>1),(LPARAM)0);
-                                //SendMessage(hDlg,WM_COMMAND,(WPARAM)(((DWORD)(BN_CLICKED)<<16)|(DWORD)((nFlag&0x01 == 1)?IDC_RADIO1:IDC_RADIO2)),(LPARAM)0);
-                                //SendMessage(GetDlgItem(hDlg,IDC_CHECKAUTOCOMPARE),BM_SETCHECK,(WPARAM)((nFlag&0x02)>1),(LPARAM)0);
-                                //SendMessage(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),BM_SETCHECK,(WPARAM)((nFlag&0x04)>>2),(LPARAM)0);
-                                //SendMessage(GetDlgItem(hDlg,IDC_CHECKINI),BM_SETCHECK,(WPARAM)((nFlag&0x08)>>3),(LPARAM)0);
-                            }
-                            ReadFile(hFile,&nMask,4,&NBW,NULL);
+            /*// To get rgst152.dat which is the ini file of regshot,but it should  be a standard ini file in future!
+              hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+              if (hFile != INVALID_HANDLE_VALUE)
+              {
+                  if ((ReadFile(hFile,&nFlag,1,&NBW,NULL) == TRUE) && NBW == 1)
+                  {
+                      SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)(nFlag&0x01),(LPARAM)0);
+                      SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)((nFlag&0x01)^0x01),(LPARAM)0);
+                      SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)((nFlag&0x02)>>1),(LPARAM)0);
+                      //SendMessage(GetDlgItem(hDlg,IDC_CHECKTURBO),BM_SETCHECK,(WPARAM)((nFlag&0x02)>1),(LPARAM)0);
+                      //SendMessage(hDlg,WM_COMMAND,(WPARAM)(((DWORD)(BN_CLICKED)<<16)|(DWORD)((nFlag&0x01 == 1)?IDC_RADIO1:IDC_RADIO2)),(LPARAM)0);
+                      //SendMessage(GetDlgItem(hDlg,IDC_CHECKAUTOCOMPARE),BM_SETCHECK,(WPARAM)((nFlag&0x02)>1),(LPARAM)0);
+                      //SendMessage(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),BM_SETCHECK,(WPARAM)((nFlag&0x04)>>2),(LPARAM)0);
+                      //SendMessage(GetDlgItem(hDlg,IDC_CHECKINI),BM_SETCHECK,(WPARAM)((nFlag&0x08)>>3),(LPARAM)0);
+                  }
+                  ReadFile(hFile,&nMask,4,&NBW,NULL);
 
-                            if ((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL) == TRUE)
-                                 && NBW == sizeof(nLengthofStr) && nLengthofStr != 0)
-                            {
+                  if ((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL) == TRUE)
+                       && NBW == sizeof(nLengthofStr) && nLengthofStr != 0)
+                  {
 
-                                if ((ReadFile(hFile,lpExtDir,nLengthofStr,&NBW,NULL) == TRUE) && NBW == nLengthofStr)
-                                {
-                                    SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
-                                }
-                                else
-                                    SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
+                      if ((ReadFile(hFile,lpExtDir,nLengthofStr,&NBW,NULL) == TRUE) && NBW == nLengthofStr)
+                      {
+                          SetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir);
+                      }
+                      else
+                          SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
 
-                            }
-                            else
-                                SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
+                  }
+                  else
+                      SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
 
-                            // the output temppath
-                            if ((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL) == TRUE)
-                                 && NBW == sizeof(nLengthofStr) && nLengthofStr != 0)
-                            {
+                  // the output temppath
+                  if ((ReadFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL) == TRUE)
+                       && NBW == sizeof(nLengthofStr) && nLengthofStr != 0)
+                  {
 
-                                if ((ReadFile(hFile,lpOutputpath,nLengthofStr,&NBW,NULL) == TRUE) && NBW == nLengthofStr)
-                                {
-                                    SetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath);
-                                }
-                                else
-                                    SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
+                      if ((ReadFile(hFile,lpOutputpath,nLengthofStr,&NBW,NULL) == TRUE) && NBW == nLengthofStr)
+                      {
+                          SetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath);
+                      }
+                      else
+                          SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
 
-                            }
-                            else
-                                SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
+                  }
+                  else
+                      SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
+                      CloseHandle(hFile);
+              }
+              else
+              {
+                  SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)0x01,(LPARAM)0);
+                  SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
+                  SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
+                  SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
+                  SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
+                  //SendMessage(GetDlgItem(hDlg,IDC_CHECKTURBO),BM_SETCHECK,(WPARAM)0,(LPARAM)0);
+              }
+              EnableWindow(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),FALSE);*/
 
-
-                            CloseHandle(hFile);
-                        }
-                        else
-                        {
-                            SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_SETCHECK,(WPARAM)0x01,(LPARAM)0);
-                            SendMessage(GetDlgItem(hDlg,IDC_RADIO2),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
-                            SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
-                            SetDlgItemText(hDlg,IDC_EDITDIR,lpWindowsDirName);
-                            SetDlgItemText(hDlg,IDC_EDITPATH,lpTempPath);
-                            //SendMessage(GetDlgItem(hDlg,IDC_CHECKTURBO),BM_SETCHECK,(WPARAM)0,(LPARAM)0);
-                        }
-            */          //EnableWindow(GetDlgItem(hDlg,IDC_CHECKWRITECONTENT),FALSE);
             SendMessage(hDlg,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
 
             lpLastSaveDir = lpOutputpath;
@@ -503,7 +500,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     SetClassLongPtr(hWnd,GCLP_HICON,(LONG_PTR)LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAINICON)));
 
-    SetWindowText(hWnd, str_prgname);   // tfx 设置程序标题为str_prgname，避免修改资源文件
+    SetWindowText(hWnd,str_prgname);   // tfx 设置程序标题为str_prgname，避免修改资源文件
     ShowWindow(hWnd,nCmdShow);
     UpdateWindow(hWnd);
     //SetPriorityClass(hInstance,31);
