@@ -45,7 +45,7 @@ extern LPSTR str_Original;
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
     if (uMsg == BFFM_INITIALIZED) {
-        SendMessage(hWnd, BFFM_SETSELECTION, 1, lpData);
+        SendMessage(hWnd,BFFM_SETSELECTION,1,lpData);
     }
     return 0;
 }
@@ -83,7 +83,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             GetWindowsDirectory(lpWindowsDirName,MAX_PATH);
             nLengthofStr = strlen(lpWindowsDirName);
-            if (nLengthofStr>0 && *(lpWindowsDirName+nLengthofStr-1) == '\\') {
+            if (nLengthofStr > 0 && *(lpWindowsDirName+nLengthofStr-1) == '\\') {
                 *(lpWindowsDirName+nLengthofStr-1) = 0x00;
             }
             GetTempPath(MAX_PATH,lpTempPath);
@@ -193,6 +193,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     DestroyMenu(hMenu);
 
                     return(TRUE);
+
                 case IDC_2NDSHOT:
                     CreateShotPopupMenu();
                     is1 = FALSE;
@@ -200,6 +201,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     TrackPopupMenu(hMenu,TPM_LEFTALIGN|TPM_LEFTBUTTON,rect.left+10,rect.top+10,0,hDlg,NULL);
                     DestroyMenu(hMenu);
                     return(TRUE);
+
                 case IDM_SHOTONLY:
                     if (is1) {
                         is1LoadFromHive = FALSE;
@@ -210,6 +212,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     }
 
                     return(TRUE);
+
                 case IDM_SHOTSAVE:
                     if (is1) {
                         is1LoadFromHive = FALSE;
@@ -235,9 +238,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     return(TRUE);
 
-                    //case  IDC_SAVEREG:
-                    //SaveRegistry(lpHeadLocalMachine1,lpHeadUsers1);
-                    //      return(TRUE);
+                    /*case IDC_SAVEREG:
+                        SaveRegistry(lpHeadLocalMachine1,lpHeadUsers1);
+                        return(TRUE);*/
+
                 case IDC_COMPARE:
                     EnableWindow(GetDlgItem(hDlg,IDC_COMPARE),FALSE);
                     UI_BeforeClear();
@@ -249,6 +253,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     SetCursor(hSaveCursor);
                     MessageBeep(0xffffffff);
                     return(TRUE);
+
                 case IDC_CLEAR1:
                     hMenuClear = CreatePopupMenu();
                     AppendMenu(hMenuClear,MF_STRING,IDM_CLEARALLSHOTS,lan_menuclearallshots);
@@ -257,7 +262,6 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     AppendMenu(hMenuClear,MF_STRING,IDM_CLEARSHOT2,lan_menuclearshot2);
                     //AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear comparison result");
                     SetMenuDefaultItem(hMenuClear,IDM_CLEARALLSHOTS,FALSE);
-
 
                     //if (lpHeadFile != NULL)
                     //{
@@ -282,9 +286,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     TrackPopupMenu(hMenuClear,TPM_LEFTALIGN|TPM_LEFTBUTTON,rect.left+10,rect.top+10,0,hDlg,NULL);
                     DestroyMenu(hMenuClear);
                     return(TRUE);
+
                 case IDM_CLEARALLSHOTS:
                     UI_BeforeClear();
-                    FreeAllKeyContent1();  // Note!! if loadfromhive and contains file, we should let lpHeadFile to NULL
+                    FreeAllKeyContent1();  // Note!! If loadfromhive and contains a file, we should let lpHeadFile to NULL
                     FreeAllKeyContent2();
                     FreeAllCompareResults();
 
@@ -296,6 +301,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_AfterClear();
                     EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
                     return(TRUE);
+
                 case IDM_CLEARSHOT1:
                     UI_BeforeClear();
                     FreeAllKeyContent1();
@@ -307,6 +313,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     ClearHeadFileMatchTag(lpHeadFile2);
                     UI_AfterClear();
                     return(TRUE);
+
                 case IDM_CLEARSHOT2:
                     UI_BeforeClear();
                     FreeAllKeyContent2();
@@ -318,8 +325,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     ClearHeadFileMatchTag(lpHeadFile1);
                     UI_AfterClear();
                     return(TRUE);
-                    /*
-                    case IDM_CLEARRESULT:
+
+                /*case IDM_CLEARRESULT:
                     UI_BeforeClear();
                     FreeAllCompareResults();
                     ClearKeyMatchTag(lpHeadLocalMachine1);
@@ -329,8 +336,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     ClearHeadFileMatchTag(lpHeadFile1);
                     ClearHeadFileMatchTag(lpHeadFile2);
                     UI_AfterClear();
-                    return(TRUE);
-                    */
+                    return(TRUE);*/
 
                 case IDC_CHECKDIR:
                     if (SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0) == 1) {
@@ -341,27 +347,27 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         EnableWindow(GetDlgItem(hDlg,IDC_BROWSE1),FALSE);
                     }
                     return(TRUE);
+
                 case IDC_CANCEL1:
                 case IDCANCEL:
-                    /*                  SetCurrentDirectory(lpStartDir);
-                                        hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-                                        if (hFile != INVALID_HANDLE_VALUE)
-                                        {
+                    /*SetCurrentDirectory(lpStartDir);
+                      hFile = CreateFile(REGSHOTDATFILE,GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+                      if (hFile != INVALID_HANDLE_VALUE)
+                      {
 
-                                            nFlag = (BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)|
-                                                SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1);
-                                            WriteFile(hFile,&nFlag,1,&NBW,NULL);
-                                            WriteFile(hFile,&nMask,4,&NBW,NULL);
-                                            nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
-                                            WriteFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL);
-                                            WriteFile(hFile,lpExtDir,nLengthofStr,&NBW,NULL);
-                                            nLengthofStr = GetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath,MAX_PATH);
-                                            WriteFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL);
-                                            WriteFile(hFile,lpOutputpath,nLengthofStr,&NBW,NULL);
+                          nFlag = (BYTE)(SendMessage(GetDlgItem(hDlg,IDC_RADIO1),BM_GETCHECK,(WPARAM)0,(LPARAM)0)|
+                              SendMessage(GetDlgItem(hDlg,IDC_CHECKDIR),BM_GETCHECK,(WPARAM)0,(LPARAM)0)<<1);
+                          WriteFile(hFile,&nFlag,1,&NBW,NULL);
+                          WriteFile(hFile,&nMask,4,&NBW,NULL);
+                          nLengthofStr = GetDlgItemText(hDlg,IDC_EDITDIR,lpExtDir,EXTDIRLEN+2);
+                          WriteFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL);
+                          WriteFile(hFile,lpExtDir,nLengthofStr,&NBW,NULL);
+                          nLengthofStr = GetDlgItemText(hDlg,IDC_EDITPATH,lpOutputpath,MAX_PATH);
+                          WriteFile(hFile,&nLengthofStr,sizeof(nLengthofStr),&NBW,NULL);
+                          WriteFile(hFile,lpOutputpath,nLengthofStr,&NBW,NULL);
 
-                                            CloseHandle(hFile);
-                                        }
-                    */
+                          CloseHandle(hFile);
+                      }*/
                     SetSnapRegs(hDlg);  // tfx
                     PostQuitMessage(0);
                     return(TRUE);
@@ -377,6 +383,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     BrowseInfo1.lParam = 0;
 
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
+
                     if (lpidlist != NULL) {
                         size_t  nWholeLen;
 
@@ -427,6 +434,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     MYFREE(BrowseInfo1.pszDisplayName);
                 }
                 return(TRUE);
+
                 case IDC_COMBOLANGUAGE:
                     GetLanguageStrings(hDlg);
                     return(TRUE);
@@ -447,8 +455,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return(FALSE);
 }
 
-/*
-BOOL SetPrivilege(HANDLE hToken, LPCTSTR pString, BOOL bEnablePrivilege)
+
+/*BOOL SetPrivilege(HANDLE hToken, LPCTSTR pString, BOOL bEnablePrivilege)
 {
     TOKEN_PRIVILEGES    tp;
     LUID    luid;
@@ -471,10 +479,9 @@ BOOL SetPrivilege(HANDLE hToken, LPCTSTR pString, BOOL bEnablePrivilege)
     if (!AdjustTokenPrivileges(hToken,FALSE,&tpPrevious,cbSize,NULL,NULL))
         return FALSE;
     return TRUE;
-}
-*/
+}*/
 
-//////////////////////////////////////////////////////////////////
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpszCmdLine, int nCmdShow)
 {
