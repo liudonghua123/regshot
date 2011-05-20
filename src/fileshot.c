@@ -369,7 +369,7 @@ VOID	SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,DWO
 	nFPTemp4Write=0;
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);              //clear and save bfilematch
 	WriteFile(hFileWholeReg,lpFileContent->lpfilename,nLenPlus1,&NBW,NULL); //Save the current filename
-	//in arm ??
+	
 	nPad= (nLenPlus1%4 ==0 )? 0 : (4-nLenPlus1%4);
 	if( nPad > 0)
 		WriteFile(hFileWholeReg,&nFPTemp4Write,nPad,&NBW,NULL);	//Save the current filename
