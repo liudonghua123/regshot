@@ -92,13 +92,14 @@
 
 
 // Struct used for Windows Registry Key
+// 1.8.3s  following 3 structs are "slightly" changed
 struct _KEYCONTENT {
     LPSTR  lpkeyname;                          // Pointer to key's name
     struct _VALUECONTENT FAR * lpfirstvalue;   // Pointer to key's first value
     struct _KEYCONTENT FAR * lpfirstsubkey;    // Pointer to key's first subkey
     struct _KEYCONTENT FAR * lpbrotherkey;     // Pointer to key's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to key's father
-    BYTE   bkeymatch;                          // Flag used at comparing
+    DWORD  bkeymatch;                          //Flag used at comparing,former is byte
 
 };
 typedef struct _KEYCONTENT KEYCONTENT,FAR * LPKEYCONTENT;
@@ -112,7 +113,7 @@ struct _VALUECONTENT {
     LPBYTE lpvaluedata;                        // Pointer to value data
     struct _VALUECONTENT FAR * lpnextvalue;    // Pointer to value's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to value's father[Key]
-    BYTE   bvaluematch;                        // Flag used at comparing
+    DWORD  bvaluematch;                        // Flag used at comparing,former is byte
 };
 typedef struct _VALUECONTENT VALUECONTENT,FAR * LPVALUECONTENT;
 
@@ -129,7 +130,7 @@ struct _FILECONTENT {
     struct _FILECONTENT FAR * lpfirstsubfile;  // Pointer to files[DIRS] first sub file
     struct _FILECONTENT FAR * lpbrotherfile;   // Pointer to files[DIRS] brother
     struct _FILECONTENT FAR * lpfatherfile;    // Pointer to files father
-    BYTE   bfilematch;                         // Flag used at comparing
+    DWORD  bfilematch;                         // Flag used at comparing,former is byte
 };
 typedef struct _FILECONTENT FILECONTENT,FAR * LPFILECONTENT;
 
