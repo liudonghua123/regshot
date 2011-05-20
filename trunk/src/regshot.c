@@ -24,7 +24,7 @@
 
 char str_DefResPre[] = REGSHOT_RESULT_FILE;
 char str_filter[] = {"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
-char str_RegFileSignature[]="RSHIVE183"; //Need [] to use with sizeof() must <12  changed 1.8.3s for new hive file (aligned for arm?)
+char str_RegFileSignature[]="RSHIVE183"; //Need [] to use with sizeof() must <12  changed 1.8.3s for new hive file 
 
 extern u_char * lan_errorcreatefile;
 extern u_char * lan_comments;
@@ -1159,7 +1159,7 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 	nFPTemp4Write=0;
 	WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);					//clear and save bkeymatch
 	WriteFile(hFileWholeReg,lpKeyContent->lpkeyname,nLenPlus1,&NBW,NULL);	//Save the current keyname
-	//in arm ??
+	
 	if( nPad > 0)
 		WriteFile(hFileWholeReg,&nFPTemp4Write,nPad,&NBW,NULL);
 	
@@ -1176,7 +1176,7 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 		nFPTemp4Write=nFPCurrent+28;										//1.8.3s 7*4,former is 6*4+1
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//save location of lpvaluename
 
-		nPad= (nLenPlus1%4 ==0 )? 0 : (4-nLenPlus1%4); //determine if pad to 4bytes is needed arm ??
+		nPad= (nLenPlus1%4 ==0 )? 0 : (4-nLenPlus1%4); //determine if pad to 4bytes is needed 
 		nFPTemp4Write=(lpv->datasize>0)?(nFPCurrent+28+nLenPlus1+nPad):0;			//if no lpvaluedata,we write 0
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//save location of lpvaluedata
 		
@@ -1189,13 +1189,13 @@ VOID	SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey,DWORD nFPCa
 		nFPTemp4Write=0;
 		WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);				//clear and save bvaluematch
 		WriteFile(hFileWholeReg,lpv->lpvaluename,nLenPlus1,&NBW,NULL);		//save lpvaluename
-		//in arm ??
+		
 		if( nPad > 0)
 			WriteFile(hFileWholeReg,&nFPTemp4Write,nPad,&NBW,NULL);
 
 		if (lpv->datasize > 0) {
 			WriteFile(hFileWholeReg,lpv->lpvaluedata,lpv->datasize,&NBW,NULL); //save lpvaluedata
-			//in arm ??
+			
 			if( nPad1 > 0)
 				WriteFile(hFileWholeReg,&nFPTemp4Write,nPad1,&NBW,NULL);
 		}
