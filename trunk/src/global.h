@@ -19,6 +19,10 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#ifndef REGSHOT_GLOBAL_H
+#define REGSHOT_GLOBAL_H
+
+
 #ifdef __GNUC__
 #include <unistd.h>
 #endif
@@ -99,7 +103,7 @@ struct _KEYCONTENT {
     struct _KEYCONTENT FAR * lpfirstsubkey;    // Pointer to key's first subkey
     struct _KEYCONTENT FAR * lpbrotherkey;     // Pointer to key's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to key's father
-    DWORD  bkeymatch;                          //Flag used at comparing,former is byte
+    DWORD  bkeymatch;                          // Flag used at comparing, former is byte
 
 };
 typedef struct _KEYCONTENT KEYCONTENT,FAR * LPKEYCONTENT;
@@ -113,7 +117,7 @@ struct _VALUECONTENT {
     LPBYTE lpvaluedata;                        // Pointer to value data
     struct _VALUECONTENT FAR * lpnextvalue;    // Pointer to value's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to value's father[Key]
-    DWORD  bvaluematch;                        // Flag used at comparing,former is byte
+    DWORD  bvaluematch;                        // Flag used at comparing, former is byte
 };
 typedef struct _VALUECONTENT VALUECONTENT,FAR * LPVALUECONTENT;
 
@@ -130,7 +134,7 @@ struct _FILECONTENT {
     struct _FILECONTENT FAR * lpfirstsubfile;  // Pointer to files[DIRS] first sub file
     struct _FILECONTENT FAR * lpbrotherfile;   // Pointer to files[DIRS] brother
     struct _FILECONTENT FAR * lpfatherfile;    // Pointer to files father
-    DWORD  bfilematch;                         // Flag used at comparing,former is byte
+    DWORD  bfilematch;                         // Flag used at comparing, former is byte
 };
 typedef struct _FILECONTENT FILECONTENT,FAR * LPFILECONTENT;
 
@@ -341,3 +345,5 @@ VOID    WriteHtmlbr(void);
 VOID    ReAlignFile(LPHEADFILE lpHF, DWORD nBase);
 LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
 VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
+
+#endif //REGSHOT_GLOBAL_H
