@@ -1151,17 +1151,17 @@ VOID    SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD n
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
 
     nFPTemp4Write = nFPHeader + sizeof(KEYCONTENT);                                         // sizeof(KEYCONTENT) 6*4 1.8.3s, in former it is 5*4+1
-    WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Save the location of lpkeyname
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Save the location of lpkeyname
 
     nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : ( sizeof(int) - nLenPlus1 % sizeof(int) );
     nFPTemp4Write = (lpKeyContent->lpfirstvalue != NULL) ? (nFPHeader + sizeof(KEYCONTENT) + nLenPlus1 + nPad) : 0;         // We write lpkeyname plus a "\0"
-    WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Save the location of lpfirstvalue
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Save the location of lpfirstvalue
 
     WriteFile(hFileWholeReg, (LPBYTE)lpKeyContent + sizeof(LPSTR)+sizeof(LPVALUECONTENT), sizeof(LPKEYCONTENT)*2, &NBW, NULL);      // Save lpfirstsubkey and lpbrotherkey
-    WriteFile(hFileWholeReg, &nFPCurrentFatherKey, 4, &NBW, NULL);          // Save nFPCurrentFatherKey passed by caller
+    WriteFile(hFileWholeReg, &nFPCurrentFatherKey, sizeof(DWORD), &NBW, NULL);          // Save nFPCurrentFatherKey passed by caller
 
     nFPTemp4Write = 0;
-    WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Clear and save bkeymatch
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Clear and save bkeymatch
     WriteFile(hFileWholeReg, lpKeyContent->lpkeyname, nLenPlus1, &NBW, NULL); // Save the current keyname
 
     if (nPad > 0) {
@@ -1175,23 +1175,23 @@ VOID    SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD n
 
         nLenPlus1 = strlen(lpv->lpvaluename) + 1;
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
-        WriteFile(hFileWholeReg, (LPBYTE)lpv, 4+4, &NBW, NULL);
+        WriteFile(hFileWholeReg, (LPBYTE)lpv, sizeof(DWORD)*2, &NBW, NULL);
 
         nFPTemp4Write = nFPCurrent + sizeof(VALUECONTENT);                                    // 1.8.3s 7*4, former is 6*4+1
-        WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);            // Save location of lpvaluename
+        WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);            // Save location of lpvaluename
 
         nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : (sizeof(int) - nLenPlus1 % sizeof(int));              // determine if pad to 4bytes is needed
         nFPTemp4Write = (lpv->datasize > 0) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad) : 0;     // if no lpvaluedata, we write 0
-        WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);            // Save location of lpvaluedata
+        WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);            // Save location of lpvaluedata
 
         nPad1 = (lpv->datasize % sizeof(int) == 0) ? 0 : (sizeof(int) - lpv->datasize % sizeof(int));
         nFPTemp4Write = (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0;    // if no nextvalue we write 0
-        WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);            // Save location of next subvalue
+        WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);            // Save location of next subvalue
 
         nFPTemp4Write = nFPHeader;
-        WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);            // Save location of current key
+        WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);            // Save location of current key
         nFPTemp4Write = 0;
-        WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);            // Clear and save bvaluematch
+        WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);            // Clear and save bvaluematch
         WriteFile(hFileWholeReg, lpv->lpvaluename, nLenPlus1, &NBW, NULL);  // Save lpvaluename
 
         if (nPad > 0) {
@@ -1222,7 +1222,7 @@ VOID    SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD n
     if (nFPCaller > 0) { // save position of current key in current father key
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
         SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-        WriteFile(hFileWholeReg, &nFPHeader, 4, &NBW, NULL);
+        WriteFile(hFileWholeReg, &nFPHeader, sizeof(DWORD), &NBW, NULL);
         SetFilePointer(hFileWholeReg, nFPCurrent, NULL, FILE_BEGIN);
     }
 
@@ -1277,7 +1277,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                 // Save the position of H_L_M
                 nFPcurrent = HIVEBEGINOFFSET; // computerlen*2+sizeof(systemtime)+32 must <hivebeginoffset
                 SetFilePointer(hFileWholeReg, 16, NULL, FILE_BEGIN);
-                WriteFile(hFileWholeReg, &nFPcurrent, 4, &NBW, NULL);
+                WriteFile(hFileWholeReg, &nFPcurrent, sizeof(DWORD), &NBW, NULL);
 
                 SetFilePointer(hFileWholeReg, HIVEBEGINOFFSET, NULL, FILE_BEGIN);
 
@@ -1289,7 +1289,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                 // Save the position of hkeyUsr
                 nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
                 SetFilePointer(hFileWholeReg, 20, NULL, FILE_BEGIN);
-                WriteFile(hFileWholeReg, &nFPcurrent, 4, &NBW, NULL);
+                WriteFile(hFileWholeReg, &nFPcurrent, sizeof(DWORD), &NBW, NULL);
                 SetFilePointer(hFileWholeReg, nFPcurrent, NULL, FILE_BEGIN);
 
                 if (lpKeyUSER != NULL) {
@@ -1300,24 +1300,24 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                     // Write start position of file chain
                     nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
                     SetFilePointer(hFileWholeReg, 24, NULL, FILE_BEGIN);
-                    WriteFile(hFileWholeReg, &nFPcurrent, 4, &NBW, NULL);   // write start pos at 24
+                    WriteFile(hFileWholeReg, &nFPcurrent, sizeof(DWORD), &NBW, NULL);   // write start pos at 24
                     SetFilePointer(hFileWholeReg, nFPcurrent, NULL, FILE_BEGIN);
 
                     for (lphf = lpHF; lphf != NULL;) {
                         nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT); // save place for next filehead in chain
                         SetFilePointer(hFileWholeReg, 4, NULL, FILE_CURRENT); // move 4 bytes, leave space for lpnextfilecontent
                         nFPcurrent1 = nFPcurrent + 8;
-                        WriteFile(hFileWholeReg, &nFPcurrent1, 4, &NBW, NULL); // write lpfilecontent
+                        WriteFile(hFileWholeReg, &nFPcurrent1, sizeof(DWORD), &NBW, NULL); // write lpfilecontent
 
                         SaveFileContent(lphf->lpfilecontent, 0, 0);
                         nFPcurrent1 = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
                         SetFilePointer(hFileWholeReg, nFPcurrent, NULL, FILE_BEGIN);
                         lphf = lphf->lpnextheadfile;
                         if (lphf != NULL) {
-                            WriteFile(hFileWholeReg, &nFPcurrent1, 4, &NBW, NULL);
+                            WriteFile(hFileWholeReg, &nFPcurrent1, sizeof(DWORD), &NBW, NULL);
                         } else {
                             nFPcurrent1 = 0;
-                            WriteFile(hFileWholeReg, &nFPcurrent1, 4, &NBW, NULL);
+                            WriteFile(hFileWholeReg, &nFPcurrent1, sizeof(DWORD), &NBW, NULL);
                             break;
                         }
                         SetFilePointer(hFileWholeReg, nFPcurrent1, NULL, FILE_BEGIN);
@@ -1446,13 +1446,13 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
 
                 *lpHive = MYALLOC(nFileSize);
                 nBase = (DWORD)(*lpHive);
-                ReadFile(hFileWholeReg, &nOffSet, 4, &NBW, NULL);
+                ReadFile(hFileWholeReg, &nOffSet, sizeof(DWORD), &NBW, NULL);
                 *lplpKeyHLM = (LPKEYCONTENT)(nBase + nOffSet);
 
-                ReadFile(hFileWholeReg, &nOffSet, 4, &NBW, NULL);
+                ReadFile(hFileWholeReg, &nOffSet, sizeof(DWORD), &NBW, NULL);
                 *lplpKeyUSER = (LPKEYCONTENT)(nBase + nOffSet);
 
-                ReadFile(hFileWholeReg, &nOffSet, 4, &NBW, NULL);
+                ReadFile(hFileWholeReg, &nOffSet, sizeof(DWORD), &NBW, NULL);
                 if (nOffSet == 0) {
                     *lplpHeadFile = NULL;
                 } else {

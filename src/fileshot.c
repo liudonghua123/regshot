@@ -348,6 +348,7 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 //--------------------------------------------------
 //File save engine (It is stupid again!) added in 1.8
 //1.8.3s changed some struct
+//modi 20111216
 //--------------------------------------------------
 VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DWORD nFPCaller)
 {
@@ -361,16 +362,16 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,
     nLenPlus1 = strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
     nFPTemp4Write = nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3s 11*4 former is 10*4+1
-    WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Save the location of lpfilename
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Save the location of lpfilename
 
-    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR), 24, &NBW, NULL);    // Write time, size etc. 6*4
+    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR), 6*sizeof(DWORD), &NBW, NULL);    // Write time, size etc. 6*4
 
     //nFPTemp4Write = (lpFileContent->lpfirstsubfile!=NULL) ? (nFPHeader + 41 + nLenPlus1) : 0;     // We write lpfilename plus a "\0"
     //WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);                  // Save the location of lpfirstsubfile
-    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR)+24, 8, &NBW, NULL);    // Save lpfirstsubfile and lpbrotherfile
-    WriteFile(hFileWholeReg, &nFPCurrentFatherFile, 4, &NBW, NULL);         // Save nFPCurrentFatherKey passed by caller
+    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR)+6*sizeof(DWORD), sizeof(LPFILECONTENT)*2, &NBW, NULL);    // Save lpfirstsubfile and lpbrotherfile
+    WriteFile(hFileWholeReg, &nFPCurrentFatherFile, sizeof(DWORD), &NBW, NULL);         // Save nFPCurrentFatherKey passed by caller
     nFPTemp4Write = 0;
-    WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Clear and save bfilematch
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Clear and save bfilematch
     WriteFile(hFileWholeReg, lpFileContent->lpfilename, nLenPlus1, &NBW, NULL); // Save the current filename
 
     nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : (sizeof(int) - nLenPlus1 % sizeof(int));
@@ -380,18 +381,18 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,
 
     if (lpFileContent->lpfirstsubfile != NULL) {
         // pass this filecontent's position as subfile's fatherfile's position and pass the "lpfirstsubfile field"
-        SaveFileContent(lpFileContent->lpfirstsubfile, nFPHeader, nFPHeader + sizeof(LPSTR)+24);
+        SaveFileContent(lpFileContent->lpfirstsubfile, nFPHeader, nFPHeader + sizeof(LPSTR)+6*sizeof(DWORD));
     }
 
     if (lpFileContent->lpbrotherfile != NULL) {
         // pass this file's fatherfile's position as brother's father and pass "lpbrotherfile field"
-        SaveFileContent(lpFileContent->lpbrotherfile, nFPCurrentFatherFile, nFPHeader + sizeof(LPSTR)+24+sizeof(LPFILECONTENT));
+        SaveFileContent(lpFileContent->lpbrotherfile, nFPCurrentFatherFile, nFPHeader + sizeof(LPSTR)+6*sizeof(DWORD)+sizeof(LPFILECONTENT));
     }
 
     if (nFPCaller > 0) { // save position of current file in current father file
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
         SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-        WriteFile(hFileWholeReg, &nFPHeader, 4, &NBW, NULL);
+        WriteFile(hFileWholeReg, &nFPHeader, sizeof(DWORD), &NBW, NULL);
         SetFilePointer(hFileWholeReg, nFPCurrent, NULL, FILE_BEGIN);
     }
 
