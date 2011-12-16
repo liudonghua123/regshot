@@ -45,9 +45,10 @@
 
 #ifdef USEHEAPALLOC_DANGER
 
-#define MYALLOC(x)  HeapAlloc(hHeap,1,x)
-#define MYALLOC0(x) HeapAlloc(hHeap,9,x) // HEAP_NO_SERIALIZE|HEAP_ZERO_MEMORY ,1|8
-#define MYFREE(x)   HeapFree(hHeap,1,x)
+//MSDN doc say use HEAP_NO_SERIALIZE is not good for process heap :( so change fromm 1 to 0 20111216 ,slower than using 1
+#define MYALLOC(x)  HeapAlloc(hHeap,0,x)
+#define MYALLOC0(x) HeapAlloc(hHeap,8,x) // HEAP_NO_SERIALIZE|HEAP_ZERO_MEMORY ,1|8
+#define MYFREE(x)   HeapFree(hHeap,0,x)
 
 #else
 

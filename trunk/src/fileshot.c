@@ -360,32 +360,32 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,
 
     nLenPlus1 = strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
-    nFPTemp4Write = nFPHeader + 44;                                         // 1.8.3s 11*4 former is 10*4+1
+    nFPTemp4Write = nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3s 11*4 former is 10*4+1
     WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Save the location of lpfilename
 
-    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + 4, 24, &NBW, NULL);    // Write time, size etc. 6*4
+    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR), 24, &NBW, NULL);    // Write time, size etc. 6*4
 
     //nFPTemp4Write = (lpFileContent->lpfirstsubfile!=NULL) ? (nFPHeader + 41 + nLenPlus1) : 0;     // We write lpfilename plus a "\0"
     //WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);                  // Save the location of lpfirstsubfile
-    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + 28, 8, &NBW, NULL);    // Save lpfirstsubfile and lpbrotherfile
+    WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR)+24, 8, &NBW, NULL);    // Save lpfirstsubfile and lpbrotherfile
     WriteFile(hFileWholeReg, &nFPCurrentFatherFile, 4, &NBW, NULL);         // Save nFPCurrentFatherKey passed by caller
     nFPTemp4Write = 0;
     WriteFile(hFileWholeReg, &nFPTemp4Write, 4, &NBW, NULL);                // Clear and save bfilematch
     WriteFile(hFileWholeReg, lpFileContent->lpfilename, nLenPlus1, &NBW, NULL); // Save the current filename
 
-    nPad = (nLenPlus1 % 4 == 0) ? 0 : (4 - nLenPlus1 % 4);
+    nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : (sizeof(int) - nLenPlus1 % sizeof(int));
     if (nPad > 0) {
         WriteFile(hFileWholeReg, &nFPTemp4Write, nPad, &NBW, NULL);         // Save the current filename
     }
 
     if (lpFileContent->lpfirstsubfile != NULL) {
         // pass this filecontent's position as subfile's fatherfile's position and pass the "lpfirstsubfile field"
-        SaveFileContent(lpFileContent->lpfirstsubfile, nFPHeader, nFPHeader + 28);
+        SaveFileContent(lpFileContent->lpfirstsubfile, nFPHeader, nFPHeader + sizeof(LPSTR)+24);
     }
 
     if (lpFileContent->lpbrotherfile != NULL) {
         // pass this file's fatherfile's position as brother's father and pass "lpbrotherfile field"
-        SaveFileContent(lpFileContent->lpbrotherfile, nFPCurrentFatherFile, nFPHeader + 32);
+        SaveFileContent(lpFileContent->lpbrotherfile, nFPCurrentFatherFile, nFPHeader + sizeof(LPSTR)+24+sizeof(LPFILECONTENT));
     }
 
     if (nFPCaller > 0) { // save position of current file in current father file
@@ -411,30 +411,24 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,
 
 //--------------------------------------------------
 //Realign filecontent, called by ReAlignFile()
+//modi 20111216
 //--------------------------------------------------
 VOID ReAlignFileContent(LPFILECONTENT lpFC, DWORD nBase)
 {
-    LPDWORD lp;
-    lp = (LPDWORD)lpFC;
 
-    if ((*lp) != 0) {
-        (*lp) += nBase;
-    }
-    lp += 7;
+    if ( lpFC->lpfilename!=NULL) {
+		(LPBYTE)lpFC->lpfilename += nBase;
+	}
+    if ( lpFC->lpfirstsubfile!=NULL) {
+		(LPBYTE)lpFC->lpfirstsubfile += nBase;
+	}
+    if ( lpFC->lpbrotherfile!=NULL) {
+		(LPBYTE)lpFC->lpbrotherfile += nBase;
+	}
+    if ( lpFC->lpfatherfile!=NULL) {
+		(LPBYTE)lpFC->lpfatherfile += nBase;
+	}
 
-    if ((*lp) != 0) {
-        (*lp) += nBase;
-    }
-    lp++;
-
-    if ((*lp) != 0) {
-        (*lp) += nBase;
-    }
-    lp++;
-
-    if ((*lp) != 0) {
-        (*lp) += nBase;
-    }
 
     nGettingFile++; // just for the progress bar
 
@@ -451,21 +445,23 @@ VOID ReAlignFileContent(LPFILECONTENT lpFC, DWORD nBase)
 
 //--------------------------------------------------
 //Realign file, walk through chain
+//modi 20111216
 //--------------------------------------------------
 VOID ReAlignFile(LPHEADFILE lpHF, DWORD nBase)
 {
-    LPDWORD     lp;
     LPHEADFILE  lphf;
 
     for (lphf = lpHF; lphf != NULL; lphf = lphf->lpnextheadfile) {
-        lp = (LPDWORD)lphf;
-        if ((*lp) != 0) {
-            (*lp) += nBase;
-        }
-        lp++;
-        if ((*lp) != 0) {
-            (*lp) += nBase;
-        }
+
+    
+    	if(lphf->lpnextheadfile!=NULL) {
+			(LPBYTE)lphf->lpnextheadfile += nBase;
+		}
+		if(lphf->lpfilecontent!=NULL) {
+			(LPBYTE)lphf->lpfilecontent += nBase;
+		}
+		
+
         if (lphf->lpfilecontent != NULL) {    // I wouldn't find crash bug(loadhive->readfile) in 1.8.0 if I had added it in that version
             ReAlignFileContent(lphf->lpfilecontent, nBase);
         }
