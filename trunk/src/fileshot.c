@@ -350,31 +350,35 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 //1.8.3s changed some struct
 //modi 20111216
 //--------------------------------------------------
-VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DWORD nFPCaller)
+VOID    SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, DWORD nFPCaller)
 {
 
     DWORD   nFPHeader;
     DWORD   nFPCurrent;
-    DWORD   nFPTemp4Write;
+    size_t  nFPTemp4Write;
     DWORD   nLenPlus1;
     int     nPad;
 
     nLenPlus1 = strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
     nFPTemp4Write = nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3s 11*4 former is 10*4+1
-    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Save the location of lpfilename
+    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(nFPTemp4Write), &NBW, NULL);                // Save the location of lpfilename
 
     WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR), 6*sizeof(DWORD), &NBW, NULL);    // Write time, size etc. 6*4
 
     //nFPTemp4Write = (lpFileContent->lpfirstsubfile!=NULL) ? (nFPHeader + 41 + nLenPlus1) : 0;     // We write lpfilename plus a "\0"
     //WriteFile(hFileWholeReg,&nFPTemp4Write,4,&NBW,NULL);                  // Save the location of lpfirstsubfile
     WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR)+6*sizeof(DWORD), sizeof(LPFILECONTENT)*2, &NBW, NULL);    // Save lpfirstsubfile and lpbrotherfile
-    WriteFile(hFileWholeReg, &nFPCurrentFatherFile, sizeof(DWORD), &NBW, NULL);         // Save nFPCurrentFatherKey passed by caller
-    nFPTemp4Write = 0;
-    WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(DWORD), &NBW, NULL);                // Clear and save bfilematch
+    WriteFile(hFileWholeReg, &nFPCurrentFatherFile, sizeof(nFPCurrentFatherFile), &NBW, NULL);         // Save nFPCurrentFatherKey passed by caller
+    
+    lpFileContent->bfilematch=0;
+    WriteFile(hFileWholeReg, &(lpFileContent->bfilematch), sizeof(lpFileContent->bfilematch), &NBW, NULL);                // Clear and save bfilematch
+    
     WriteFile(hFileWholeReg, lpFileContent->lpfilename, nLenPlus1, &NBW, NULL); // Save the current filename
 
     nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : (sizeof(int) - nLenPlus1 % sizeof(int));
+    
+    nFPTemp4Write=0;
     if (nPad > 0) {
         WriteFile(hFileWholeReg, &nFPTemp4Write, nPad, &NBW, NULL);         // Save the current filename
     }
@@ -414,7 +418,7 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile,
 //Realign filecontent, called by ReAlignFile()
 //modi 20111216
 //--------------------------------------------------
-VOID ReAlignFileContent(LPFILECONTENT lpFC, DWORD nBase)
+VOID ReAlignFileContent(LPFILECONTENT lpFC, size_t nBase)
 {
 
     if ( lpFC->lpfilename!=NULL) {
@@ -448,7 +452,7 @@ VOID ReAlignFileContent(LPFILECONTENT lpFC, DWORD nBase)
 //Realign file, walk through chain
 //modi 20111216
 //--------------------------------------------------
-VOID ReAlignFile(LPHEADFILE lpHF, DWORD nBase)
+VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase)
 {
     LPHEADFILE  lphf;
 
