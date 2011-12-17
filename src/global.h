@@ -104,7 +104,7 @@ struct _KEYCONTENT {
     struct _KEYCONTENT FAR * lpfirstsubkey;    // Pointer to key's first subkey
     struct _KEYCONTENT FAR * lpbrotherkey;     // Pointer to key's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to key's father
-    DWORD  bkeymatch;                          // Flag used at comparing, former is byte
+    size_t bkeymatch;                          // Flag used at comparing, former is byte
 
 };
 typedef struct _KEYCONTENT KEYCONTENT, FAR * LPKEYCONTENT;
@@ -118,7 +118,7 @@ struct _VALUECONTENT {
     LPBYTE lpvaluedata;                        // Pointer to value data
     struct _VALUECONTENT FAR * lpnextvalue;    // Pointer to value's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to value's father[Key]
-    DWORD  bvaluematch;                        // Flag used at comparing, former is byte
+    size_t bvaluematch;                        // Flag used at comparing, former is byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR * LPVALUECONTENT;
 
@@ -135,7 +135,7 @@ struct _FILECONTENT {
     struct _FILECONTENT FAR * lpfirstsubfile;  // Pointer to files[DIRS] first sub file
     struct _FILECONTENT FAR * lpbrotherfile;   // Pointer to files[DIRS] brother
     struct _FILECONTENT FAR * lpfatherfile;    // Pointer to files father
-    DWORD  bfilematch;                         // Flag used at comparing, former is byte
+    size_t bfilematch;                         // Flag used at comparing, former is byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR * LPFILECONTENT;
 
@@ -233,8 +233,8 @@ LPKEYCONTENT    lpHeadUsers1;           // Pointer to HKEY_USERS 1
 LPKEYCONTENT    lpHeadUsers2;
 LPHEADFILE      lpHeadFile1;            // Pointer to headfile
 LPHEADFILE      lpHeadFile2;
-LPSTR           lpTempHive1;            // Pointer for loading hive files
-LPSTR           lpTempHive2;
+LPBYTE          lpTempHive1;            // Pointer for loading hive files
+LPBYTE          lpTempHive2;
 LPSTR           lpComputerName1;
 LPSTR           lpComputerName2;
 LPSTR           lpUserName1;
@@ -320,7 +320,7 @@ VOID    Shot1(void);
 VOID    Shot2(void);
 BOOL    CompareShots(void);
 VOID    SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER, LPHEADFILE lpHF, LPSTR computer, LPSTR user, LPVOID time);
-BOOL    LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lpHF, LPSTR FAR * lpHive);
+BOOL    LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lpHF, LPBYTE FAR * lpHive);
 VOID    FreeAllCompareResults(void);
 VOID    FreeAllKeyContent1(void);
 VOID    FreeAllKeyContent2(void);
@@ -336,14 +336,14 @@ VOID    ErrMsg(char * note);
 VOID    WriteHead(u_char * lpstr, DWORD count, BOOL isHTML);
 VOID    WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor);
 VOID    WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML);
-VOID    SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DWORD nFPCaller);
+VOID    SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, DWORD nFPCaller);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
 VOID    FindDirChain(LPHEADFILE lpHF, LPSTR lpDir, size_t nMaxLen);
 BOOL    DirChainMatch(LPHEADFILE lphf1, LPHEADFILE lphf2);
 VOID    WriteHtmlbegin(void);
 VOID    WriteHtmlover(void);
 VOID    WriteHtmlbr(void);
-VOID    ReAlignFile(LPHEADFILE lpHF, DWORD nBase);
+VOID    ReAlignFile(LPHEADFILE lpHF, size_t nBase);
 LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
 VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
 
