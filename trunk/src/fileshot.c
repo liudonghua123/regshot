@@ -358,21 +358,21 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, D
     DWORD   nFPCurrent;
     DWORD   nLenPlus1;
     int     nPad;
-    SAVEFILECONTENT sfc;
+    FILECONTENT sfc;
 
     nLenPlus1 = (DWORD)strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
 
-    sfc.fpos_filename = (size_t)nFPHeader + sizeof(FILECONTENT);                                       // 1.8.3 11*4 former is 10*4+1
+    sfc.lpfilename = (LPSTR)(nFPHeader + sizeof(FILECONTENT));                                       // 1.8.3 11*4 former is 10*4+1
     sfc.writetimelow = lpFileContent->writetimelow;
     sfc.writetimehigh = lpFileContent->writetimehigh;
     sfc.filesizelow = lpFileContent->filesizelow;
     sfc.filesizehigh = lpFileContent->filesizehigh;
     sfc.fileattr = lpFileContent->fileattr;
     sfc.cksum = lpFileContent->cksum;
-    sfc.fpos_firstsubfile = (size_t)lpFileContent->lpfirstsubfile;
-    sfc.fpos_brotherfile = (size_t)lpFileContent->lpbrotherfile;
-    sfc.fpos_fatherfile = nFPCurrentFatherFile;
+    sfc.lpfirstsubfile = lpFileContent->lpfirstsubfile;
+    sfc.lpbrotherfile = lpFileContent->lpbrotherfile;
+    sfc.lpfatherfile = (LPFILECONTENT)nFPCurrentFatherFile;
     sfc.bfilematch = 0;
     WriteFile(hFileWholeReg, &sfc, sizeof(sfc), &NBW, NULL);
 
