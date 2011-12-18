@@ -1146,8 +1146,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
     INT     nPad;
     INT     nPad1;
     LPVALUECONTENT lpv;
-    SAVEKEYCONTENT skc;
-    SAVEVALUECONTENT svc;
+    KEYCONTENT skc;
+    VALUECONTENT svc;
 
     //Note use (DWORD) to disable warning of lost of data to convert size_t to dword, in current windows,it is safe that registry's xxxxname is stay in DWORD long
     nLenPlus1 = (DWORD)strlen(lpKeyContent->lpkeyname) + 1;                        // Get len+1
@@ -1155,11 +1155,11 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
 
     //using struct ,idea from maddes
-    skc.fpos_keyname = (size_t)nFPHeader + sizeof(KEYCONTENT);
-    skc.fpos_firstvalue = (lpKeyContent->lpfirstvalue != NULL) ? (nFPHeader + sizeof(KEYCONTENT) + nLenPlus1 + nPad) : 0;
-    skc.fpos_firstsubkey = (size_t)lpKeyContent->lpfirstsubkey; //it is filled later.
-    skc.fpos_brotherkey = (size_t)lpKeyContent->lpbrotherkey; //it is filled later
-    skc.fpos_fatherkey = nFPCurrentFatherKey;
+    skc.lpkeyname = (LPSTR)(nFPHeader + sizeof(KEYCONTENT));
+    skc.lpfirstvalue = (LPVALUECONTENT)( (lpKeyContent->lpfirstvalue != NULL) ? (nFPHeader + sizeof(KEYCONTENT) + nLenPlus1 + nPad) : 0 );
+    skc.lpfirstsubkey = lpKeyContent->lpfirstsubkey; //it is filled later.
+    skc.lpbrotherkey = lpKeyContent->lpbrotherkey; //it is filled later
+    skc.lpfatherkey = (LPKEYCONTENT)nFPCurrentFatherKey;
     skc.bkeymatch = 0;
     WriteFile(hFileWholeReg, &skc, sizeof(skc), &NBW, NULL);
 
@@ -1196,10 +1196,10 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
         svc.typecode = lpv->typecode;
         svc.datasize = lpv->datasize;
-        svc.fpos_valuename = nFPCurrent + sizeof(VALUECONTENT); //size must same for valuecontent and savevaluecontent
-        svc.fpos_valuedata = (lpv->datasize > 0) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad) : 0;   // if no lpvaluedata, we write 0
-        svc.fpos_nextvalue = (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0;  // if no nextvalue we write 0
-        svc.fpos_fatherkey = nFPHeader;
+        svc.lpvaluename = (LPSTR)( nFPCurrent + sizeof(VALUECONTENT)); //size must same for valuecontent and savevaluecontent
+        svc.lpvaluedata = (LPBYTE)( (lpv->datasize > 0) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad) : 0);   // if no lpvaluedata, we write 0
+        svc.lpnextvalue = (LPVALUECONTENT)( (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(VALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0);  // if no nextvalue we write 0
+        svc.lpfatherkey = (LPKEYCONTENT) nFPHeader;
         svc.bvaluematch = 0;
         WriteFile(hFileWholeReg, &svc, sizeof(svc), &NBW, NULL);
 
