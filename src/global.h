@@ -18,15 +18,18 @@
     along with Regshot; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-//just to disable compiler warning in vs2010 for secure version of strlen,sprintf ....
-#define _CRT_SECURE_NO_WARNINGS
-//This make Debug build does not crash on "Stack Overflow" in recursive calling , this is 32M, you can change it to a proper number.
-#pragma comment(linker, "/STACK:33554432")
 
 #ifndef REGSHOT_GLOBAL_H
 #define REGSHOT_GLOBAL_H
 
-
+//just to disable compiler warning in vs2010 for secure version of strlen,sprintf ....
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#if defined(_MSC_VER)
+//This make Debug build does not crash on "Stack Overflow" in recursive calling , this is 32M, you can change it to a proper number.
+#pragma comment(linker, "/STACK:33554432")
+#endif
 #ifdef __GNUC__
 #include <unistd.h>
 #endif
