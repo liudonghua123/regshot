@@ -347,21 +347,37 @@ VOID FreeAllFileHead(LPHEADFILE lp)
 
 //--------------------------------------------------
 //File save engine (It is stupid again!) added in 1.8
-//1.8.3s changed some struct
+//1.8.3 changed some struct
 //modi 20111216
 //--------------------------------------------------
 VOID    SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, DWORD nFPCaller)
 {
 
+    size_t  nFPTemp4Write;
     DWORD   nFPHeader;
     DWORD   nFPCurrent;
-    size_t  nFPTemp4Write;
     DWORD   nLenPlus1;
     int     nPad;
-
-    nLenPlus1 = strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
+	SAVEFILECONTENT sfc;
+	
+    nLenPlus1 = (DWORD)strlen(lpFileContent->lpfilename) + 1;                      // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);       // Save head fp
-    nFPTemp4Write = nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3s 11*4 former is 10*4+1
+    
+    sfc.fpos_filename=(size_t)nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3 11*4 former is 10*4+1
+    sfc.writetimelow=lpFileContent->writetimelow;
+    sfc.writetimehigh=lpFileContent->writetimehigh;
+    sfc.filesizelow=lpFileContent->filesizelow;
+    sfc.filesizehigh=lpFileContent->filesizehigh;
+    sfc.fileattr=lpFileContent->fileattr;
+    sfc.cksum=lpFileContent->cksum;
+    sfc.fpos_firstsubfile=(size_t)lpFileContent->lpfirstsubfile;
+    sfc.fpos_brotherfile=(size_t)lpFileContent->lpbrotherfile;
+    sfc.fpos_fatherfile=nFPCurrentFatherFile;
+    sfc.bfilematch=0;
+    WriteFile(hFileWholeReg, &sfc, sizeof(sfc), &NBW, NULL);
+    
+/*    
+    nFPTemp4Write = nFPHeader + sizeof(FILECONTENT);                                         // 1.8.3 11*4 former is 10*4+1
     WriteFile(hFileWholeReg, &nFPTemp4Write, sizeof(nFPTemp4Write), &NBW, NULL);                // Save the location of lpfilename
 
     WriteFile(hFileWholeReg, (LPBYTE)lpFileContent + sizeof(LPSTR), 6*sizeof(DWORD), &NBW, NULL);    // Write time, size etc. 6*4
@@ -373,7 +389,7 @@ VOID    SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile
     
     lpFileContent->bfilematch=0;
     WriteFile(hFileWholeReg, &(lpFileContent->bfilematch), sizeof(lpFileContent->bfilematch), &NBW, NULL);                // Clear and save bfilematch
-    
+*/
     WriteFile(hFileWholeReg, lpFileContent->lpfilename, nLenPlus1, &NBW, NULL); // Save the current filename
 
     nPad = (nLenPlus1 % sizeof(int) == 0) ? 0 : (sizeof(int) - nLenPlus1 % sizeof(int));
