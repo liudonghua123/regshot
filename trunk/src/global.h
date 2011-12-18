@@ -18,6 +18,10 @@
     along with Regshot; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+//just to disable compiler warning in vs2010 for secure version of strlen,sprintf ....
+#define _CRT_SECURE_NO_WARNINGS
+//This make Debug build does not crash on "Stack Overflow" in recursive calling , this is 32M, you can change it to a proper number.
+#pragma comment(linker, "/STACK:33554432")
 
 #ifndef REGSHOT_GLOBAL_H
 #define REGSHOT_GLOBAL_H
@@ -97,14 +101,14 @@
 
 
 // Struct used for Windows Registry Key
-// 1.8.3s  following 3 structs are "slightly" changed
+// 1.8.3  following 3 structs are "slightly" changed
 struct _KEYCONTENT {
     LPSTR  lpkeyname;                          // Pointer to key's name
     struct _VALUECONTENT FAR * lpfirstvalue;   // Pointer to key's first value
     struct _KEYCONTENT FAR * lpfirstsubkey;    // Pointer to key's first subkey
     struct _KEYCONTENT FAR * lpbrotherkey;     // Pointer to key's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to key's father
-    size_t bkeymatch;                          // Flag used at comparing, former is byte
+    size_t bkeymatch;                          // Flag used at comparing, 1.8.2<= is byte
 
 };
 typedef struct _KEYCONTENT KEYCONTENT, FAR * LPKEYCONTENT;
@@ -118,7 +122,7 @@ struct _VALUECONTENT {
     LPBYTE lpvaluedata;                        // Pointer to value data
     struct _VALUECONTENT FAR * lpnextvalue;    // Pointer to value's brother
     struct _KEYCONTENT FAR * lpfatherkey;      // Pointer to value's father[Key]
-    size_t bvaluematch;                        // Flag used at comparing, former is byte
+    size_t bvaluematch;                        // Flag used at comparing, 1.8.2<= is byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR * LPVALUECONTENT;
 
@@ -135,7 +139,7 @@ struct _FILECONTENT {
     struct _FILECONTENT FAR * lpfirstsubfile;  // Pointer to files[DIRS] first sub file
     struct _FILECONTENT FAR * lpbrotherfile;   // Pointer to files[DIRS] brother
     struct _FILECONTENT FAR * lpfatherfile;    // Pointer to files father
-    size_t bfilematch;                         // Flag used at comparing, former is byte
+    size_t bfilematch;                         // Flag used at comparing, 1.8.2<= is byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR * LPFILECONTENT;
 
@@ -165,6 +169,51 @@ struct _COMRESULT {
     struct _COMRESULT FAR * lpnextresult;      // Pointer to next _COMRESULT
 };
 typedef struct _COMRESULT COMRESULT, FAR * LPCOMRESULT;
+
+
+//------------------- 1.8.3  maddes  -----------------------------
+//Following 3 structs are maddes's idea :)
+//Struct for saving windows registry key,must be the same size as _KEYCONTENT,and careful with boundary
+struct _SAVEKEYCONTENT {
+    size_t  fpos_keyname;                          // Pointer to key's name
+    size_t  fpos_firstvalue;   // Pointer to key's first value
+    size_t  fpos_firstsubkey;    // Pointer to key's first subkey
+    size_t  fpos_brotherkey;     // Pointer to key's brother
+    size_t  fpos_fatherkey;      // Pointer to key's father
+    size_t  bkeymatch;                          // Flag used at comparing, 1.8.2<= is byte
+
+};
+typedef struct _SAVEKEYCONTENT SAVEKEYCONTENT, FAR * LPSAVEKEYCONTENT;
+
+
+// Struct used for saving Windows Registry Value,must be the same size as _VALUECONTENT
+struct _SAVEVALUECONTENT {
+    DWORD  typecode;                           // Type of value [DWORD,STRING...]
+    DWORD  datasize;                           // Value data size in bytes
+    size_t fpos_valuename;                        // Pointer to value name
+    size_t fpos_valuedata;                        // Pointer to value data
+    size_t fpos_nextvalue;    // Pointer to value's brother
+    size_t fpos_fatherkey;      // Pointer to value's father[Key]
+    size_t bvaluematch;                        // Flag used at comparing, 1.8.2<= is byte
+};
+typedef struct _SAVEVALUECONTENT SAVEVALUECONTENT, FAR * LPSAVEVALUECONTENT;
+
+//struct for saving file content,must be the same size as _FILECONTENT
+struct _SAVEFILECONTENT {
+    size_t fpos_filename;                         // Pointer to filename
+    DWORD  writetimelow;                       // File write time [LOW  DWORD]
+    DWORD  writetimehigh;                      // File write time [HIGH DWORD]
+    DWORD  filesizelow;                        // File size [LOW  DWORD]
+    DWORD  filesizehigh;                       // File size [HIGH DWORD]
+    DWORD  fileattr;                           // File attributes
+    DWORD  cksum;                              // File checksum(plan to add in 1.8 not used now)
+    size_t fpos_firstsubfile;  // Pointer to files[DIRS] first sub file
+    size_t fpos_brotherfile;   // Pointer to files[DIRS] brother
+    size_t fpos_fatherfile;    // Pointer to files father
+    size_t bfilematch;                         // Flag used at comparing, 1.8.2<= is byte
+};
+typedef struct _SAVEFILECONTENT SAVEFILECONTENT, FAR * LPSAVEFILECONTENT;
+//------------------------------------------------------------------------------------
 
 
 // Pointers to compare result [see above]
