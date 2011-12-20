@@ -692,6 +692,7 @@ BOOL CompareShots(void)
     FILETIME ftime1;
     FILETIME ftime2;
 
+
     if (!DirChainMatch(lpHeadFile1, lpHeadFile2)) {
         MessageBox(hWnd, "Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!", "Warning", MB_ICONWARNING);
     }
@@ -961,7 +962,7 @@ BOOL CompareShots(void)
 
     CloseHandle(hFile);
 
-    if ((int)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
+    if ( ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= (HINSTANCE)32) {
         ErrMsg((LPCTSTR)lan_errorexecviewer);
     }
     MYFREE(lpDestFileName);
@@ -1113,7 +1114,7 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
         if (RegOpenKeyEx(hkey, lpKeyName, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &Subhkey) != ERROR_SUCCESS) {
             continue;
         }
-        if (IsInSkipList(lpKeyName, lpSnapRegs)) {
+        if (IsInSkipList(lpKeyName, lplpRegSkipStrings)) {
             // tfx
             RegCloseKey(Subhkey);  // 1.8.2 seperate
             continue;
@@ -1194,7 +1195,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
         nPad1 = (lpv->datasize % sizeof(int) == 0) ? 0 : (sizeof(int) - lpv->datasize % sizeof(int));
 
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
-        nFPTemp4Write=nFPCurrent;
+        nFPTemp4Write=nFPHeader;
         svc.typecode = lpv->typecode;
         svc.datasize = lpv->datasize;
         svc.lpvaluename = (LPSTR)(nFPCurrent + sizeof(VALUECONTENT));       // size must same for valuecontent and savevaluecontent

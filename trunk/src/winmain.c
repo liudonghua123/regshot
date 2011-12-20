@@ -179,7 +179,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             strcat(lpRegshotIni, REGSHOTINI);
 
-            GetSnapRegs(hDlg); // tfx
+            LoadSettingsFromIni(hDlg); // tfx
 
             return TRUE;
 
@@ -368,7 +368,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                           CloseHandle(hFile);
                       }*/
-                    SetSnapRegs(hDlg);  // tfx
+                    SaveSettingsToIni(hDlg);  // tfx
                     PostQuitMessage(0);
                     return(TRUE);
 
