@@ -202,8 +202,8 @@ VOID GetDefaultStrings(VOID)
 VOID PointToNewStrings(VOID)
 {
     //LPDWORD lp = ldwTempStrings;
-    LPBYTE  *lp = (LPBYTE *)lplpLangStrings;
-    
+    LPBYTE * lp = (LPBYTE *)lplpLangStrings;
+
     lan_key             = *lp;
     lp++;
     lan_value           = *lp;
@@ -282,7 +282,7 @@ BOOL GetLanguageStrings(HWND hDlg)
     BOOL    bRet;
     LPBYTE  lpReturn;
     //LPDWORD lp;
-    LPBYTE  *lp;
+    LPBYTE * lp;
     char    lpIniKey[16];    // 1.8.2 LPSTR   lpIniKey = MYALLOC0(8);
 
     nIndex = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
@@ -296,7 +296,7 @@ BOOL GetLanguageStrings(HWND hDlg)
 
             sprintf(lpIniKey, "%d%s", i, "=");
             // pointer returned was pointed to char just after "="
-            if ((lpReturn = AtPos((LPBYTE)lpLangStrings, (LPBYTE)lpIniKey, SIZEOF_LANGSTRINGS,strlen(lpIniKey))) != NULL) {
+            if ((lpReturn = AtPos((LPBYTE)lpLangStrings, (LPBYTE)lpIniKey, SIZEOF_LANGSTRINGS, strlen(lpIniKey))) != NULL) {
                 //_asm int 3;
                 //*(lp + i - 1) = (DWORD)lpReturn;
                 *(lp + i - 1) = lpReturn;
@@ -310,7 +310,7 @@ BOOL GetLanguageStrings(HWND hDlg)
 
         }
 
-        lpReturn = AtPos((LPBYTE)lpLangStrings, (LPBYTE)str_ItemTranslator, SIZEOF_LANGSTRINGS,strlen(str_ItemTranslator));
+        lpReturn = AtPos((LPBYTE)lpLangStrings, (LPBYTE)str_ItemTranslator, SIZEOF_LANGSTRINGS, strlen(str_ItemTranslator));
         lpCurrentTranslator = (lpReturn != NULL) ? ((LPSTR)lpReturn + 1) : str_Original;
         PointToNewStrings();
         bRet = TRUE;
