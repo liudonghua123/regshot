@@ -23,8 +23,8 @@
 // ISDIR, ISFILE added in 1.8.0
 #define ISDIR(x)  ( (x&FILE_ATTRIBUTE_DIRECTORY) != 0 )
 #define ISFILE(x) ( (x&FILE_ATTRIBUTE_DIRECTORY) == 0 )
-extern u_char * lan_dir;
-extern u_char * lan_file;
+extern LPBYTE lan_dir;
+extern LPBYTE lan_file;
 
 
 //-------------------------------------------------------------
@@ -438,16 +438,16 @@ VOID ReAlignFileContent(LPFILECONTENT lpFC, size_t nBase)
 {
 
     if (lpFC->lpfilename != NULL) {
-        (LPBYTE)lpFC->lpfilename += nBase;
+        lpFC->lpfilename += nBase;
     }
     if (lpFC->lpfirstsubfile != NULL) {
-        (LPBYTE)lpFC->lpfirstsubfile += nBase;
+        lpFC->lpfirstsubfile =(LPFILECONTENT)( (LPBYTE)lpFC->lpfirstsubfile + nBase);
     }
     if (lpFC->lpbrotherfile != NULL) {
-        (LPBYTE)lpFC->lpbrotherfile += nBase;
+        lpFC->lpbrotherfile = (LPFILECONTENT)( (LPBYTE)lpFC->lpbrotherfile + nBase);
     }
     if (lpFC->lpfatherfile != NULL) {
-        (LPBYTE)lpFC->lpfatherfile += nBase;
+        lpFC->lpfatherfile = (LPFILECONTENT)( (LPBYTE)lpFC->lpfatherfile + nBase);
     }
 
 
@@ -476,10 +476,10 @@ VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase)
 
 
         if (lphf->lpnextheadfile != NULL) {
-            (LPBYTE)lphf->lpnextheadfile += nBase;
+            lphf->lpnextheadfile =(LPHEADFILE)( (LPBYTE)lphf->lpnextheadfile + nBase);
         }
         if (lphf->lpfilecontent != NULL) {
-            (LPBYTE)lphf->lpfilecontent += nBase;
+            lphf->lpfilecontent = (LPFILECONTENT)( (LPBYTE)lphf->lpfilecontent + nBase);
         }
 
 
