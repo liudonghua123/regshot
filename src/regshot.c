@@ -193,7 +193,7 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
         case REG_SZ:
         case REG_EXPAND_SZ:
             if (lpValueContent->lpvaluedata != NULL) {
-                if (size == (DWORD)strlen( (const char *)(lpValueContent->lpvaluedata) ) + 1) {
+                if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
                     lpvaluedata = TransData(lpValueContent, REG_SZ);
                 } else {
                     lpvaluedata = TransData(lpValueContent, REG_BINARY);
@@ -963,7 +963,7 @@ BOOL CompareShots(void)
 
     CloseHandle(hFile);
 
-    if ( (size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
+    if ((size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
         ErrMsg((LPCTSTR)lan_errorexecviewer);
     }
     MYFREE(lpDestFileName);
@@ -1196,7 +1196,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
         nPad1 = (lpv->datasize % sizeof(int) == 0) ? 0 : (sizeof(int) - lpv->datasize % sizeof(int));
 
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
-        nFPTemp4Write=nFPHeader;
+        nFPTemp4Write = nFPHeader;
         svc.typecode = lpv->typecode;
         svc.datasize = lpv->datasize;
         svc.lpvaluename = (LPSTR)(nFPCurrent + sizeof(VALUECONTENT));       // size must same for valuecontent and savevaluecontent
@@ -1207,7 +1207,6 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, size_t nFPCurrentFatherKey, DWORD nFP
         WriteFile(hFileWholeReg, &svc, sizeof(svc), &NBW, NULL);
 
 /*
-
         WriteFile(hFileWholeReg, (LPBYTE)lpv, sizeof(DWORD)*2, &NBW, NULL);
 
         nFPTemp4Write = nFPCurrent + sizeof(VALUECONTENT);                                      // 1.8.3 7*4, former is 6*4+1
@@ -1401,16 +1400,16 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
         lpKey->lpkeyname += nBase;
     }
     if (lpKey->lpfirstvalue != NULL) {
-        lpKey->lpfirstvalue =(LPVALUECONTENT)( (LPBYTE)lpKey->lpfirstvalue + nBase);
+        lpKey->lpfirstvalue = (LPVALUECONTENT)((LPBYTE)lpKey->lpfirstvalue + nBase);
     }
     if (lpKey->lpfirstsubkey != NULL) {
-        lpKey->lpfirstsubkey =(LPKEYCONTENT)( (LPBYTE)lpKey->lpfirstsubkey + nBase);
+        lpKey->lpfirstsubkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfirstsubkey + nBase);
     }
     if (lpKey->lpbrotherkey != NULL) {
-        lpKey->lpbrotherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpbrotherkey + nBase);
+        lpKey->lpbrotherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpbrotherkey + nBase);
     }
     if (lpKey->lpfatherkey != NULL) {
-        lpKey->lpfatherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpfatherkey + nBase);
+        lpKey->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfatherkey + nBase);
     }
 
     nGettingKey++;
@@ -1424,10 +1423,10 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
             lpv->lpvaluedata += nBase;
         }
         if (lpv->lpnextvalue != NULL) {
-            lpv->lpnextvalue =(LPVALUECONTENT)( (LPBYTE)lpv->lpnextvalue + nBase);
+            lpv->lpnextvalue = (LPVALUECONTENT)((LPBYTE)lpv->lpnextvalue + nBase);
         }
         if (lpv->lpfatherkey != NULL) {
-            lpv->lpfatherkey =(LPKEYCONTENT)( (LPBYTE)lpv->lpfatherkey + nBase);
+            lpv->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpv->lpfatherkey + nBase);
         }
 
     }
@@ -1470,7 +1469,7 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
             *lpHive = MYALLOC0(16);
             ReadFile(hFileWholeReg, *lpHive, 16, &NBW, NULL);
 
-            if (strcmp(str_RegFileSignature, (const char *)(*lpHive) ) != 0) {
+            if (strcmp(str_RegFileSignature, (const char *)(*lpHive)) != 0) {
                 ErrMsg((LPCTSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!"); //changed in 1.8.3
                 bRet = FALSE;
             } else {

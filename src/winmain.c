@@ -42,7 +42,7 @@ extern LPSTR str_Original;
 // this new function added by Youri in 1.8.2, for expanding path in browse dialog
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-	UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(lParam);
     if (uMsg == BFFM_INITIALIZED) {
         SendMessage(hWnd, BFFM_SETSELECTION, 1, lpData);
     }
@@ -58,8 +58,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     size_t  nLengthofStr;
     //BYTE    nFlag;
 
-	UNREFERENCED_PARAMETER(lParam);
-	
+    UNREFERENCED_PARAMETER(lParam);
+
     switch (message) {
         case WM_INITDIALOG:
 
@@ -99,7 +99,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             strcat(lpIni, REGSHOTLANGUAGEFILE);
 
             lpLangStrings = MYALLOC(SIZEOF_LANGSTRINGS);
-            lplpLangStrings = MYALLOC0( sizeof(LPSTR) * 60); // max is 60 strings
+            lplpLangStrings = MYALLOC0(sizeof(LPSTR) * 60);  // max is 60 strings
 
             if (GetLanguageType(hDlg)) {
                 GetLanguageStrings(hDlg);
@@ -498,13 +498,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     //FARPROC       lpfnDlgProc;
     //lpfnDlgProc = MakeProcInstance((FARPROC)DialogProc,hInstance);    // old style of create dialogproc
     */
-	UNREFERENCED_PARAMETER(lpszCmdLine);
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	
+    UNREFERENCED_PARAMETER(lpszCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+
     hHeap = GetProcessHeap(); // 1.8.2
     hWnd = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, (WNDPROC)DialogProc);
 
-    
+
     SetClassLongPtr(hWnd, GCLP_HICON, (LONG_PTR)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAINICON)));
 
     SetWindowText(hWnd, str_prgname);  // tfx 设置程序标题为str_prgname，避免修改资源文件

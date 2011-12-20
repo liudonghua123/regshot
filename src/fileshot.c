@@ -363,7 +363,7 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, D
 
     nLenPlus1 = (DWORD)strlen(lpFileContent->lpfilename) + 1;                       // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);               // Save head fp
-	//using struct ,idea from maddes
+    // using struct, idea from maddes
     sfc.lpfilename = (LPSTR)(nFPHeader + sizeof(FILECONTENT));                      // 1.8.3 11*4 former is 10*4+1
     sfc.writetimelow = lpFileContent->writetimelow;
     sfc.writetimehigh = lpFileContent->writetimehigh;
@@ -442,13 +442,13 @@ VOID ReAlignFileContent(LPFILECONTENT lpFC, size_t nBase)
         lpFC->lpfilename += nBase;
     }
     if (lpFC->lpfirstsubfile != NULL) {
-        lpFC->lpfirstsubfile =(LPFILECONTENT)( (LPBYTE)lpFC->lpfirstsubfile + nBase);
+        lpFC->lpfirstsubfile = (LPFILECONTENT)((LPBYTE)lpFC->lpfirstsubfile + nBase);
     }
     if (lpFC->lpbrotherfile != NULL) {
-        lpFC->lpbrotherfile = (LPFILECONTENT)( (LPBYTE)lpFC->lpbrotherfile + nBase);
+        lpFC->lpbrotherfile = (LPFILECONTENT)((LPBYTE)lpFC->lpbrotherfile + nBase);
     }
     if (lpFC->lpfatherfile != NULL) {
-        lpFC->lpfatherfile = (LPFILECONTENT)( (LPBYTE)lpFC->lpfatherfile + nBase);
+        lpFC->lpfatherfile = (LPFILECONTENT)((LPBYTE)lpFC->lpfatherfile + nBase);
     }
 
 
@@ -477,10 +477,10 @@ VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase)
 
 
         if (lphf->lpnextheadfile != NULL) {
-            lphf->lpnextheadfile =(LPHEADFILE)( (LPBYTE)lphf->lpnextheadfile + nBase);
+            lphf->lpnextheadfile = (LPHEADFILE)((LPBYTE)lphf->lpnextheadfile + nBase);
         }
         if (lphf->lpfilecontent != NULL) {
-            lphf->lpfilecontent = (LPFILECONTENT)( (LPBYTE)lphf->lpfilecontent + nBase);
+            lphf->lpfilecontent = (LPFILECONTENT)((LPBYTE)lphf->lpfilecontent + nBase);
         }
 
 

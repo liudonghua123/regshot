@@ -274,8 +274,8 @@ LPSTR   lpRegshotIni;
 
 LPBYTE  lpRegSkipStrings;
 LPBYTE  lpFileSkipStrings;
-LPBYTE *lplpRegSkipStrings;
-LPBYTE *lplpFileSkipStrings;
+LPBYTE * lplpRegSkipStrings;
+LPBYTE * lplpFileSkipStrings;
 //LPSTR   lpSnapKey;
 //LPSTR   lpSnapReturn;
 
@@ -318,7 +318,7 @@ BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
 BOOL    IsInSkipList(LPSTR lpStr, LPBYTE * lpSkipList);
 VOID    UpdateCounters(LPBYTE title1, LPBYTE title2, DWORD count1, DWORD count2);
-LPBYTE  AtPos(LPBYTE lpMaster, LPBYTE lp, size_t size,size_t sizep);
+LPBYTE  AtPos(LPBYTE lpMaster, LPBYTE lp, size_t size, size_t sizep);
 BOOL    GetLanguageType(HWND hDlg);
 VOID    GetDefaultStrings(VOID);
 VOID    PointToNewStrings(VOID);
