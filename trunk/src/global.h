@@ -102,7 +102,7 @@
 // Some definitions of MutiLanguage strings [Free space length]
 #define SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER 2048
 #define SIZEOF_SINGLE_LANGUAGENAME          64
-#define SIZEOF_FREESTRINGS                  16384
+#define SIZEOF_LANGSTRINGS                  16384
 #define SIZEOF_ABOUTBOX                     2048
 
 
@@ -266,7 +266,7 @@ LPSTR   lpWindowsDirName;
 LPSTR   lpTempPath;
 LPSTR   lpStartDir;
 LPSTR   lpIni;
-LPSTR   lpFreeStrings;
+LPSTR   lpLangStrings;
 LPSTR   lpCurrentTranslator;
 //LPSTR REGSHOTDATFILE    = "rgst152.dat";
 LPSTR   lpProgramDir;   // tfx ∂®“Â
@@ -278,7 +278,7 @@ LPSTR   lpSnapFilesStr;
 LPSTR   lpSnapKey;
 LPSTR   lpSnapReturn;
 
-LPDWORD ldwTempStrings;
+LPVOID  lplpLangStrings;
 
 
 // Former definations used at Dynamic Monitor Engine. Not Used NOW
@@ -316,8 +316,8 @@ VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    GetSnapRegs(HWND hDlg);
 BOOL    SetSnapRegs(HWND hDlg);
 BOOL    IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList);
-VOID    UpdateCounters(LPSTR title1, LPSTR title2, DWORD count1, DWORD count2);
-LPSTR   AtPos(LPSTR lpMaster, LPSTR lp, DWORD size);
+VOID    UpdateCounters(LPBYTE title1, LPBYTE title2, DWORD count1, DWORD count2);
+LPBYTE  AtPos(LPBYTE lpMaster, LPBYTE lp, size_t size,size_t sizep);
 BOOL    GetLanguageType(HWND hDlg);
 VOID    GetDefaultStrings(VOID);
 VOID    PointToNewStrings(VOID);
@@ -344,7 +344,7 @@ LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
 BOOL    ReplaceInValidFileName(LPSTR lpf);
-VOID    ErrMsg(char * note);
+VOID    ErrMsg(LPCTSTR note);
 VOID    WriteHead(u_char * lpstr, DWORD count, BOOL isHTML);
 VOID    WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor);
 VOID    WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML);
