@@ -270,13 +270,14 @@ LPSTR   lpLangStrings;
 LPSTR   lpCurrentTranslator;
 //LPSTR REGSHOTDATFILE    = "rgst152.dat";
 LPSTR   lpProgramDir;   // tfx ∂®“Â
-LPDWORD lpSnapRegs;
-LPDWORD lpSnapFiles;
 LPSTR   lpRegshotIni;
-LPSTR   lpSnapRegsStr;
-LPSTR   lpSnapFilesStr;
-LPSTR   lpSnapKey;
-LPSTR   lpSnapReturn;
+
+LPBYTE  lpRegSkipStrings;
+LPBYTE  lpFileSkipStrings;
+LPBYTE *lplpRegSkipStrings;
+LPBYTE *lplpFileSkipStrings;
+//LPSTR   lpSnapKey;
+//LPSTR   lpSnapReturn;
 
 LPVOID  lplpLangStrings;
 
@@ -313,9 +314,9 @@ BOOL            bUseLongRegHead;    // 1.8.1 for compatible to 1.61e5 and undore
 HANDLE          hHeap;              // 1.8.2
 
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
-BOOL    GetSnapRegs(HWND hDlg);
-BOOL    SetSnapRegs(HWND hDlg);
-BOOL    IsInSkipList(LPSTR lpSnap, LPDWORD lpSkipList);
+BOOL    LoadSettingsFromIni(HWND hDlg);
+BOOL    SaveSettingsToIni(HWND hDlg);
+BOOL    IsInSkipList(LPSTR lpStr, LPBYTE * lpSkipList);
 VOID    UpdateCounters(LPBYTE title1, LPBYTE title2, DWORD count1, DWORD count2);
 LPBYTE  AtPos(LPBYTE lpMaster, LPBYTE lp, size_t size,size_t sizep);
 BOOL    GetLanguageType(HWND hDlg);

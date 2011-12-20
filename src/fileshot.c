@@ -167,7 +167,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
         //if (!(*lpTemp == '.' && *(lpTemp + 1) == 0x00 ) && !(*lpTemp == '.' && *(lpTemp + 1) == '.' && *(lpTemp + 2) == 0x00 ) // 1.8.0
         //risk! see above.
         if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)     // 1.8.2
-                && !IsInSkipList(lpFileContent->lpfilename, lpSnapFiles)) { // tfx
+                && !IsInSkipList(lpFileContent->lpfilename, lplpFileSkipStrings)) { // tfx
 
             nGettingDir++;
             GetFilesSnap(lpFileContent);
@@ -193,7 +193,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
         if (ISDIR(lpFileContent->fileattr)) {
             //if ( !(*lpTemp == '.' && *(lpTemp + 1) == 0x00 ) && !(*lpTemp == '.' && *(lpTemp + 1) == '.' && *(lpTemp + 2) == 0x00 ) // if (lstrcmp(lpFileContent->lpfilename,".") != 0 && lstrcmp(lpFileContent->lpfilename,"..") != 0
             if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)    // 1.8.2
-                    && !IsInSkipList(lpFileContent->lpfilename, lpSnapFiles)) { // tfx
+                    && !IsInSkipList(lpFileContent->lpfilename, lplpFileSkipStrings)) { // tfx
                 nGettingDir++;
                 GetFilesSnap(lpFileContent);
             }
