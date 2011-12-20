@@ -1,6 +1,7 @@
 /*
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
+    Copyright 2011 maddes
 
     This file is part of Regshot.
 
@@ -362,7 +363,7 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, size_t nFPCurrentFatherFile, D
 
     nLenPlus1 = (DWORD)strlen(lpFileContent->lpfilename) + 1;                       // Get len+1
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);               // Save head fp
-
+	//using struct ,idea from maddes
     sfc.lpfilename = (LPSTR)(nFPHeader + sizeof(FILECONTENT));                      // 1.8.3 11*4 former is 10*4+1
     sfc.writetimelow = lpFileContent->writetimelow;
     sfc.writetimehigh = lpFileContent->writetimehigh;

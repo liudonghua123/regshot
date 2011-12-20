@@ -1,6 +1,7 @@
 /*
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
+    Copyright 2011 maddes
 
     This file is part of Regshot.
 
@@ -962,7 +963,7 @@ BOOL CompareShots(void)
 
     CloseHandle(hFile);
 
-    if ( ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= (HINSTANCE)32) {
+    if ( (size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
         ErrMsg((LPCTSTR)lan_errorexecviewer);
     }
     MYFREE(lpDestFileName);
