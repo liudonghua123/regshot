@@ -17,7 +17,9 @@
     along with Regshot; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
+/*This file orignal coded by tulipfan
+ change some name and fix for x64 by tianwei 
+*/
 #include "global.h"
 // 1.8.2 move defination from global.h to this place
 #define SIZEOF_INI_SKIPBLOCK  65535
@@ -158,7 +160,7 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx 保存信息到配置文件
 BOOL IsInSkipList(LPSTR lpStr, LPBYTE * lpSkipList) // tfx 跳过黑名单
 {
     int i;
-
+//todo:it seems bypass null item. but the getsetting is get all. is it safe without the null thing? tianwei
     for (i = 0; (LPSTR)(*(lpSkipList + i)) != NULL && i <= MAX_INI_SKIPITEMS - 1; i++) {
         if (_stricmp(lpStr, (LPSTR) (*(lpSkipList + i)) ) == 0) {
             return TRUE;
