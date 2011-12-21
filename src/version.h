@@ -39,9 +39,12 @@
 #ifdef _WIN64
 #define REGSHOT_TITLE             "Regshot x64"
 #define REGSHOT_RESULT_FILE       "~res-x64"
+//1.8.3beta new signature. signature length must <= 15 bytes 
+#define REGSHOT_HIVE_SIGNATURE    "RSHIVE183_64"
 #else
 #define REGSHOT_TITLE             "Regshot"
 #define REGSHOT_RESULT_FILE       "~res"
+#define REGSHOT_HIVE_SIGNATURE    "RSHIVE183_32"
 #endif // _WIN64
 
 #endif // REGSHOT_VERSION_H
