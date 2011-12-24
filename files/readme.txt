@@ -62,7 +62,7 @@ File shots are now saved in hive file.
 Do not compare shots saved with different "UseLongRegHead" option!
 
 (12) New to 1.8.3 (beta):
-regshot hive's structure is changed in this version,so old hive can not load into this version
+Regshot hive's structure is changed in this version, so old hive cannot load into this version
 
 -----------------
 Thanks:
@@ -124,8 +124,8 @@ Copyright 2007 Belogorokhov Youri
 * TiANWEi - Original Author of Regshot, 1999-now
 * Maddes  http://www.maddes.net/ - Coder and Maintainer, 2011-now
 * XhmikosR - Coder and project maintainer, 2011-now
-* tulipfan (tfx) was the designer & coder of "Skiplist functions,regshot.ini setup,REGSHOT_TITLE define" ,he made the release 1.7 .
-* Belogorokhov Youri (HANDLE) was the contributor of "a better html color idea,a new style browse dialog function" in 1.8.
+* tulipfan (tfx) was the designer & coder of "Skiplist functions, regshot.ini setup, REGSHOT_TITLE define", he made the release 1.7.
+* Belogorokhov Youri (HANDLE) was the contributor of "a better html color idea, a new style browse dialog function" in 1.8.
 
 Multi-language translations are the property of their respective owner.
 

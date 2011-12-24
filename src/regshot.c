@@ -195,7 +195,7 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
         case REG_SZ:
         case REG_EXPAND_SZ:
             if (lpValueContent->lpvaluedata != NULL) {
-                if (size == (DWORD)strlen( (const char *)(lpValueContent->lpvaluedata) ) + 1) {
+                if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
                     lpvaluedata = TransData(lpValueContent, REG_SZ);
                 } else {
                     lpvaluedata = TransData(lpValueContent, REG_BINARY);
@@ -502,8 +502,8 @@ VOID FreeAllKeyContent1(void)
 {
     if (is1LoadFromHive) {
 #ifdef _WIN64
-		FreeAllKeyExceptNameValue(lpHeadLocalMachine1);
-		FreeAllKeyExceptNameValue(lpHeadUsers1);
+        FreeAllKeyExceptNameValue(lpHeadLocalMachine1);
+        FreeAllKeyExceptNameValue(lpHeadUsers1);
 #endif
         MYFREE(lpTempHive1);    // Note, together we free the filecontent!
         lpTempHive1 = NULL;
@@ -524,8 +524,8 @@ VOID FreeAllKeyContent2(void)
 {
     if (is2LoadFromHive) {
 #ifdef _WIN64
-		FreeAllKeyExceptNameValue(lpHeadLocalMachine2);
-		FreeAllKeyExceptNameValue(lpHeadUsers2);
+        FreeAllKeyExceptNameValue(lpHeadLocalMachine2);
+        FreeAllKeyExceptNameValue(lpHeadUsers2);
 #endif
         MYFREE(lpTempHive2);    // Note, together we free the filecontent!
         lpTempHive2 = NULL;
@@ -998,7 +998,7 @@ BOOL CompareShots(void)
 
     CloseHandle(hFile);
 
-    if ( (size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
+    if ((size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
         ErrMsg((LPCTSTR)lan_errorexecviewer);
     }
     MYFREE(lpDestFileName);
@@ -1227,13 +1227,13 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
     for (lpv = lpKeyContent->lpfirstvalue; lpv != NULL; lpv = lpv->lpnextvalue) {
 
         nLenPlus1 = (DWORD)strlen(lpv->lpvaluename) + 1;
-        nPad = (nLenPlus1 % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - nLenPlus1 % sizeof(DWORD)); 
+        nPad = (nLenPlus1 % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - nLenPlus1 % sizeof(DWORD));
         nPad1 = (lpv->datasize % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - lpv->datasize % sizeof(DWORD));
 
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
         svc.typecode = lpv->typecode;
         svc.datasize = lpv->datasize;
-        svc.fpos_valuename = nFPCurrent + sizeof(SAVEVALUECONTENT);       
+        svc.fpos_valuename = nFPCurrent + sizeof(SAVEVALUECONTENT);
         svc.fpos_valuedata = (lpv->datasize > 0) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad) : 0;    // if no lpvaluedata, we write 0
         svc.fpos_nextvalue = (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0;   // if no nextvalue we write 0
         svc.fpos_fatherkey = nFPHeader;
@@ -1241,7 +1241,6 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
         WriteFile(hFileWholeReg, &svc, sizeof(svc), &NBW, NULL);
 
 /*
-
         WriteFile(hFileWholeReg, (LPBYTE)lpv, sizeof(DWORD)*2, &NBW, NULL);
 
         nFPTemp4Write = nFPCurrent + sizeof(VALUECONTENT);                                      // 1.8.3 7*4, former is 6*4+1
@@ -1281,12 +1280,12 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
 
     if (lpKeyContent->lpfirstsubkey != NULL) {
         // pass this keycontent's position as subkey's fatherkey's position and pass the "lpfirstsubkey field"
-        SaveRegKey(lpKeyContent->lpfirstsubkey, nFPHeader, nFPHeader + 2*sizeof(DWORD));
+        SaveRegKey(lpKeyContent->lpfirstsubkey, nFPHeader, nFPHeader + 2 * sizeof(DWORD));
     }
 
     if (lpKeyContent->lpbrotherkey != NULL) {
         // pass this key's fatherkey's position as brother's father and pass "lpbrotherkey field"
-        SaveRegKey(lpKeyContent->lpbrotherkey, nFPCurrentFatherKey, nFPHeader + 3*sizeof(DWORD));
+        SaveRegKey(lpKeyContent->lpbrotherkey, nFPCurrentFatherKey, nFPHeader + 3 * sizeof(DWORD));
     }
 
     if (nFPCaller > 0) { // save position of current key in current father key
@@ -1336,7 +1335,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
 
                 UI_BeforeClear();
                 InitProgressBar();
-                
+
                 //WriteFile(hFileWholeReg, str_RegshotHiveSignature, sizeof(str_RegshotHiveSignature) - 1, &NBW, NULL); // save lpvaluedata
 
                 // 0   signature( <= 12) last 4 bytes may be used in furture
@@ -1348,9 +1347,9 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                 // 96  username
                 // 160 systemtime
 
-                ZeroMemory(&hiveheader,sizeof(hiveheader));
+                ZeroMemory(&hiveheader, sizeof(hiveheader));
                 // Save the position of H_L_M
-                hiveheader.offsetkeyhklm=HIVEBEGINOFFSET;
+                hiveheader.offsetkeyhklm = HIVEBEGINOFFSET;
 
                 SetFilePointer(hFileWholeReg, HIVEBEGINOFFSET, NULL, FILE_BEGIN);
                 if (lpKeyHLM != NULL) { //always
@@ -1359,7 +1358,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
 
                 // Save the position of hkeyUsr
                 nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
-                hiveheader.offsetkeyuser=nFPcurrent;
+                hiveheader.offsetkeyuser = nFPcurrent;
 
                 if (lpKeyUSER != NULL) { //always
                     SaveRegKey(lpKeyUSER, 0, 0);
@@ -1368,40 +1367,40 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
                 if (lpHF != NULL) {
                     // Write start position of file chain
                     nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
-                    hiveheader.offsetheadfile=nFPcurrent;
-                    
+                    hiveheader.offsetheadfile = nFPcurrent;
+
 
                     for (lphf = lpHF; lphf != NULL;) {
-						
+
                         nFPcurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);           // save place for next filehead in chain
-                        sh.fpos_filecontent=nFPcurrent+sizeof(sh.fpos_nextheadfile)+sizeof(sh.fpos_filecontent);
-                        
-						SetFilePointer(hFileWholeReg, sizeof(sh), NULL, FILE_CURRENT);
-						
+                        sh.fpos_filecontent = nFPcurrent + sizeof(sh.fpos_nextheadfile) + sizeof(sh.fpos_filecontent);
+
+                        SetFilePointer(hFileWholeReg, sizeof(sh), NULL, FILE_CURRENT);
+
                         SaveFileContent(lphf->lpfilecontent, 0, 0);
-                        
+
                         nFPcurrent1 = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
                         lphf = lphf->lpnextheadfile;
-                        sh.fpos_nextheadfile= (lphf !=NULL)? nFPcurrent1: 0;
-                        SetFilePointer(hFileWholeReg,nFPcurrent , NULL, FILE_BEGIN);
-                        WriteFile(hFileWholeReg,&sh,sizeof(sh),&NBW,NULL);
+                        sh.fpos_nextheadfile = (lphf != NULL) ? nFPcurrent1 : 0;
+                        SetFilePointer(hFileWholeReg, nFPcurrent , NULL, FILE_BEGIN);
+                        WriteFile(hFileWholeReg, &sh, sizeof(sh), &NBW, NULL);
                         if (lphf == NULL) {
-							break;
-						}
-                        
+                            break;
+                        }
+
                         SetFilePointer(hFileWholeReg, nFPcurrent1, NULL, FILE_BEGIN);
                     }
                 }
-                
-                
-                
-                
-                CopyMemory(hiveheader.signature,str_RegshotHiveSignature,sizeof(str_RegshotHiveSignature) - 1);
-				CopyMemory(hiveheader.computername,computer,strlen(computer));
-				CopyMemory(hiveheader.username,user,strlen(user));
-				CopyMemory(&hiveheader.systemtime, time,sizeof(SYSTEMTIME));
-				
-				SetFilePointer(hFileWholeReg,0 , NULL, FILE_BEGIN);
+
+
+
+
+                CopyMemory(hiveheader.signature, str_RegshotHiveSignature, sizeof(str_RegshotHiveSignature) - 1);
+                CopyMemory(hiveheader.computername, computer, strlen(computer));
+                CopyMemory(hiveheader.username, user, strlen(user));
+                CopyMemory(&hiveheader.systemtime, time, sizeof(SYSTEMTIME));
+
+                SetFilePointer(hFileWholeReg, 0 , NULL, FILE_BEGIN);
 
                 WriteFile(hFileWholeReg, &hiveheader, sizeof(hiveheader), &NBW, NULL);
 
@@ -1422,62 +1421,62 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
 }
 #ifdef _WIN64
 //
-VOID RebuildFromHive_reg(LPSAVEKEYCONTENT lpFile,LPKEYCONTENT lpFatherkey, LPKEYCONTENT lpKey,LPBYTE lpHiveFileBase)
+VOID RebuildFromHive_reg(LPSAVEKEYCONTENT lpFile, LPKEYCONTENT lpFatherkey, LPKEYCONTENT lpKey, LPBYTE lpHiveFileBase)
 {
     LPVALUECONTENT lpValue;
     LPVALUECONTENT lpValueLast;
     LPSAVEVALUECONTENT lpv;
     LPKEYCONTENT lpsubkey;
-    
-    lpValueLast=NULL;
 
-    if(lpFile->fpos_keyname != 0) {
-        lpKey->lpkeyname = (LPSTR)(lpHiveFileBase+lpFile->fpos_keyname);
+    lpValueLast = NULL;
+
+    if (lpFile->fpos_keyname != 0) {
+        lpKey->lpkeyname = (LPSTR)(lpHiveFileBase + lpFile->fpos_keyname);
     }
     lpKey->lpfatherkey = lpFatherkey;
-    
+
     nGettingKey++;
-	
-    for (lpv =(LPSAVEVALUECONTENT)(lpHiveFileBase+ lpFile->fpos_firstvalue); lpHiveFileBase!=(LPBYTE)lpv ; lpv=(LPSAVEVALUECONTENT)(lpHiveFileBase+lpv->fpos_nextvalue)) {
-        lpValue=MYALLOC0(sizeof(VALUECONTENT));
-        if(lpValueLast !=NULL) {
-            lpValueLast->lpnextvalue=lpValue;
+
+    for (lpv = (LPSAVEVALUECONTENT)(lpHiveFileBase + lpFile->fpos_firstvalue); lpHiveFileBase != (LPBYTE)lpv ; lpv = (LPSAVEVALUECONTENT)(lpHiveFileBase + lpv->fpos_nextvalue)) {
+        lpValue = MYALLOC0(sizeof(VALUECONTENT));
+        if (lpValueLast != NULL) {
+            lpValueLast->lpnextvalue = lpValue;
         }
         else {
-            lpKey->lpfirstvalue=lpValue;
-        }
-            
-        lpValue->typecode=lpv->typecode;
-        lpValue->datasize=lpv->datasize;
-        if (lpv->fpos_valuename!=0) {
-            lpValue->lpvaluename = (LPSTR)(lpHiveFileBase+lpv->fpos_valuename);
-        }
-        if (lpv->fpos_valuedata!=0) {
-            lpValue->lpvaluedata = lpHiveFileBase+lpv->fpos_valuedata;
+            lpKey->lpfirstvalue = lpValue;
         }
 
-        lpValue->lpfatherkey =lpKey;
-        lpValueLast=lpValue;
-        
+        lpValue->typecode = lpv->typecode;
+        lpValue->datasize = lpv->datasize;
+        if (lpv->fpos_valuename != 0) {
+            lpValue->lpvaluename = (LPSTR)(lpHiveFileBase + lpv->fpos_valuename);
+        }
+        if (lpv->fpos_valuedata != 0) {
+            lpValue->lpvaluedata = lpHiveFileBase + lpv->fpos_valuedata;
+        }
+
+        lpValue->lpfatherkey = lpKey;
+        lpValueLast = lpValue;
+
         nGettingValue++;
     }
 
 
     if (lpFile->fpos_firstsubkey != 0) {
-        lpsubkey=MYALLOC0(sizeof(KEYCONTENT));
-        lpKey->lpfirstsubkey=lpsubkey;
-        RebuildFromHive_reg( (LPSAVEKEYCONTENT)(lpHiveFileBase+lpFile->fpos_firstsubkey),lpKey,lpsubkey,lpHiveFileBase);
+        lpsubkey = MYALLOC0(sizeof(KEYCONTENT));
+        lpKey->lpfirstsubkey = lpsubkey;
+        RebuildFromHive_reg((LPSAVEKEYCONTENT)(lpHiveFileBase + lpFile->fpos_firstsubkey), lpKey, lpsubkey, lpHiveFileBase);
     }
 
     if (lpFile->fpos_brotherkey != 0) {
-        lpsubkey=MYALLOC0(sizeof(KEYCONTENT));
-        lpKey->lpbrotherkey=lpsubkey;
-        RebuildFromHive_reg((LPSAVEKEYCONTENT)(lpHiveFileBase+lpFile->fpos_brotherkey),lpKey,lpsubkey,lpHiveFileBase);
-    }    
+        lpsubkey = MYALLOC0(sizeof(KEYCONTENT));
+        lpKey->lpbrotherkey = lpsubkey;
+        RebuildFromHive_reg((LPSAVEKEYCONTENT)(lpHiveFileBase + lpFile->fpos_brotherkey), lpKey, lpsubkey, lpHiveFileBase);
+    }
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
         UpdateCounters(lan_key, lan_value, nGettingKey, nGettingValue);
-    }        
+    }
 
 }
 
@@ -1496,16 +1495,16 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
         lpKey->lpkeyname += nBase;
     }
     if (lpKey->lpfirstvalue != NULL) {
-        lpKey->lpfirstvalue =(LPVALUECONTENT)( (LPBYTE)lpKey->lpfirstvalue + nBase);
+        lpKey->lpfirstvalue = (LPVALUECONTENT)((LPBYTE)lpKey->lpfirstvalue + nBase);
     }
     if (lpKey->lpfirstsubkey != NULL) {
-        lpKey->lpfirstsubkey =(LPKEYCONTENT)( (LPBYTE)lpKey->lpfirstsubkey + nBase);
+        lpKey->lpfirstsubkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfirstsubkey + nBase);
     }
     if (lpKey->lpbrotherkey != NULL) {
-        lpKey->lpbrotherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpbrotherkey + nBase);
+        lpKey->lpbrotherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpbrotherkey + nBase);
     }
     if (lpKey->lpfatherkey != NULL) {
-        lpKey->lpfatherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpfatherkey + nBase);
+        lpKey->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfatherkey + nBase);
     }
 
     nGettingKey++;
@@ -1519,10 +1518,10 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
             lpv->lpvaluedata += nBase;
         }
         if (lpv->lpnextvalue != NULL) {
-            lpv->lpnextvalue =(LPVALUECONTENT)( (LPBYTE)lpv->lpnextvalue + nBase);
+            lpv->lpnextvalue = (LPVALUECONTENT)((LPBYTE)lpv->lpnextvalue + nBase);
         }
         if (lpv->lpfatherkey != NULL) {
-            lpv->lpfatherkey =(LPKEYCONTENT)( (LPBYTE)lpv->lpfatherkey + nBase);
+            lpv->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpv->lpfatherkey + nBase);
         }
 
     }
@@ -1550,9 +1549,9 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
     DWORD   nRemain;
     DWORD   nReadSize;
     HIVEHEADER hiveheader;
-    char    sname[MAX_PATH+1];
-    
-    ZeroMemory(sname,sizeof(sname));
+    char    sname[MAX_PATH + 1];
+
+    ZeroMemory(sname, sizeof(sname));
 
     opfn.lStructSize = sizeof(opfn);
     opfn.hwndOwner = hWnd;
@@ -1563,80 +1562,80 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
     opfn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     opfn.lpstrDefExt = "hiv";
     if (!GetOpenFileName(&opfn)) {
-		return FALSE;
-	}
-	hFileWholeReg = CreateFile(opfn.lpstrFile, GENERIC_READ , FILE_SHARE_READ , NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        return FALSE;
+    }
+    hFileWholeReg = CreateFile(opfn.lpstrFile, GENERIC_READ , FILE_SHARE_READ , NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFileWholeReg == INVALID_HANDLE_VALUE) {
-		ErrMsg((LPCTSTR)lan_erroropenfile);
-		return FALSE;
-	}
-	nFileSize = GetFileSize(hFileWholeReg, NULL);
-	if(nFileSize< sizeof(HIVEHEADER)) {
-		CloseHandle(hFileWholeReg);
-		ErrMsg((LPCTSTR)"wrong filesize");
-		return FALSE;
-	}
-	
-    ZeroMemory(&hiveheader,sizeof(HIVEHEADER));
-	ReadFile(hFileWholeReg, &hiveheader, sizeof(HIVEHEADER), &NBW, NULL);
-	
+        ErrMsg((LPCTSTR)lan_erroropenfile);
+        return FALSE;
+    }
+    nFileSize = GetFileSize(hFileWholeReg, NULL);
+    if (nFileSize < sizeof(HIVEHEADER)) {
+        CloseHandle(hFileWholeReg);
+        ErrMsg((LPCTSTR)"wrong filesize");
+        return FALSE;
+    }
 
-	if (strcmp(str_RegshotHiveSignature, (const char *)(hiveheader.signature) ) != 0) {
-		CloseHandle(hFileWholeReg);
-		ErrMsg((LPCTSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!"); //changed in 1.8.3
-		return FALSE;
-	}
-	//May add some check here
+    ZeroMemory(&hiveheader, sizeof(HIVEHEADER));
+    ReadFile(hFileWholeReg, &hiveheader, sizeof(HIVEHEADER), &NBW, NULL);
 
-	
-	nGettingKey = 0;
-	nGettingFile = 0;
-	if (is1) {
-		UI_BeforeShot(IDC_1STSHOT);
-	} else {
-		UI_BeforeShot(IDC_2NDSHOT);
-	}
 
-	*lpHive = MYALLOC(nFileSize);
+    if (strcmp(str_RegshotHiveSignature, (const char *)(hiveheader.signature)) != 0) {
+        CloseHandle(hFileWholeReg);
+        ErrMsg((LPCTSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!"); //changed in 1.8.3
+        return FALSE;
+    }
+    //May add some check here
 
-	SetFilePointer(hFileWholeReg, 0, NULL, FILE_BEGIN);
 
-	InitProgressBar();
+    nGettingKey = 0;
+    nGettingFile = 0;
+    if (is1) {
+        UI_BeforeShot(IDC_1STSHOT);
+    } else {
+        UI_BeforeShot(IDC_2NDSHOT);
+    }
+
+    *lpHive = MYALLOC(nFileSize);
+
+    SetFilePointer(hFileWholeReg, 0, NULL, FILE_BEGIN);
+
+    InitProgressBar();
 #define READ_BATCH_SIZE 8192
-	nFileStep = nFileSize / READ_BATCH_SIZE / MAXPBPOSITION;
+    nFileStep = nFileSize / READ_BATCH_SIZE / MAXPBPOSITION;
 
-	for (i = 0, j = 0, nRemain = nFileSize;; i += READ_BATCH_SIZE, j++) {
-		if (nRemain >= READ_BATCH_SIZE) {
-			nReadSize = READ_BATCH_SIZE;
-		} else {
-			nReadSize = nRemain;
-		}
-		// Crash bug made in 1.8.0 tianwei, fixed in 1.8.1 tianwei
-		ReadFile(hFileWholeReg, (*lpHive) + i, nReadSize, &NBW, NULL); // read the whole file now
-		if (NBW != nReadSize) {
-			CloseHandle(hFileWholeReg);
-			ErrMsg((LPCTSTR)"Reading ERROR!");
-			return FALSE;
-		}
-		nRemain -= nReadSize;
-		if (nRemain == 0) {
-			break;
-		}
-		if (j % (nFileSize / READ_BATCH_SIZE) > nFileStep) {
-			j = 0;
-			SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-			UpdateWindow(hWnd);
-			PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
-		}
-	}
+    for (i = 0, j = 0, nRemain = nFileSize;; i += READ_BATCH_SIZE, j++) {
+        if (nRemain >= READ_BATCH_SIZE) {
+            nReadSize = READ_BATCH_SIZE;
+        } else {
+            nReadSize = nRemain;
+        }
+        // Crash bug made in 1.8.0 tianwei, fixed in 1.8.1 tianwei
+        ReadFile(hFileWholeReg, (*lpHive) + i, nReadSize, &NBW, NULL); // read the whole file now
+        if (NBW != nReadSize) {
+            CloseHandle(hFileWholeReg);
+            ErrMsg((LPCTSTR)"Reading ERROR!");
+            return FALSE;
+        }
+        nRemain -= nReadSize;
+        if (nRemain == 0) {
+            break;
+        }
+        if (j % (nFileSize / READ_BATCH_SIZE) > nFileStep) {
+            j = 0;
+            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            UpdateWindow(hWnd);
+            PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+        }
+    }
 #undef READ_BATCH_SIZE
-	ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);
+    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);
 
-	nBase = (size_t) * lpHive;
-	*lplpKeyHLM = (LPKEYCONTENT)( nBase +  hiveheader.offsetkeyhklm );
-	*lplpKeyUSER = (LPKEYCONTENT)(nBase +  hiveheader.offsetkeyuser );
-	*lplpHeadFile= ( hiveheader.offsetheadfile == 0 ) ? NULL : (LPHEADFILE)(nBase + hiveheader.offsetheadfile);
-	
+    nBase = (size_t) * lpHive;
+    *lplpKeyHLM = (LPKEYCONTENT)(nBase +  hiveheader.offsetkeyhklm);
+    *lplpKeyUSER = (LPKEYCONTENT)(nBase +  hiveheader.offsetkeyuser);
+    *lplpHeadFile = (hiveheader.offsetheadfile == 0) ? NULL : (LPHEADFILE)(nBase + hiveheader.offsetheadfile);
+
 #ifdef _WIN64
     nGettingKey   = 2;
     nGettingValue = 0;
@@ -1645,58 +1644,58 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
     nGettingDir   = 0;
     nBASETIME  = GetTickCount();
     nBASETIME1 = nBASETIME;
-	if (is1) {
-		UI_BeforeShot(IDC_1STSHOT);
-	} else {
-		UI_BeforeShot(IDC_2NDSHOT);
-	}
+    if (is1) {
+        UI_BeforeShot(IDC_1STSHOT);
+    } else {
+        UI_BeforeShot(IDC_2NDSHOT);
+    }
 
-	*lplpKeyHLM=MYALLOC0(sizeof(KEYCONTENT));
-	*lplpKeyUSER=MYALLOC0(sizeof(KEYCONTENT));
-	RebuildFromHive_reg((LPSAVEKEYCONTENT)( nBase + hiveheader.offsetkeyhklm),NULL,*lplpKeyHLM ,*lpHive);
-	RebuildFromHive_reg((LPSAVEKEYCONTENT)( nBase + hiveheader.offsetkeyuser),NULL,*lplpKeyUSER ,*lpHive);
+    *lplpKeyHLM = MYALLOC0(sizeof(KEYCONTENT));
+    *lplpKeyUSER = MYALLOC0(sizeof(KEYCONTENT));
+    RebuildFromHive_reg((LPSAVEKEYCONTENT)(nBase + hiveheader.offsetkeyhklm), NULL, *lplpKeyHLM , *lpHive);
+    RebuildFromHive_reg((LPSAVEKEYCONTENT)(nBase + hiveheader.offsetkeyuser), NULL, *lplpKeyUSER , *lpHive);
     nGettingTime = GetTickCount();
     UpdateCounters(lan_key, lan_value, nGettingKey, nGettingValue);
 
 #else
-	ReAlignReg(*lplpKeyHLM, nBase);
-	ReAlignReg(*lplpKeyUSER, nBase);
+    ReAlignReg(*lplpKeyHLM, nBase);
+    ReAlignReg(*lplpKeyUSER, nBase);
 #endif
 
 
-	if (*lplpHeadFile != NULL) {
-		SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-		SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
-#ifdef _WIN64                    
-		*lplpHeadFile=MYALLOC0(sizeof(HEADFILE));
-		RebuildFromHive_filehead((LPSAVEHEADFILE)(nBase + hiveheader.offsetheadfile),*lplpHeadFile,*lpHive);
+    if (*lplpHeadFile != NULL) {
+        SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+        SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
+#ifdef _WIN64
+        *lplpHeadFile = MYALLOC0(sizeof(HEADFILE));
+        RebuildFromHive_filehead((LPSAVEHEADFILE)(nBase + hiveheader.offsetheadfile), *lplpHeadFile, *lpHive);
         nGettingTime = GetTickCount();
-        UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);		
+        UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
 #else
-		ReAlignFile(*lplpHeadFile, nBase);
+        ReAlignFile(*lplpHeadFile, nBase);
 #endif
-		FindDirChain(*lplpHeadFile, lpExtDir, EXTDIRLEN); // Get new chains, must do this after ReAlignFile!
-		SetDlgItemText(hWnd, IDC_EDITDIR, lpExtDir);
-	} else {
-		SetDlgItemText(hWnd, IDC_EDITDIR, "");
-	}
+        FindDirChain(*lplpHeadFile, lpExtDir, EXTDIRLEN); // Get new chains, must do this after ReAlignFile!
+        SetDlgItemText(hWnd, IDC_EDITDIR, lpExtDir);
+    } else {
+        SetDlgItemText(hWnd, IDC_EDITDIR, "");
+    }
 
 
-	if (is1) {
-		// Use copymemory in 1.8, old version direct point to, which is wrong
-		CopyMemory(lpComputerName1, hiveheader.computername, COMPUTERNAMELEN);
-		CopyMemory(lpUserName1, hiveheader.username, COMPUTERNAMELEN);
-		CopyMemory(lpSystemtime1, &hiveheader.systemtime, sizeof(SYSTEMTIME));
-	} else {
-		CopyMemory(lpComputerName2, hiveheader.computername, COMPUTERNAMELEN);
-		CopyMemory(lpUserName2, hiveheader.username, COMPUTERNAMELEN);
-		CopyMemory(lpSystemtime2, &hiveheader.systemtime, sizeof(SYSTEMTIME));
-	}
+    if (is1) {
+        // Use copymemory in 1.8, old version direct point to, which is wrong
+        CopyMemory(lpComputerName1, hiveheader.computername, COMPUTERNAMELEN);
+        CopyMemory(lpUserName1, hiveheader.username, COMPUTERNAMELEN);
+        CopyMemory(lpSystemtime1, &hiveheader.systemtime, sizeof(SYSTEMTIME));
+    } else {
+        CopyMemory(lpComputerName2, hiveheader.computername, COMPUTERNAMELEN);
+        CopyMemory(lpUserName2, hiveheader.username, COMPUTERNAMELEN);
+        CopyMemory(lpSystemtime2, &hiveheader.systemtime, sizeof(SYSTEMTIME));
+    }
 
-	UI_AfterShot();
+    UI_AfterShot();
 
-	CloseHandle(hFileWholeReg);
- 
+    CloseHandle(hFileWholeReg);
+
     *(opfn.lpstrFile + opfn.nFileOffset) = 0x00;
     strcpy(lpLastOpenDir, opfn.lpstrFile);
 
