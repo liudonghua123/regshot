@@ -434,66 +434,66 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DW
 
 #ifdef _WIN64
 //
-VOID RebuildFromHive_file(LPSAVEFILECONTENT lpFile,LPFILECONTENT lpFatherFC, LPFILECONTENT lpFC,LPBYTE lpHiveFileBase)
+VOID RebuildFromHive_file(LPSAVEFILECONTENT lpFile, LPFILECONTENT lpFatherFC, LPFILECONTENT lpFC, LPBYTE lpHiveFileBase)
 {
-	LPFILECONTENT lpsubfile;
-	
-    if(lpFile->fpos_filename !=0) {
-        lpFC->lpfilename = (LPSTR)(lpHiveFileBase+lpFile->fpos_filename);
+    LPFILECONTENT lpsubfile;
+
+    if (lpFile->fpos_filename != 0) {
+        lpFC->lpfilename = (LPSTR)(lpHiveFileBase + lpFile->fpos_filename);
     }
-    lpFC->writetimelow=lpFile->writetimelow;
-    lpFC->writetimehigh=lpFile->writetimehigh;
-    lpFC->filesizelow=lpFile->filesizelow;
-    lpFC->filesizehigh=lpFile->filesizehigh;
-    lpFC->fileattr=lpFile->fileattr;
-    lpFC->cksum=lpFile->cksum;
+    lpFC->writetimelow = lpFile->writetimelow;
+    lpFC->writetimehigh = lpFile->writetimehigh;
+    lpFC->filesizelow = lpFile->filesizelow;
+    lpFC->filesizehigh = lpFile->filesizehigh;
+    lpFC->fileattr = lpFile->fileattr;
+    lpFC->cksum = lpFile->cksum;
     lpFC->lpfatherfile = lpFatherFC;
-    if(ISDIR(lpFC->fileattr)) {
+    if (ISDIR(lpFC->fileattr)) {
         nGettingDir++;
-    }else {
-	    nGettingFile++;
+    } else {
+        nGettingFile++;
     }
-	
+
     if (lpFile->fpos_firstsubfile != 0) {
-        lpsubfile=MYALLOC0(sizeof(FILECONTENT));
-        lpFC->lpfirstsubfile=lpsubfile;
-        RebuildFromHive_file( (LPSAVEFILECONTENT)(lpHiveFileBase+lpFile->fpos_firstsubfile),lpFC,lpsubfile,lpHiveFileBase);
+        lpsubfile = MYALLOC0(sizeof(FILECONTENT));
+        lpFC->lpfirstsubfile = lpsubfile;
+        RebuildFromHive_file((LPSAVEFILECONTENT)(lpHiveFileBase + lpFile->fpos_firstsubfile), lpFC, lpsubfile, lpHiveFileBase);
     }
 
     if (lpFile->fpos_brotherfile != 0) {
-        lpsubfile=MYALLOC0(sizeof(FILECONTENT));
-        lpFC->lpbrotherfile=lpsubfile;
-        RebuildFromHive_file((LPSAVEFILECONTENT)(lpHiveFileBase+lpFile->fpos_brotherfile),lpFatherFC,lpsubfile,lpHiveFileBase);
-    }    
-    
+        lpsubfile = MYALLOC0(sizeof(FILECONTENT));
+        lpFC->lpbrotherfile = lpsubfile;
+        RebuildFromHive_file((LPSAVEFILECONTENT)(lpHiveFileBase + lpFile->fpos_brotherfile), lpFatherFC, lpsubfile, lpHiveFileBase);
+    }
+
 
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
         UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
-    }    
-    
+    }
+
 }
 
-VOID RebuildFromHive_filehead(LPSAVEHEADFILE lpSHF,LPHEADFILE lpHeadFile,LPBYTE lpHiveFileBase)
+VOID RebuildFromHive_filehead(LPSAVEHEADFILE lpSHF, LPHEADFILE lpHeadFile, LPBYTE lpHiveFileBase)
 {
     LPSAVEHEADFILE  lpshf;
     LPHEADFILE lpHF;
     LPHEADFILE lpHFLast;
 
-    for (lpshf = lpSHF,lpHF=lpHeadFile; lpHiveFileBase != (LPBYTE)lpshf; lpshf = (LPSAVEHEADFILE)(lpHiveFileBase+lpshf->fpos_nextheadfile) ) {
-    
+    for (lpshf = lpSHF, lpHF = lpHeadFile; lpHiveFileBase != (LPBYTE)lpshf; lpshf = (LPSAVEHEADFILE)(lpHiveFileBase + lpshf->fpos_nextheadfile)) {
+
         if (lpshf->fpos_filecontent != 0) {
-            lpHF->lpfilecontent = MYALLOC0(sizeof(FILECONTENT)); 
-            RebuildFromHive_file( (LPSAVEFILECONTENT)(lpHiveFileBase+lpshf->fpos_filecontent),NULL,lpHF->lpfilecontent,lpHiveFileBase);
+            lpHF->lpfilecontent = MYALLOC0(sizeof(FILECONTENT));
+            RebuildFromHive_file((LPSAVEFILECONTENT)(lpHiveFileBase + lpshf->fpos_filecontent), NULL, lpHF->lpfilecontent, lpHiveFileBase);
         }
-        if(lpshf->fpos_nextheadfile != 0) {
-			lpHF->lpnextheadfile=MYALLOC0(sizeof(HEADFILE));
-			lpHFLast=lpHF;
-			lpHF=lpHF->lpnextheadfile;
+        if (lpshf->fpos_nextheadfile != 0) {
+            lpHF->lpnextheadfile = MYALLOC0(sizeof(HEADFILE));
+            lpHFLast = lpHF;
+            lpHF = lpHF->lpnextheadfile;
         }
         //if(lpHFLast ==NULL) {
-		//	lpHeadFile->lpnextheadfile=lpHF;
-		//}else{
+        //	lpHeadFile->lpnextheadfile=lpHF;
+        //}else{
         //    lpHFLast->lpnextheadfile=lpHF;
         //}
         //lpHFLast->lpnextheadfile=lpHF;
