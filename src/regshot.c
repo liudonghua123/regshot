@@ -1029,10 +1029,10 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
     LPVALUECONTENT  lpValueContent;
     LPKEYCONTENT    lpKeyContentLast;
     LPVALUECONTENT  lpValueContentLast;
-    
-    lpKeyContentLast=NULL;
-    lpValueContentLast=NULL;
-    
+
+    lpKeyContentLast = NULL;
+    lpValueContentLast = NULL;
+
     // To detemine MAX length
     if (RegQueryInfoKey(
                 hkey,
@@ -1081,7 +1081,7 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
         lpValueContent = MYALLOC0(sizeof(VALUECONTENT));
         // I had done if (i == 0) in 1.50b- ! thanks fisttk@21cn.com and non-standard
         //if (lpFatherKeyContent->lpfirstvalue == NULL) {
-        if(lpValueContentLast == NULL) {
+        if (lpValueContentLast == NULL) {
             lpFatherKeyContent->lpfirstvalue = lpValueContent;
         } else {
             lpValueContentLast->lpnextvalue = lpValueContent;
@@ -1129,7 +1129,7 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
         }
         lpKeyContent = MYALLOC0(sizeof(KEYCONTENT));
         //if (lpFatherKeyContent->lpfirstsubkey == NULL) {
-        if(lpKeyContentLast == NULL) {
+        if (lpKeyContentLast == NULL) {
             lpFatherKeyContent->lpfirstsubkey = lpKeyContent;
         } else {
             lpKeyContentLast->lpbrotherkey = lpKeyContent;
@@ -1585,7 +1585,7 @@ BOOL LoadHive(LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER,
 
     if (strcmp(str_RegshotHiveSignature, (const char *)(hiveheader.signature)) != 0) {
         CloseHandle(hFileWholeReg);
-        ErrMsg((LPCTSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!"); 
+        ErrMsg((LPCTSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!");
         return FALSE;
     }
     //May add some check here
