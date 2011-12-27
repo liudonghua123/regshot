@@ -76,8 +76,8 @@ VOID GetAllSubFile(
 
     if (ISDIR(lpFileContent->fileattr)) {
         //lpTemp = lpFileContent->lpfilename;
-        if (strcmp(lpFileContent->lpfilename,".") != 0  && strcmp(lpFileContent->lpfilename,"..") != 0)  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
-        //if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)) {     // 1.8.2
+        if (strcmp(lpFileContent->lpfilename, ".") != 0  && strcmp(lpFileContent->lpfilename, "..") != 0)  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
+            //if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)) {     // 1.8.2
             LogToMem(typedir, lpcountdir, lpFileContent);
         }
     } else {
@@ -147,7 +147,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
     lpFileContentTemp = lpFileContent;
 
     if (ISDIR(lpFileContent->fileattr)) {
-        if (strcmp(lpFileContent->lpfilename,".") != 0 && strcmp(lpFileContent->lpfilename,"..") != 0
+        if (strcmp(lpFileContent->lpfilename, ".") != 0 && strcmp(lpFileContent->lpfilename, "..") != 0
                 && !IsInSkipList(lpFileContent->lpfilename, lplpFileSkipStrings)) { // tfx
 
             nGettingDir++;
@@ -172,7 +172,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFile)
         lpFileContentTemp = lpFileContent;
 
         if (ISDIR(lpFileContent->fileattr)) {
-            if (strcmp(lpFileContent->lpfilename,".") != 0 && strcmp(lpFileContent->lpfilename,"..") != 0
+            if (strcmp(lpFileContent->lpfilename, ".") != 0 && strcmp(lpFileContent->lpfilename, "..") != 0
                     && !IsInSkipList(lpFileContent->lpfilename, lplpFileSkipStrings)) { // tfx
                 nGettingDir++;
                 GetFilesSnap(lpFileContent);

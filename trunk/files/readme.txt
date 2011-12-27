@@ -63,9 +63,9 @@ File shots are now saved in hive file.
 Do not compare shots saved with different "UseLongRegHead" option!
 
 (12) New to 1.8.3 (beta):
-Regshot hive's structure is sligtly changed in this version, so old hive cannot load into this version
-182to183.exe  can make transfers from old hive to new hiv.
-x64 build is added ,try it on 64bit windows.
+Regshot hive's structure is slightly changed in this version, so old hive cannot load into this version.
+182to183.exe can make transfers from old hive to new one.
+x64 build is added, try it on 64bit Windows.
 
 -----------------
 Thanks:
