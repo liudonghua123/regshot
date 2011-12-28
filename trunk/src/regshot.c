@@ -26,6 +26,8 @@
 char str_DefResPre[] = REGSHOT_RESULT_FILE;
 char str_filter[]    = {"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
 char str_RegshotHiveSignature[] = REGSHOT_HIVE_SIGNATURE;  // Need [] to use with sizeof() must <12
+char str_ValueDataIsNULL[]=": (NULL!)";
+
 
 extern LPBYTE lan_errorcreatefile;
 extern LPBYTE lan_comments;
@@ -123,6 +125,7 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 
 //-------------------------------------------------------------
 // Routine Trans VALUECONTENT.data[which in binary] into strings
+// Called by GetWholeValueData()
 //-------------------------------------------------------------
 LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
 {
@@ -137,9 +140,9 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
             // because some non-regular value would corrupt this.
             lpvaluedata = MYALLOC0(size + 5);    // 5 is enough
             strcpy(lpvaluedata, ": \"");
-            if (lpValueContent->lpvaluedata != NULL) {
+            //if (lpValueContent->lpvaluedata != NULL) {
                 strcat(lpvaluedata, (const char *)lpValueContent->lpvaluedata);
-            }
+            //}
             strcat(lpvaluedata, "\"");
             // wsprintf has a bug that can not print string too long one time!);
             //wsprintf(lpvaluedata,"%s%s%s",": \"",lpValueContent->lpvaluedata,"\"");
@@ -188,48 +191,53 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
     LPSTR   lpvaluedata = NULL;
     DWORD   c;
     DWORD   size = lpValueContent->datasize;
+    
+    if(lpValueContent->lpvaluedata != NULL) {  //fix a bug at 20111228
 
-    switch (lpValueContent->typecode) {
-
-        case REG_SZ:
-        case REG_EXPAND_SZ:
-            if (lpValueContent->lpvaluedata != NULL) {
-                if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
-                    lpvaluedata = TransData(lpValueContent, REG_SZ);
-                } else {
-                    lpvaluedata = TransData(lpValueContent, REG_BINARY);
-                }
-            } else {
-                lpvaluedata = TransData(lpValueContent, REG_SZ);
-            }
-            break;
-        case REG_MULTI_SZ:
-            if (*((LPBYTE)(lpValueContent->lpvaluedata)) != 0x00) {
-                for (c = 0;; c++) {
-                    if (*((LPWORD)(lpValueContent->lpvaluedata + c)) == 0) {
-                        break;
+        switch (lpValueContent->typecode) {
+            case REG_SZ:
+            case REG_EXPAND_SZ:
+                //if (lpValueContent->lpvaluedata != NULL) {
+                    if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
+                        lpvaluedata = TransData(lpValueContent, REG_SZ);
+                    } else {
+                        lpvaluedata = TransData(lpValueContent, REG_BINARY);
                     }
-                }
-                if (size == c + 2) {
-                    lpvaluedata = TransData(lpValueContent, REG_MULTI_SZ);
+                //} else {
+                //    lpvaluedata = TransData(lpValueContent, REG_SZ);
+                //}
+                break;
+            case REG_MULTI_SZ:
+                if (*((LPBYTE)(lpValueContent->lpvaluedata)) != 0x00) {
+                    for (c = 0;; c++) {
+                        if (*((LPWORD)(lpValueContent->lpvaluedata + c)) == 0) {
+                            break;
+                        }
+                    }
+                    if (size == c + 2) {
+                        lpvaluedata = TransData(lpValueContent, REG_MULTI_SZ);
+                    } else {
+                        lpvaluedata = TransData(lpValueContent, REG_BINARY);
+                    }
                 } else {
                     lpvaluedata = TransData(lpValueContent, REG_BINARY);
                 }
-            } else {
+                break;
+            case REG_DWORD:
+            case REG_DWORD_BIG_ENDIAN:
+                if (size == SIZEOFREG_DWORD) {
+                    lpvaluedata = TransData(lpValueContent, REG_DWORD);
+                } else {
+                    lpvaluedata = TransData(lpValueContent, REG_BINARY);
+                }
+                break;
+            default :
                 lpvaluedata = TransData(lpValueContent, REG_BINARY);
-            }
-            break;
-        case REG_DWORD:
-        case REG_DWORD_BIG_ENDIAN:
-            if (size == SIZEOFREG_DWORD) {
-                lpvaluedata = TransData(lpValueContent, REG_DWORD);
-            } else {
-                lpvaluedata = TransData(lpValueContent, REG_BINARY);
-            }
-            break;
-        default :
-            lpvaluedata = TransData(lpValueContent, REG_BINARY);
-    }
+        }
+    }else {
+		lpvaluedata=MYALLOC0( sizeof(str_ValueDataIsNULL));
+		strcpy(lpvaluedata,str_ValueDataIsNULL);
+	}        
     return lpvaluedata;
 }
 
