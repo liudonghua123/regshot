@@ -31,7 +31,7 @@
 #define REGSHOT_VERSION_PATCH     3
 #define REGSHOT_VERSION_REV       0
 
-#define REGSHOT_VERSION_COPYRIGHT "Copyright © 1999-2011, all contributors"
+#define REGSHOT_VERSION_COPYRIGHT "Copyright (C) 1999-2011, all contributors"
 #define REGSHOT_VERSION_NUM       REGSHOT_VERSION_MAJOR,REGSHOT_VERSION_MINOR,REGSHOT_VERSION_PATCH,REGSHOT_VERSION_REV
 #define REGSHOT_VERSION           STRINGIFY(REGSHOT_VERSION_MAJOR) ", " STRINGIFY(REGSHOT_VERSION_MINOR) ", " STRINGIFY(REGSHOT_VERSION_PATCH) ", " STRINGIFY(REGSHOT_VERSION_REV)
 #define REGSHOT_VERSION_STRING    STRINGIFY(REGSHOT_VERSION_MAJOR) "." STRINGIFY(REGSHOT_VERSION_MINOR) "." STRINGIFY(REGSHOT_VERSION_PATCH) "-beta1V3"
@@ -47,19 +47,54 @@
 #endif // _WIN64
 
 #ifdef _DEBUG
-#define REGSHOT_VERSION_BUILDTYPE "(debug build)"
+#define REGSHOT_VERSION_BUILDTYPE "d"
 #else
-#define REGSHOT_VERSION_BUILDTYPE "(release build)"
+#define REGSHOT_VERSION_BUILDTYPE "r"
 #endif
 
-#ifdef _MSC_VER
-#define REGSHOT_VERSION_COMPILER  "MSC"
-#elif __GNUC__
-#define REGSHOT_VERSION_COMPILER  "GNUC"
-#elif __ICL
-#define REGSHOT_VERSION_COMPILER  "ICL"
+#define DO_STRINGIFY(x) #x
+#define STRINGIFY(x)    DO_STRINGIFY(x)
+
+#if defined(__GNUC__)
+  #define REGSHOT_VERSION_COMPILER "GCC "STRINGIFY(__GNUC__)"."STRINGIFY(__GNUC_MINOR__)"."STRINGIFY(__GNUC_PATCHLEVEL__)
+#elif defined(__INTEL_COMPILER)
+    #if __INTEL_COMPILER >= 1200
+        #define REGSHOT_VERSION_COMPILER "Intel Compiler 12"
+    #else
+        #define REGSHOT_VERSION_COMPILER "Intel Compiler (version unknown)"
+    #endif
+#elif defined(WDK_BUILD)
+    #if _MSC_VER == 1600
+        #if (_MSC_FULL_VER >= 160040219)
+            #define REGSHOT_VERSION_COMPILER "WDK (MSVC 2010 SP1)"
+        #else
+            #define REGSHOT_VERSION_COMPILER "WDK (MSVC 2010)"
+        #endif
+    #elif _MSC_VER == 1500
+        #if (_MSC_FULL_VER == 150030729)
+            #define REGSHOT_VERSION_COMPILER "WDK"
+        #else
+            #define REGSHOT_VERSION_COMPILER "WDK (version unknown)"
+        #endif
+    #endif
+#elif defined(_MSC_VER)
+    #if _MSC_VER == 1600
+        #if (_MSC_FULL_VER >= 160040219)
+            #define REGSHOT_VERSION_COMPILER "MSVC 2010 SP1"
+        #else
+            #define REGSHOT_VERSION_COMPILER "MSVC 2010"
+        #endif
+    #elif _MSC_VER == 1500
+        #if (_MSC_FULL_VER >= 150030729)
+            #define REGSHOT_VERSION_COMPILER "MSVC 2008 SP1"
+        #else
+            #define REGSHOT_VERSION_COMPILER "MSVC 2008"
+        #endif
+    #else
+        #define REGSHOT_VERSION_COMPILER "MSVC (version unknown)"
+    #endif
 #else
-#define REGSHOT_VERSION_COMPILER  ""
+    #define REGSHOT_VERSION_COMPILER "(Unknown compiler)"
 #endif
 
 #define REGSHOT_VERSION_DESCRIPTION   REGSHOT_VERSION_STRING ", " REGSHOT_VERSION_PLATFORM ", " REGSHOT_VERSION_BUILDTYPE ", " REGSHOT_VERSION_COMPILER

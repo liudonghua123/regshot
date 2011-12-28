@@ -26,7 +26,7 @@
 char str_DefResPre[] = REGSHOT_RESULT_FILE;
 char str_filter[]    = {"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
 char str_RegshotHiveSignature[] = REGSHOT_HIVE_SIGNATURE;  // Need [] to use with sizeof() must <12
-char str_ValueDataIsNULL[]=": (NULL!)";
+char str_ValueDataIsNULL[] = ": (NULL!)";
 SAVEKEYCONTENT sKC;
 SAVEVALUECONTENT sVC;
 
@@ -143,7 +143,7 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
             lpvaluedata = MYALLOC0(size + 5);    // 5 is enough
             strcpy(lpvaluedata, ": \"");
             //if (lpValueContent->lpvaluedata != NULL) {
-                strcat(lpvaluedata, (const char *)lpValueContent->lpvaluedata);
+            strcat(lpvaluedata, (const char *)lpValueContent->lpvaluedata);
             //}
             strcat(lpvaluedata, "\"");
             // wsprintf has a bug that can not print string too long one time!);
@@ -193,18 +193,18 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
     LPSTR   lpvaluedata = NULL;
     DWORD   c;
     DWORD   size = lpValueContent->datasize;
-    
-    if(lpValueContent->lpvaluedata != NULL) {  //fix a bug at 20111228
+
+    if (lpValueContent->lpvaluedata != NULL) { //fix a bug at 20111228
 
         switch (lpValueContent->typecode) {
             case REG_SZ:
             case REG_EXPAND_SZ:
                 //if (lpValueContent->lpvaluedata != NULL) {
-                    if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
-                        lpvaluedata = TransData(lpValueContent, REG_SZ);
-                    } else {
-                        lpvaluedata = TransData(lpValueContent, REG_BINARY);
-                    }
+                if (size == (DWORD)strlen((const char *)(lpValueContent->lpvaluedata)) + 1) {
+                    lpvaluedata = TransData(lpValueContent, REG_SZ);
+                } else {
+                    lpvaluedata = TransData(lpValueContent, REG_BINARY);
+                }
                 //} else {
                 //    lpvaluedata = TransData(lpValueContent, REG_SZ);
                 //}
@@ -236,10 +236,10 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
             default :
                 lpvaluedata = TransData(lpValueContent, REG_BINARY);
         }
-    }else {
-		lpvaluedata=MYALLOC0( sizeof(str_ValueDataIsNULL));
-		strcpy(lpvaluedata,str_ValueDataIsNULL);
-	}        
+    } else {
+        lpvaluedata = MYALLOC0(sizeof(str_ValueDataIsNULL));
+        strcpy(lpvaluedata, str_ValueDataIsNULL);
+    }
     return lpvaluedata;
 }
 
