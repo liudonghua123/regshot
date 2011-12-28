@@ -27,6 +27,8 @@ char str_DefResPre[] = REGSHOT_RESULT_FILE;
 char str_filter[]    = {"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
 char str_RegshotHiveSignature[] = REGSHOT_HIVE_SIGNATURE;  // Need [] to use with sizeof() must <12
 char str_ValueDataIsNULL[]=": (NULL!)";
+SAVEKEYCONTENT sKC;
+SAVEVALUECONTENT sVC;
 
 
 extern LPBYTE lan_errorcreatefile;
@@ -1194,8 +1196,6 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
     INT     nPad;
     INT     nPad1;
     LPVALUECONTENT lpv;
-    SAVEKEYCONTENT skc;
-    SAVEVALUECONTENT svc;
 
     // Note use (DWORD) to disable warning of lost of data to convert size_t to dword, in current windows,it is safe that registry's xxxxname is stay in DWORD long
     nLenPlus1 = (DWORD)strlen(lpKeyContent->lpkeyname) + 1;                     // Get len+1
@@ -1203,13 +1203,13 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);           // Save head fp
 
     // using struct ,idea from maddes
-    skc.fpos_keyname = nFPHeader + sizeof(SAVEKEYCONTENT);
-    skc.fpos_firstvalue = (lpKeyContent->lpfirstvalue != NULL) ? (nFPHeader + sizeof(SAVEKEYCONTENT) + nLenPlus1 + nPad) : 0;
-    skc.fpos_firstsubkey = 0; // it is filled later.
-    skc.fpos_brotherkey = 0;   // it is filled later
-    skc.fpos_fatherkey = nFPCurrentFatherKey;
-    skc.bkeymatch = 0;
-    WriteFile(hFileWholeReg, &skc, sizeof(skc), &NBW, NULL);
+    sKC.fpos_keyname = nFPHeader + sizeof(SAVEKEYCONTENT);
+    sKC.fpos_firstvalue = (lpKeyContent->lpfirstvalue != NULL) ? (nFPHeader + sizeof(SAVEKEYCONTENT) + nLenPlus1 + nPad) : 0;
+    sKC.fpos_firstsubkey = 0; // it is filled later.
+    sKC.fpos_brotherkey = 0;   // it is filled later
+    sKC.fpos_fatherkey = nFPCurrentFatherKey;
+    sKC.bkeymatch = 0;
+    WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
 
 /*
     nFPTemp4Write = nFPHeader + sizeof(KEYCONTENT);                                             
@@ -1242,14 +1242,14 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
         nPad1 = (lpv->datasize % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - lpv->datasize % sizeof(DWORD));
 
         nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);  // Save fp
-        svc.typecode = lpv->typecode;
-        svc.datasize = lpv->datasize;
-        svc.fpos_valuename = nFPCurrent + sizeof(SAVEVALUECONTENT);
-        svc.fpos_valuedata = (lpv->datasize > 0) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad) : 0;    // if no lpvaluedata, we write 0
-        svc.fpos_nextvalue = (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0;   // if no nextvalue we write 0
-        svc.fpos_fatherkey = nFPHeader;
-        svc.bvaluematch = 0;
-        WriteFile(hFileWholeReg, &svc, sizeof(svc), &NBW, NULL);
+        sVC.typecode = lpv->typecode;
+        sVC.datasize = lpv->datasize;
+        sVC.fpos_valuename = nFPCurrent + sizeof(SAVEVALUECONTENT);
+        sVC.fpos_valuedata = (lpv->datasize > 0) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad) : 0;    // if no lpvaluedata, we write 0
+        sVC.fpos_nextvalue = (lpv->lpnextvalue != NULL) ? (nFPCurrent + sizeof(SAVEVALUECONTENT) + nLenPlus1 + nPad + lpv->datasize + nPad1) : 0;   // if no nextvalue we write 0
+        sVC.fpos_fatherkey = nFPHeader;
+        sVC.bvaluematch = 0;
+        WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
 
 /*
         WriteFile(hFileWholeReg, (LPBYTE)lpv, sizeof(DWORD)*2, &NBW, NULL);
