@@ -1,6 +1,6 @@
 /*
     Copyright 2011 Regshot Team
-    
+
     Regshot is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -16,8 +16,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-
 #include "global.h"
+
 //--------------------------------------------------
 // Realign key & value content after loading from hive file
 //--------------------------------------------------
@@ -29,19 +29,19 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
         lpKey->lpkeyname += nBase;
     }
     if (lpKey->lpfirstvalue != NULL) {
-        lpKey->lpfirstvalue =(LPVALUECONTENT)( (LPBYTE)lpKey->lpfirstvalue + nBase);
+        lpKey->lpfirstvalue = (LPVALUECONTENT)((LPBYTE)lpKey->lpfirstvalue + nBase);
     }
     if (lpKey->lpfirstsubkey != NULL) {
-        lpKey->lpfirstsubkey =(LPKEYCONTENT)( (LPBYTE)lpKey->lpfirstsubkey + nBase);
+        lpKey->lpfirstsubkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfirstsubkey + nBase);
     }
     if (lpKey->lpbrotherkey != NULL) {
-        lpKey->lpbrotherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpbrotherkey + nBase);
+        lpKey->lpbrotherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpbrotherkey + nBase);
     }
     if (lpKey->lpfatherkey != NULL) {
-        lpKey->lpfatherkey = (LPKEYCONTENT)( (LPBYTE)lpKey->lpfatherkey + nBase);
+        lpKey->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpKey->lpfatherkey + nBase);
     }
 
-   
+
     for (lpv = lpKey->lpfirstvalue; lpv != NULL; lpv = lpv->lpnextvalue) {
 
         if (lpv->lpvaluename != NULL) {
@@ -51,10 +51,10 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
             lpv->lpvaluedata += nBase;
         }
         if (lpv->lpnextvalue != NULL) {
-            lpv->lpnextvalue =(LPVALUECONTENT)( (LPBYTE)lpv->lpnextvalue + nBase);
+            lpv->lpnextvalue = (LPVALUECONTENT)((LPBYTE)lpv->lpnextvalue + nBase);
         }
         if (lpv->lpfatherkey != NULL) {
-            lpv->lpfatherkey =(LPKEYCONTENT)( (LPBYTE)lpv->lpfatherkey + nBase);
+            lpv->lpfatherkey = (LPKEYCONTENT)((LPBYTE)lpv->lpfatherkey + nBase);
         }
 
     }
@@ -67,7 +67,6 @@ VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase)
         ReAlignReg(lpKey->lpbrotherkey, nBase);
     }
 }
-
 
 
 //--------------------------------------------------
@@ -110,7 +109,6 @@ VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase)
 
     for (lphf = lpHF; lphf != NULL; lphf = lphf->lpnextheadfile) {
 
-
         if (lphf->lpnextheadfile != NULL) {
             lphf->lpnextheadfile = (LPHEADFILE)((LPBYTE)lphf->lpnextheadfile + nBase);
         }
@@ -123,4 +121,3 @@ VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase)
         }
     }
 }
-
