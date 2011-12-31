@@ -1,6 +1,6 @@
 /*
     Copyright 2011 Regshot Team
-    
+
     Regshot is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <shlobj.h>
 
-#define REGSHOT_HIVE_SIGNATURE_182    "REGSHOTHIVE"
-#define REGSHOT_HIVE_SIGNATURE    "RSHIVE183"
+#define REGSHOT_HIVE_SIGNATURE_182  "REGSHOTHIVE"
+#define REGSHOT_HIVE_SIGNATURE      "RSHIVE183"
 
 #define HIVEBEGINOFFSET 512         // Hive file out put header computerlen*2+sizeof(systemtime)+32 must <hivebeginoffset!!!!!!!!!!!!!!
 
@@ -40,7 +40,7 @@
 
 #endif
 
-//Struct for hive version <=1.8.2
+// Struct for hive version <=1.8.2
 // Struct used for Windows Registry Key
 struct _KEYCONTENT {
     LPSTR  lpkeyname;                          // Pointer to key's name
@@ -86,21 +86,18 @@ typedef struct _FILECONTENT FILECONTENT, FAR * LPFILECONTENT;
 
 // Adjusted for filecontent saving. 1.8
 struct _HEADFILE {
-    struct _HEADFILE FAR * lpnextheadfile;      // Pointer to next headfile struc
-    LPFILECONTENT   lpfilecontent;              // Pointer to filecontent
+    struct _HEADFILE FAR * lpnextheadfile;     // Pointer to next headfile struc
+    LPFILECONTENT          lpfilecontent;      // Pointer to filecontent
 };
 typedef struct  _HEADFILE HEADFILE, FAR * LPHEADFILE;
 
 // Pointers to Registry Key
 LPKEYCONTENT    lpHeadLocalMachine;    // Pointer to HKEY_LOCAL_MACHINE 1
-
 LPKEYCONTENT    lpHeadUsers;           // Pointer to HKEY_USERS 1
-
 LPHEADFILE      lpHeadFile;            // Pointer to headfile
-
 LPBYTE          lpTempHive;            // Pointer for loading hive files
-HANDLE hFileWholeReg;
-DWORD NBW;
+HANDLE          hFileWholeReg;
+DWORD           NBW;
 
 //----------------- struct for saving designed by maddes ------------------------
 
@@ -157,5 +154,5 @@ typedef struct  _SAVEHEADFILE SAVEHEADFILE, FAR * LPSAVEHEADFILE;
 VOID ReAlignReg(LPKEYCONTENT lpKey, size_t nBase);
 VOID ReAlignFileContent(LPFILECONTENT lpFC, size_t nBase);
 VOID ReAlignFile(LPHEADFILE lpHF, size_t nBase);
-BOOL LoadHive(LPCTSTR lpFileName,LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lplpHeadFile);
-BOOL SaveHive(LPCTSTR lpFileName, LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,LPHEADFILE lpHF);
+BOOL LoadHive(LPCTSTR lpFileName, LPKEYCONTENT FAR * lplpKeyHLM, LPKEYCONTENT FAR * lplpKeyUSER, LPHEADFILE FAR * lplpHeadFile);
+BOOL SaveHive(LPCTSTR lpFileName, LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER, LPHEADFILE lpHF);
