@@ -157,7 +157,7 @@ struct _COMRESULT {
 };
 typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
 
-//Struct for hive file header 
+// Struct for hive file header
 struct _HIVEHEADER {
     unsigned char signature[16];    // 16bytes offset 0
     DWORD  offsetkeyhklm;           // 4 offset 16 ( 512)
