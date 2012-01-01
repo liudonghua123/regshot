@@ -1,18 +1,20 @@
 @ECHO OFF
 SETLOCAL
 
-PUSHD %~dp0%
+PUSHD %~dp0
 
-SET "ASTYLE=AStyle.exe"
+SET "PATH=%~dp0;%PATH%"
 
-IF NOT EXIST %ASTYLE% (
+AStyle.exe --version 2>NUL
+
+IF %ERRORLEVEL% NEQ 0 (
   ECHO.
   ECHO ERROR: Astyle wasn't found!
   PAUSE
   EXIT /B
 )
 
-%ASTYLE% -s4 --style=kr --indent-switches --indent-namespaces --add-brackets^
+AStyle.exe -s4 --style=kr --indent-switches --indent-namespaces --add-brackets^
  --indent-col1-comments --pad-header --align-pointer=name --align-reference=name^
  --preserve-date --pad-oper --unpad-paren --recursive ..\src\*.c ..\src\*.h
 
