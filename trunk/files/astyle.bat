@@ -3,13 +3,12 @@ SETLOCAL
 
 PUSHD %~dp0
 
-SET "PATH=%~dp0;%PATH%"
-
-AStyle.exe --version 2>NUL
+AStyle.exe --version 1>&2 2>NUL
 
 IF %ERRORLEVEL% NEQ 0 (
   ECHO.
   ECHO ERROR: Astyle wasn't found!
+  ECHO Visit http://astyle.sourceforge.net/ for download and details.
   PAUSE
   EXIT /B
 )
