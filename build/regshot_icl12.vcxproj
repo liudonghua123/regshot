@@ -70,29 +70,29 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\ICL12\$(Configuration)_$(Platform)\</OutDir>
-    <IntDir>..\bin\ICL12\$(Configuration)_$(Platform)\obj\</IntDir>
+    <OutDir>..\bin\ICL12\$(Configuration)_x86\</OutDir>
+    <IntDir>..\bin\ICL12\$(Configuration)_x86\obj\</IntDir>
     <TargetName>Regshot</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\ICL12\$(Configuration)_$(Platform)\</OutDir>
-    <IntDir>..\bin\ICL12\$(Configuration)_$(Platform)\obj\</IntDir>
+    <OutDir>..\bin\ICL12\$(Configuration)_x64)\</OutDir>
+    <IntDir>..\bin\ICL12\$(Configuration)_x64\obj\</IntDir>
     <TargetName>Regshot</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\ICL12\$(Configuration)_$(Platform)\</OutDir>
-    <IntDir>..\bin\ICL12\$(Configuration)_$(Platform)\obj\</IntDir>
+    <OutDir>..\bin\ICL12\$(Configuration)_x86\</OutDir>
+    <IntDir>..\bin\ICL12\$(Configuration)_x86\obj\</IntDir>
     <TargetName>Regshot</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\ICL12\$(Configuration)_$(Platform)\</OutDir>
-    <IntDir>..\bin\ICL12\$(Configuration)_$(Platform)\obj\</IntDir>
+    <OutDir>..\bin\ICL12\$(Configuration)_x64\</OutDir>
+    <IntDir>..\bin\ICL12\$(Configuration)_x64\obj\</IntDir>
     <TargetName>Regshot</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
