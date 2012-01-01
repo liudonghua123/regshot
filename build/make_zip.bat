@@ -38,102 +38,102 @@ IF /I "%~1" == "/?"     GOTO SHOWHELP
 
 rem Check for the first switch
 IF "%~1" == "" (
-  SET INPUTDIRx86=bin\WDK\Release_x86
+  SET INPUTDIRx86=bin\WDK\Release_Win32
   SET INPUTDIRx64=bin\WDK\Release_x64
   SET SUFFIX=_WDK
 ) ELSE (
   IF /I "%~1" == "WDK" (
-    SET INPUTDIRx86=bin\WDK\Release_x86
+    SET INPUTDIRx86=bin\WDK\Release_Win32
     SET INPUTDIRx64=bin\WDK\Release_x64
     SET SUFFIX=_WDK
     GOTO START
   )
   IF /I "%~1" == "/WDK" (
-    SET INPUTDIRx86=bin\WDK\Release_x86
+    SET INPUTDIRx86=bin\WDK\Release_Win32
     SET INPUTDIRx64=bin\WDK\Release_x64
     SET SUFFIX=_WDK
     GOTO START
   )
   IF /I "%~1" == "-WDK" (
-    SET INPUTDIRx86=bin\WDK\Release_x86
+    SET INPUTDIRx86=bin\WDK\Release_Win32
     SET INPUTDIRx64=bin\WDK\Release_x64
     SET SUFFIX=_WDK
     GOTO START
   )
   IF /I "%~1" == "--WDK" (
-    SET INPUTDIRx86=bin\WDK\Release_x86
+    SET INPUTDIRx86=bin\WDK\Release_Win32
     SET INPUTDIRx64=bin\WDK\Release_x64
     SET SUFFIX=_WDK
     GOTO START
   )
   IF /I "%~1" == "VS2010" (
-    SET INPUTDIRx86=bin\VS2010\Release_x86
+    SET INPUTDIRx86=bin\VS2010\Release_Win32
     SET INPUTDIRx64=bin\VS2010\Release_x64
     SET SUFFIX=_VS2010
     GOTO START
   )
   IF /I "%~1" == "/VS2010" (
-    SET INPUTDIRx86=bin\VS2010\Release_x86
+    SET INPUTDIRx86=bin\VS2010\Release_Win32
     SET INPUTDIRx64=bin\VS2010\Release_x64
     SET SUFFIX=_VS2010
     GOTO START
   )
   IF /I "%~1" == "-VS2010" (
-    SET INPUTDIRx86=bin\VS2010\Release_x86
+    SET INPUTDIRx86=bin\VS2010\Release_Win32
     SET INPUTDIRx64=bin\VS2010\Release_x64
     SET SUFFIX=_VS2010
     GOTO START
   )
   IF /I "%~1" == "--VS2010" (
-    SET INPUTDIRx86=bin\VS2010\Release_x86
+    SET INPUTDIRx86=bin\VS2010\Release_Win32
     SET INPUTDIRx64=bin\VS2010\Release_x64
     SET SUFFIX=_VS2010
     GOTO START
   )
   IF /I "%~1" == "VS2008" (
-    SET INPUTDIRx86=bin\VS2008\Release_x86
+    SET INPUTDIRx86=bin\VS2008\Release_Win32
     SET INPUTDIRx64=bin\VS2008\Release_x64
     SET SUFFIX=_VS2008
     GOTO START
   )
   IF /I "%~1" == "/VS2008" (
-    SET INPUTDIRx86=bin\VS2008\Release_x86
+    SET INPUTDIRx86=bin\VS2008\Release_Win32
     SET INPUTDIRx64=bin\VS2008\Release_x64
     SET SUFFIX=_VS2008
     GOTO START
   )
   IF /I "%~1" == "-VS2008" (
-    SET INPUTDIRx86=bin\VS2008\Release_x86
+    SET INPUTDIRx86=bin\VS2008\Release_Win32
     SET INPUTDIRx64=bin\VS2008\Release_x64
     SET SUFFIX=_VS2008
     GOTO START
   )
   IF /I "%~1" == "--VS2008" (
-    SET INPUTDIRx86=bin\VS2008\Release_x86
+    SET INPUTDIRx86=bin\VS2008\Release_Win32
     SET INPUTDIRx64=bin\VS2008\Release_x64
     SET SUFFIX=_VS2008
     GOTO START
   )
   IF /I "%~1" == "ICL12" (
-    SET INPUTDIRx86=bin\ICL12\Release_x86
+    SET INPUTDIRx86=bin\ICL12\Release_Win32
     SET INPUTDIRx64=bin\ICL12\Release_x64
     SET SUFFIX=_ICL12
     GOTO START
   )
   IF /I "%~1" == "/ICL12" (
-    SET INPUTDIRx86=bin\ICL12\Release_x86
+    SET INPUTDIRx86=bin\ICL12\Release_Win32
     SET INPUTDIRx64=bin\ICL12\Release_x64
     SET SUFFIX=_ICL12
     GOTO START
   )
   IF /I "%~1" == "-ICL12" (
-    SET INPUTDIRx86=bin\ICL12\Release_x86
+    SET INPUTDIRx86=bin\ICL12\Release_Win32
     SET INPUTDIRx64=bin\ICL12\Release_x64
     SET SUFFIX=_ICL12
     GOTO START
   )
   IF /I "%~1" == "--ICL12" (
-    SET INPUTDIRx86=bin\ICL12\Release_x86
+    SET INPUTDIRx86=bin\ICL12\Release_Win32
     SET INPUTDIRx64=bin\ICL12\Release_x64
     SET SUFFIX=_ICL12
     GOTO START
@@ -150,7 +150,7 @@ IF "%~1" == "" (
 SET "TEMP_NAME=temp_zip%SUFFIX%"
 
 CALL :SubGetVersion
-CALL :SubZipFiles %INPUTDIRx86% x86
+CALL :SubZipFiles %INPUTDIRx86% Win32
 CALL :SubZipFiles %INPUTDIRx64% x64
 
 
