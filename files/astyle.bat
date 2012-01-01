@@ -9,7 +9,6 @@ IF %ERRORLEVEL% NEQ 0 (
   ECHO.
   ECHO ERROR: Astyle wasn't found!
   ECHO Visit http://astyle.sourceforge.net/ for download and details.
-  PAUSE
   GOTO END
 )
 
@@ -24,7 +23,7 @@ AStyle.exe --style=kr^
 IF %ERRORLEVEL% NEQ 0 (
   ECHO.
   ECHO ERROR: Something went wrong!
-  PAUSE
+  GOTO END
 )
 
 :END
