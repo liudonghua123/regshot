@@ -65,21 +65,21 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             SendDlgItemMessage(hDlg, IDC_EDITCOMMENT, EM_SETLIMITTEXT, (WPARAM)COMMENTLENGTH, (LPARAM)0);
             SendDlgItemMessage(hDlg, IDC_EDITPATH, EM_SETLIMITTEXT, (WPARAM)MAX_PATH, (LPARAM)0);
-            SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN/2), (LPARAM)0);
-            
+            SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN / 2), (LPARAM)0);
+
             //enlarge some buffer in 201201
             lpCurrentLanguage = MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
-            lpExtDir          = MYALLOC0(EXTDIRLEN  + 4); //EXTDIRLEN is actually 4*max_path
-            lpLanguageIni     = MYALLOC0(MAX_PATH*4 + 4); //for language.ini
-            lpRegshotIni      = MYALLOC0(MAX_PATH*4 + 4); //for regshot.ini
-            lpKeyName         = MYALLOC0(MAX_PATH*2 + 2); //For scan engine store keyname
-            lpValueName       = MYALLOC0(1024*16*2);      //For scan engine store valuename
-            lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);      //For scan engine store valuedata estimate
-            lpMESSAGE         = MYALLOC0(256);            //For status bar text message store
-            lpWindowsDirName  = MYALLOC0(MAX_PATH*2 + 2);
-            lpTempPath        = MYALLOC0(MAX_PATH*2 + 2);
-            lpStartDir        = MYALLOC0(MAX_PATH*2 + 2);
-            lpOutputpath      = MYALLOC0(MAX_PATH*2 + 2); //store last save/open hive file dir 
+            lpExtDir          = MYALLOC0(EXTDIRLEN + 4);      // EXTDIRLEN is actually 4*max_path
+            lpLanguageIni     = MYALLOC0(MAX_PATH * 4 + 4);   // for language.ini
+            lpRegshotIni      = MYALLOC0(MAX_PATH * 4 + 4);   // for regshot.ini
+            lpKeyName         = MYALLOC0(MAX_PATH * 2 + 2);   // For scan engine store keyname
+            lpValueName       = MYALLOC0(1024 * 16 * 2);      // For scan engine store valuename
+            lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);    // For scan engine store valuedata estimate
+            lpMESSAGE         = MYALLOC0(256);                // For status bar text message store
+            lpWindowsDirName  = MYALLOC0(MAX_PATH * 2 + 2);
+            lpTempPath        = MYALLOC0(MAX_PATH * 2 + 2);
+            lpStartDir        = MYALLOC0(MAX_PATH * 2 + 2);
+            lpOutputpath      = MYALLOC0(MAX_PATH * 2 + 2);   // store last save/open hive file dir
             lpComputerName1   = MYALLOC0(COMPUTERNAMELEN);
             lpComputerName2   = MYALLOC0(COMPUTERNAMELEN);
             lpUserName1       = MYALLOC0(COMPUTERNAMELEN);
@@ -87,8 +87,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             lpSystemtime1     = MYALLOC0(sizeof(SYSTEMTIME));
             lpSystemtime2     = MYALLOC0(sizeof(SYSTEMTIME));
             lpLangStrings     = MYALLOC0(SIZEOF_LANGSTRINGS);
-            lplpLangStrings   = MYALLOC0(sizeof(LPSTR) * 60);     // max is 60 strings
-            
+            lplpLangStrings   = MYALLOC0(sizeof(LPSTR) * 60); // max is 60 strings
+
             lpCurrentTranslator = str_Original;
 
             GetWindowsDirectory(lpWindowsDirName, MAX_PATH);
@@ -101,11 +101,11 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             //_asm int 3;
             GetCurrentDirectory(MAX_PATH + 1, lpStartDir);      // fixed at 1.8.2 former version use getcommandline()
             strcpy(lpLanguageIni, lpStartDir);
-            if (*(lpLanguageIni + strlen(lpLanguageIni) - 1) != '\\') {         // 1.8.2
+            if (*(lpLanguageIni + strlen(lpLanguageIni) - 1) != '\\') {    // 1.8.2
                 strcat(lpLanguageIni, "\\");
             }
             strcat(lpLanguageIni, REGSHOTLANGUAGEFILE);
-            
+
 
             if (GetLanguageType(hDlg)) {
                 GetLanguageStrings(hDlg);
@@ -304,7 +304,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
-                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH*2 + 2);
+                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * 2 + 2);
                     //BrowseInfo1.lpszTitle = "Select:";
                     BrowseInfo1.ulFlags = 0;     // 3 lines added in 1.8.2
                     BrowseInfo1.lpfn = NULL;
@@ -316,7 +316,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         size_t  nWholeLen;
 
                         SHGetPathFromIDList(lpidlist, BrowseInfo1.pszDisplayName);
-                        nLengthofStr = GetDlgItemText(hDlg, IDC_EDITDIR, lpExtDir, EXTDIRLEN/2);
+                        nLengthofStr = GetDlgItemText(hDlg, IDC_EDITDIR, lpExtDir, EXTDIRLEN / 2);
                         nWholeLen = nLengthofStr + strlen(BrowseInfo1.pszDisplayName);
 
                         if (nWholeLen < EXTDIRLEN + 1) {
@@ -339,7 +339,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
-                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH*2 + 2);
+                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * 2 + 2);
                     //BrowseInfo1.lpszTitle = "Select:";
 
                     //-----------------

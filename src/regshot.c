@@ -1065,11 +1065,11 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
     LengthOfLongestValueName  = LengthOfLongestValueName + 1;
     LengthOfLongestValueData  = LengthOfLongestValueData + 1;  //use +1 maybe too careful. but since the real memory allocate is based on return of another call,it is just be here.
     if (LengthOfLongestValueData >= ESTIMATE_VALUEDATA_LENGTH) {
-        lpValueDataS= lpValueData;
+        lpValueDataS = lpValueData;
         lpValueData = MYALLOC(LengthOfLongestValueData);
     }
     //lpValueName = MYALLOC(LengthOfLongestValueName);
-    
+
 
     // Get Values
     for (i = 0;; i++) {
@@ -1130,10 +1130,10 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
 
     //MYFREE(lpValueName);
     if (LengthOfLongestValueData >= ESTIMATE_VALUEDATA_LENGTH) {
-        MYFREE(lpValueData);    
-        lpValueData= lpValueDataS;
+        MYFREE(lpValueData);
+        lpValueData = lpValueDataS;
     }
-    
+
 
     for (i = 0;; i++) {
         LengthOfKeyName = LengthOfLongestSubkeyName;
@@ -1344,7 +1344,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
         opfn.lStructSize = sizeof(opfn);
         opfn.hwndOwner = hWnd;
         opfn.lpstrFilter = str_filter;
-        opfn.lpstrFile = MYALLOC0(MAX_PATH *2 + 2);
+        opfn.lpstrFile = MYALLOC0(MAX_PATH * 2 + 2);
         opfn.nMaxFile = MAX_PATH;
         opfn.lpstrInitialDir = lpLastSaveDir;
         opfn.lpstrDefExt = "hiv";
@@ -1569,7 +1569,7 @@ BOOL LoadHive(LPKEYCONTENT FAR *lplpKeyHLM, LPKEYCONTENT FAR *lplpKeyUSER,
     DWORD   nRemain;
     DWORD   nReadSize;
     HIVEHEADER hiveheader;
-    char    sname[MAX_PATH*2 + 2];
+    char    sname[MAX_PATH * 2 + 2];
 
     ZeroMemory(sname, sizeof(sname));
 
