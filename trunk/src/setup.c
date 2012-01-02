@@ -140,7 +140,7 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx save settings to ini (translate from ch
     WritePrivateProfileString(INI_SETUP, INI_USELONGREGHEAD, lpString, lpRegshotIni);
 
 
-    if (GetDlgItemText(hDlg, IDC_EDITDIR, lpString, (EXTDIRLEN/2)) != 0) {
+    if (GetDlgItemText(hDlg, IDC_EDITDIR, lpString, (EXTDIRLEN / 2)) != 0) {
         WritePrivateProfileString(INI_SETUP, INI_EXTDIR, lpString, lpRegshotIni);
     }
 
