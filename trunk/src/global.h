@@ -39,7 +39,7 @@
 #if !defined(LONG_PTR)
 typedef long LONG_PTR;
 #endif
-#endif  // _MSC_VER
+#endif  // _MSC_VER && (_MSC_VER < 1300)
 
 // added in 1.8.2 to gain a slightly faster speed but it is danger!
 #define USEHEAPALLOC_DANGER
@@ -47,7 +47,7 @@ typedef long LONG_PTR;
 
 #ifdef USEHEAPALLOC_DANGER
 
-// MSDN doc say use HEAP_NO_SERIALIZE is not good for process heap :( so change fromm 1 to 0 20111216 ,slower than using 1
+// MSDN doc say use HEAP_NO_SERIALIZE is not good for process heap :( so change fromm 1 to 0 20111216, slower than using 1
 #define MYALLOC(x)  HeapAlloc(hHeap,0,x)
 #define MYALLOC0(x) HeapAlloc(hHeap,8,x) // (HEAP_NO_SERIALIZE|) HEAP_ZERO_MEMORY ,1|8
 #define MYFREE(x)   HeapFree(hHeap,0,x)
@@ -63,7 +63,7 @@ typedef long LONG_PTR;
 
 // Some definations
 #define SIZEOF_REG_DWORD 4            // In current windows, reg_dword's size=4
-#define NOTMATCH        0            // Define modification type in comparison results
+#define NOTMATCH        0             // Define modification type in comparison results
 #define ISMATCH         1
 #define ISDEL           2
 #define ISADD           3
@@ -90,7 +90,7 @@ typedef long LONG_PTR;
 #define EXTDIRLEN       MAX_PATH * 4 // Define searching directory field length
 #define COMPUTERNAMELEN 64           // Define COMPUTER name length,do not change
 #define HIVEBEGINOFFSET 512          // Hive file out put header computerlen*2+sizeof(systemtime)+32 must <hivebeginoffset!!!!!!!!!!!!!!
-#define REGSHOT_HIVE_SIGNATURE "RSHIVE183"
+#define REGSHOT_HIVE_SIGNATURE  "RSHIVE183"
 
 
 // Some definitions of MutiLanguage strings [Free space length]
@@ -173,7 +173,7 @@ struct _HIVEHEADER {
 typedef struct _HIVEHEADER HIVEHEADER , FAR *LPHIVEHEADER;
 
 
-//----------------- struct for saving designed by maddes ------------------------
+// Struct for saving designed by maddes
 
 struct _SAVEKEYCONTENT {
     DWORD  fpos_keyname;            // Pointer to key's name
@@ -301,7 +301,7 @@ SYSTEMTIME FAR *lpSystemtime1, * lpSystemtime2;
 
 
 // Some pointers need to allocate enough space to working
-LPSTR   lpKeyName;   //following used in scan engine
+LPSTR   lpKeyName;   // following used in scan engine
 LPSTR   lpValueName;
 LPBYTE  lpValueData;
 LPBYTE  lpValueDataS;
@@ -316,7 +316,7 @@ LPSTR   lpCurrentLanguage;
 LPSTR   lpWindowsDirName;
 LPSTR   lpTempPath;
 LPSTR   lpStartDir;
-LPSTR   lpLanguageIni;  //For language.ini
+LPSTR   lpLanguageIni;  // For language.ini
 LPSTR   lpLangStrings;
 LPSTR   lpCurrentTranslator;
 LPSTR   lpRegshotIni;

@@ -99,7 +99,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             GetTempPath(MAX_PATH, lpTempPath);
 
             //_asm int 3;
-            GetCurrentDirectory(MAX_PATH + 1, lpStartDir);      // fixed at 1.8.2 former version use getcommandline()
+            GetCurrentDirectory(MAX_PATH + 1, lpStartDir);      // fixed in 1.8.2 former version use getcommandline()
             strcpy(lpLanguageIni, lpStartDir);
             if (*(lpLanguageIni + strlen(lpLanguageIni) - 1) != '\\') {    // 1.8.2
                 strcat(lpLanguageIni, "\\");
@@ -162,7 +162,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     if (is1) {
                         is1LoadFromHive = FALSE;
                         Shot1();
-                        SaveHive(lpHeadLocalMachine1, lpHeadUsers1, lpHeadFile1, lpComputerName1, lpUserName1, lpSystemtime1); // I might use a struct in future!
+                        SaveHive(lpHeadLocalMachine1, lpHeadUsers1, lpHeadFile1, lpComputerName1, lpUserName1, lpSystemtime1); // I might use a struct in the future!
                     } else {
                         is2LoadFromHive = FALSE;
                         Shot2();
@@ -434,7 +434,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     SetClassLongPtr(hWnd, GCLP_HICON, (LONG_PTR)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAINICON)));
 
-    SetWindowText(hWnd, str_prgname);  // tfx set program title to str_prgname£¬avoid edit resource file
+    SetWindowText(hWnd, str_prgname);  // tfx set program title to str_prgname to avoid edit resource file
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
     //SetPriorityClass(hInstance,31);
