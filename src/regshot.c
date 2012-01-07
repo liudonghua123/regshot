@@ -55,7 +55,7 @@ extern LPBYTE lan_file;
 extern LPBYTE lan_errorexecviewer;
 extern LPBYTE lan_erroropenfile;
 
-extern char *str_prgname;   // be careful of extern ref! Must be the same when declaring them, otherwise pointer would mis-point!
+extern char *str_prgname;   // be careful of extern ref! Must be the same when declaring them, otherwise pointer will mis-point!
 extern char str_CR[];
 
 
@@ -126,7 +126,7 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 
 
 //-------------------------------------------------------------
-// Routine Trans VALUECONTENT.data[which in binary] into strings
+// Routine Trans VALUECONTENT.data [which in binary] into strings
 // Called by GetWholeValueData()
 //-------------------------------------------------------------
 LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
@@ -428,7 +428,7 @@ VOID FreeAllKey(LPKEYCONTENT lpKey)
 
 #ifdef _WIN64
 //-------------------------------------------------------------
-//only for rebuild from hive,the name things remain in lptemphive
+// Only for rebuilding from hive, the name things remain in lptemphive
 //-------------------------------------------------------------
 VOID FreeAllKeyExceptNameValue(LPKEYCONTENT lpKey)
 {
@@ -503,7 +503,6 @@ VOID ClearHeadFileMatchTag(LPHEADFILE lpHF)
 }
 
 
-//////////////////////////////////////
 VOID FreeAllKeyContent1(void)
 {
     if (is1LoadFromHive) {
@@ -838,7 +837,7 @@ BOOL CompareShots(void)
     }
 
     lpDestFileName = MYALLOC0(MAX_PATH * 4 + 4);
-    lpstrcomp = MYALLOC0(buffersize); // buffersize must> commentlength+10 .txt 0000
+    lpstrcomp = MYALLOC0(buffersize); // buffersize must > commentlength + 10 .txt 0000
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpstrcomp, COMMENTLENGTH);
     GetDlgItemText(hWnd, IDC_EDITPATH, lpOutputpath, MAX_PATH);
 
@@ -1057,13 +1056,13 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
             ) != ERROR_SUCCESS) {
         return ;
     }
-    //Comment out in beta1V5 20120102, v4 modified these to *4 +4 ,which is not right
-    //But not so sure to use global and pass chars, because once several years ago,in win2000,I encounter some problem.
+    // Comment out in beta1V5 20120102, v4 modified these to *4 + 4, which is not right
+    // But not so sure to use global and pass chars, because once several years ago, in win2000, I encounter some problem.
     //LengthOfLongestSubkeyName = LengthOfLongestSubkeyName * 2 + 3;   // msdn says it is in unicode characters,right now maybe not large than that.old version use *2+3
     //LengthOfLongestValueName  = LengthOfLongestValueName * 2 + 3;
     LengthOfLongestSubkeyName = LengthOfLongestSubkeyName + 1;
     LengthOfLongestValueName  = LengthOfLongestValueName + 1;
-    LengthOfLongestValueData  = LengthOfLongestValueData + 1;  //use +1 maybe too careful. but since the real memory allocate is based on return of another call,it is just be here.
+    LengthOfLongestValueData  = LengthOfLongestValueData + 1;       // use +1 maybe too careful. But since the real memory allocate is based on return of another call, it is just be here.
     if (LengthOfLongestValueData >= ESTIMATE_VALUEDATA_LENGTH) {
         lpValueDataS = lpValueData;
         lpValueData = MYALLOC(LengthOfLongestValueData);
@@ -1206,7 +1205,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPCurrentFatherKey, DWORD nFPC
     INT     nPad1;
     LPVALUECONTENT lpv;
 
-    // Note use (DWORD) to disable warning of lost of data to convert size_t to dword, in current windows,it is safe that registry's xxxxname is stay in DWORD long
+    // Note use (DWORD) to silence warning of lost data when converting size_t to dword, in current windows, it is safe that registry's xxxxname is stay in DWORD long
     nLenPlus1 = (DWORD)strlen(lpKeyContent->lpkeyname) + 1;                     // Get len+1
     nPad = (nLenPlus1 % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - nLenPlus1 % sizeof(DWORD));
     nFPHeader = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);           // Save head fp
@@ -1441,7 +1440,7 @@ VOID SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER,
 }
 #ifdef _WIN64
 //-------------------------------------------------------------
-//Rebuild registry snap from file buffer
+// Rebuild registry snap from file buffer
 //-------------------------------------------------------------
 VOID RebuildFromHive_reg(LPSAVEKEYCONTENT lpFile, LPKEYCONTENT lpFatherkey, LPKEYCONTENT lpKey, LPBYTE lpHiveFileBase)
 {
@@ -1605,7 +1604,7 @@ BOOL LoadHive(LPKEYCONTENT FAR *lplpKeyHLM, LPKEYCONTENT FAR *lplpKeyUSER,
         ErrMsg((LPCSTR)"It is not a compatible hive to current version or it is not a valid Regshot hive file!");
         return FALSE;
     }
-    //May add some check here
+    // May add some check here
 
 
     nGettingKey = 0;

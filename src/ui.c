@@ -119,7 +119,7 @@ VOID UI_AfterShot(VOID)
 
 
 //--------------------------------------------------
-// Prepare the GUI for Clearing
+// Prepare the GUI for clearing
 //--------------------------------------------------
 VOID UI_BeforeClear(VOID)
 {
@@ -152,10 +152,10 @@ VOID UI_AfterClear(VOID)
         EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
         //bChk = TRUE;
     }
-    //else  // I forgot to comment out this, fixed at 1.8.2
+    //else  // I forgot to comment this out, fixed in 1.8.2
     //bChk = FALSE;
 
-    //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); // Not used 1.8; we only enable chk when clear all
+    //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); // Not used in 1.8; we only enable chk when clear all
     //SendMessage(hWnd,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
 
     SetFocus(GetDlgItem(hWnd, iddef));
