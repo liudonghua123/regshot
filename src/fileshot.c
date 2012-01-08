@@ -22,6 +22,7 @@
 
 #include "global.h"
 #include "stddef.h"  // for "offsetof" macro
+
 // ISDIR, ISFILE added in 1.8.0
 #define ISDIR(x)  ( (x&FILE_ATTRIBUTE_DIRECTORY) != 0 )
 #define ISFILE(x) ( (x&FILE_ATTRIBUTE_DIRECTORY) == 0 )
@@ -341,7 +342,7 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DW
 
     // Set file positions of the relatives inside the tree
     sFC.fpos_firstsubfile = 0;  // not known yet, may be re-written by another recursive call
-    sFC.fpos_brotherfile = 0;  // not known yet, may be re-written by another recursive call
+    sFC.fpos_brotherfile = 0;   // not known yet, may be re-written by another recursive call
     sFC.fpos_fatherfile = nFPCurrentFatherFile;
 
     // Copy the rest
@@ -382,7 +383,7 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DW
         nPad = (sFC.len_filename % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - sFC.len_filename % sizeof(DWORD));
 
         if (nPad > 0) {
-            DWORD   nFPTemp4Write;
+            DWORD nFPTemp4Write;
 
             nFPTemp4Write = 0;
             WriteFile(hFileWholeReg, &nFPTemp4Write, nPad, &NBW, NULL);
