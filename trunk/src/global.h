@@ -396,7 +396,7 @@ VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);
 
 VOID    Shot(LPREGSHOT lpshot);
-BOOL    CompareShots(LPREGSHOT lpshot1,LPREGSHOT lpshot2);
+BOOL    CompareShots(LPREGSHOT lpshot1, LPREGSHOT lpshot2);
 VOID    SaveHive(LPREGSHOT lpshot);
 BOOL    LoadHive(LPREGSHOT lpshot);
 VOID    FreeAllCompareResults(void);

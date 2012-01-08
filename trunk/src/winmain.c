@@ -178,10 +178,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_LOAD:
                     if (is1) {
                         //is1LoadFromHive = LoadHive(&lpShot1->lpheadlocalmachine, &lpShot1->lpheadusers, &lpShot1->lpheadfile, &lpShot1->lptemphive);
-                        lpShot1->isloadfromhive=LoadHive(lpShot1);
+                        lpShot1->isloadfromhive = LoadHive(lpShot1);
                     } else {
                         //is2LoadFromHive = LoadHive(&lpShot2->lpheadlocalmachine, &lpShot2->lpheadusers, &lpShot2->lpheadfile, &lpShot2->lptemphive);
-                        lpShot2->isloadfromhive=LoadHive(lpShot2);
+                        lpShot2->isloadfromhive = LoadHive(lpShot2);
                     }
 
                     //if (is1LoadFromHive || is2LoadFromHive)
@@ -196,7 +196,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDC_COMPARE:
                     EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
                     UI_BeforeClear();
-                    CompareShots(lpShot1,lpShot2);
+                    CompareShots(lpShot1, lpShot2);
                     ShowWindow(GetDlgItem(hDlg, IDC_PBCOMPARE), SW_HIDE);
                     EnableWindow(GetDlgItem(hDlg, IDC_CLEAR1), TRUE);
                     SetFocus(GetDlgItem(hDlg, IDC_CLEAR1));

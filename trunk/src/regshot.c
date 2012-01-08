@@ -715,7 +715,7 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHead1, LPKEYCONTENT lpHead2)
 //------------------------------------------------------------
 // Routine to call registry/file comparison engine
 //------------------------------------------------------------
-BOOL CompareShots(LPREGSHOT lpshot1,LPREGSHOT lpshot2)
+BOOL CompareShots(LPREGSHOT lpshot1, LPREGSHOT lpshot2)
 {
     BOOL    isHTML;
     BOOL    bshot2isnewer;
@@ -894,14 +894,14 @@ BOOL CompareShots(LPREGSHOT lpshot1,LPREGSHOT lpshot2)
 
 
     *lpstrcomp = 0x00;    //ZeroMemory(lpstrcomp,buffersize);
-    
+
     strcpy(lpstrcomp, (const char *)lpshot1->computername);
     strcat(lpstrcomp, " , ");
     strcat(lpstrcomp, (const char *)lpshot2->computername);
     WriteTitle((LPSTR)lan_computer, lpstrcomp, isHTML);
 
     *lpstrcomp = 0x00;    //ZeroMemory(lpstrcomp,buffersize);
-    
+
     strcpy(lpstrcomp, (const char *)lpshot1->username);
     strcat(lpstrcomp, " , ");
     strcat(lpstrcomp, (const char *)lpshot2->username);
@@ -1681,7 +1681,6 @@ BOOL LoadHive(LPREGSHOT lpshot)
     CopyMemory(lpshot->username, hiveheader.username, COMPUTERNAMELEN);
     CopyMemory(&lpshot->systemtime, &hiveheader.systemtime, sizeof(SYSTEMTIME));
 
-    
 
     UI_AfterShot();
 

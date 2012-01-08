@@ -258,11 +258,10 @@ VOID Shot(LPREGSHOT lpshot)
             }
     }
 
-    NBW = COMPUTERNAMELEN/2-1; 
+    NBW = COMPUTERNAMELEN / 2 - 1;
     GetSystemTime(&lpshot->systemtime);
     GetComputerName((LPSTR)lpshot->computername, &NBW); //Note:MAX_COMPUTERNAME_LENGTH seems to be 15 chars ,it is enough.
     GetUserName((LPSTR)lpshot->username, &NBW);         //Note:UNLEN seems to be 256 chars, This would fail ;)
-    
 
     UI_AfterShot();
 
