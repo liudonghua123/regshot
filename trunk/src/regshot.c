@@ -25,7 +25,7 @@
 
 char str_DefResPre[] = REGSHOT_RESULT_FILE;
 char str_filter[]    = {"Regshot hive files [*.hiv]\0*.hiv\0All files\0*.*\0\0"};
-char str_RegshotFileSignature[]="REGSHOTHIVE";
+char str_RegshotFileSignature[] = "REGSHOTHIVE";
 char str_ValueDataIsNULL[] = ": (NULL!)";
 SAVEKEYCONTENT sKC;
 SAVEVALUECONTENT sVC;
@@ -1580,8 +1580,8 @@ BOOL LoadHive(LPREGSHOT lpshot)
 
     // Enhance data of old headers to be used with newer code
     if (hiveheader.version == 0) {
-    	hiveheader.version = 1;
-    	hiveheader.tchar_size = 1;
+        hiveheader.version = 1;
+        hiveheader.tchar_size = 1;
     }
 
     // May add some more checks and handling here
