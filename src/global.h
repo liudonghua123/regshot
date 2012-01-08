@@ -158,20 +158,32 @@ struct _COMRESULT {
 };
 typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
 
-// Struct for hive file header
+// Struct for hive file header ,used in saving and loading
 struct _HIVEHEADER {
     unsigned char signature[16];    // 16bytes offset 0
     DWORD  offsetkeyhklm;           // 4 offset 16 ( 512)
     DWORD  offsetkeyuser;           // 4 offset 20
     DWORD  offsetheadfile;          // 4 offset 24
     DWORD  reserved1;               // 4 offset 28 future use!
-    unsigned char computername[64]; // 64 offset 32
-    unsigned char username[64];     // 64 offset 96 username
+    unsigned char computername[COMPUTERNAMELEN]; // 64 offset 32 ,computername ,
+    unsigned char username[COMPUTERNAMELEN];     // 64 offset 96 ,username ,note I limit this . UNLEN in msdn is longer
     SYSTEMTIME systemtime;          // 8 * 2 = 16 bytes offset 160
     unsigned char reserved2[336];   // HIVEBEGINOFFSET(512) - sum(176) = 336
 };
 typedef struct _HIVEHEADER HIVEHEADER , FAR *LPHIVEHEADER;
 
+// Struct for shot,2012.
+struct _REGSHOT {
+    LPKEYCONTENT  lpheadlocalmachine;
+    LPKEYCONTENT  lpheadusers;
+    LPHEADFILE    lpheadfile;
+    LPBYTE        lptemphive;
+    unsigned char computername[COMPUTERNAMELEN]; //64
+    unsigned char username[COMPUTERNAMELEN];
+    SYSTEMTIME    systemtime;
+    BOOL          isloadfromhive;
+};
+typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
 
 // Struct for saving designed by maddes
 
@@ -284,7 +296,10 @@ DWORD   nSavingFile;
 DWORD   NBW;                // that is: NumberOfBytesWritten;
 
 
+LPREGSHOT lpShot1;
+LPREGSHOT lpShot2;
 // Pointers to Registry Key
+/*
 LPKEYCONTENT    lpHeadLocalMachine1;    // Pointer to HKEY_LOCAL_MACHINE 1
 LPKEYCONTENT    lpHeadLocalMachine2;    // Pointer to HKEY_LOCAL_MACHINE 2
 LPKEYCONTENT    lpHeadUsers1;           // Pointer to HKEY_USERS 1
@@ -298,7 +313,7 @@ LPSTR           lpComputerName2;
 LPSTR           lpUserName1;
 LPSTR           lpUserName2;
 SYSTEMTIME FAR *lpSystemtime1, * lpSystemtime2;
-
+*/
 
 // Some pointers need to allocate enough space to working
 LPSTR   lpKeyName;   // following used in scan engine
@@ -355,8 +370,8 @@ HANDLE          hFileWholeReg;      // Handle of file regshot use
 HCURSOR         hHourGlass;         // Handle of cursor
 HCURSOR         hSaveCursor;        // Handle of cursor
 BOOL            is1;                // Flag to determine is the 1st shot
-BOOL            is1LoadFromHive;    // Flag to determine are shots load from hive files
-BOOL            is2LoadFromHive;    // Flag to determine are shots load from hive files
+//BOOL            is1LoadFromHive;    // Flag to determine are shots load from hive files
+//BOOL            is2LoadFromHive;    // Flag to determine are shots load from hive files
 RECT            rect;               // Window RECT
 FILETIME        ftLastWrite;        // Filetime struct
 BROWSEINFO      BrowseInfo1;        // BrowseINFO struct
@@ -380,14 +395,12 @@ VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);
 
-VOID    Shot1(void);
-VOID    Shot2(void);
-BOOL    CompareShots(void);
-VOID    SaveHive(LPKEYCONTENT lpKeyHLM, LPKEYCONTENT lpKeyUSER, LPHEADFILE lpHF, LPSTR computer, LPSTR user, LPVOID time);
-BOOL    LoadHive(LPKEYCONTENT FAR *lplpKeyHLM, LPKEYCONTENT FAR *lplpKeyUSER, LPHEADFILE FAR *lpHF, LPBYTE FAR *lpHive);
+VOID    Shot(LPREGSHOT lpshot);
+BOOL    CompareShots(LPREGSHOT lpshot1,LPREGSHOT lpshot2);
+VOID    SaveHive(LPREGSHOT lpshot);
+BOOL    LoadHive(LPREGSHOT lpshot);
 VOID    FreeAllCompareResults(void);
-VOID    FreeAllKeyContent1(void);
-VOID    FreeAllKeyContent2(void);
+VOID    FreeAllKeyContent(LPREGSHOT lpshot);
 VOID    FreeAllFileHead(LPHEADFILE lp);
 VOID    ClearKeyMatchTag(LPKEYCONTENT lpKey);
 VOID    GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent);    // HWND hDlg, first para deleted in 1.8, return from void * to void
