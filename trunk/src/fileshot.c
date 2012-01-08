@@ -377,14 +377,14 @@ VOID SaveFileContent(LPFILECONTENT lpFileContent, DWORD nFPCurrentFatherFile, DW
 
     // Pad to DWORD
     {
-	    DWORD nPad;
+        DWORD nPad;
 
         nPad = (sFC.len_filename % sizeof(DWORD) == 0) ? 0 : (sizeof(DWORD) - sFC.len_filename % sizeof(DWORD));
 
         if (nPad > 0) {
-		    DWORD   nFPTemp4Write;
+            DWORD   nFPTemp4Write;
 
-        	nFPTemp4Write = 0;
+            nFPTemp4Write = 0;
             WriteFile(hFileWholeReg, &nFPTemp4Write, nPad, &NBW, NULL);
         }
     }
