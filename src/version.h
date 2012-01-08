@@ -22,7 +22,7 @@
 #ifndef REGSHOT_VERSION_H
 #define REGSHOT_VERSION_H
 
-#include "Version_in.h"
+#include "VersionRev.h"
 
 #define DO_STRINGIFY(x) #x
 #define STRINGIFY(x)    DO_STRINGIFY(x)
