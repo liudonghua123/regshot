@@ -160,7 +160,7 @@ typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
 // when accessing fields of this structure always put a version check around them, e.g. "if version >= 2 then use fpos_computername"
 struct _HIVEHEADER {
     unsigned char signature[12];  // ofs 0 len 12: never convert to Unicode, always use char type and ASCII-127 codes
-    DWORD version;              // (v2) ofs 12 len 4: file/hive header version
+    DWORD version;                // (v2) ofs 12 len 4: file/hive header version
 
     DWORD  fpos_HKLM;   // ofs 16 len 4
     DWORD  fpos_HKCU;   // ofs 20 len 4
@@ -403,7 +403,7 @@ RECT            rect;               // Window RECT
 FILETIME        ftLastWrite;        // Filetime struct
 BROWSEINFO      BrowseInfo1;        // BrowseINFO struct
 OPENFILENAME    opfn;               // Openfilename struct
-BOOL            bUseLongRegHead;    // 1.8.1 for compatible to 1.61e5 and undoreg1.46
+BOOL            bUseLongRegHead;    // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
 HANDLE          hHeap;              // 1.8.2
 
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
