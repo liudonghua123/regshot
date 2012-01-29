@@ -30,6 +30,9 @@ char *str_aboutme = "Regshot is a free and open source registry compare utility.
 LPSTR   REGSHOTINI          = "regshot.ini"; // tfx
 LPSTR   REGSHOTLANGUAGEFILE = "language.ini";
 
+REGSHOT Shot1;
+REGSHOT Shot2;
+
 extern LPBYTE lan_menuclearallshots;  // Be careful of extern ref! must be the same when declare them,
 extern LPBYTE lan_menuclearshot1;     // otherwise pointer would mis-point, and I can not use sizeof
 extern LPBYTE lan_menuclearshot2;     // to get real array size in extern ref
@@ -75,22 +78,15 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             lpValueName       = MYALLOC0(1024 * 16 * 2);      // For scan engine store valuename
             lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);    // For scan engine store valuedata estimate
             lpMESSAGE         = MYALLOC0(256);                // For status bar text message store
-            lpWindowsDirName  = MYALLOC0(MAX_PATH * 2 + 2);
-            lpTempPath        = MYALLOC0(MAX_PATH * 2 + 2);
-            lpStartDir        = MYALLOC0(MAX_PATH * 2 + 2);
-            lpOutputpath      = MYALLOC0(MAX_PATH * 2 + 2);   // store last save/open hive file dir
-            lpShot1           = MYALLOC0(sizeof(REGSHOT));
-            lpShot2           = MYALLOC0(sizeof(REGSHOT));
-            /*
-            lpShot1->computername   = MYALLOC0(COMPUTERNAMELEN);
-            lpShot2->computername   = MYALLOC0(COMPUTERNAMELEN);
-            lpShot1->username       = MYALLOC0(COMPUTERNAMELEN);
-            lpShot2->username       = MYALLOC0(COMPUTERNAMELEN);
-            lpShot1->systemtime     = MYALLOC0(sizeof(SYSTEMTIME));
-            lpShot2->systemtime     = MYALLOC0(sizeof(SYSTEMTIME));
-            */
+            lpWindowsDirName  = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
+            lpTempPath        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
+            lpStartDir        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
+            lpOutputpath      = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));   // store last save/open hive file dir, +1 for possible change in CompareShots()
             lpLangStrings     = MYALLOC0(SIZEOF_LANGSTRINGS);
             lplpLangStrings   = MYALLOC0(sizeof(LPSTR) * 60); // max is 60 strings
+
+            ZeroMemory(&Shot1, sizeof(Shot1));
+            ZeroMemory(&Shot2, sizeof(Shot2));
 
             lpCurrentTranslator = str_Original;
 
@@ -152,35 +148,29 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_SHOTONLY:
                     if (is1) {
-                        lpShot1->isloadfromhive = FALSE;
-                        Shot(lpShot1);
+                        Shot(&Shot1);
                     } else {
-                        lpShot2->isloadfromhive = FALSE;
-                        Shot(lpShot2);
+                        Shot(&Shot2);
                     }
 
                     return(TRUE);
 
                 case IDM_SHOTSAVE:
                     if (is1) {
-                        lpShot1->isloadfromhive = FALSE;
-                        Shot(lpShot1);
-                        SaveHive(lpShot1); //I made it. 20120107. //SaveHive(lpShot1->lpheadlocalmachine, lpShot1->lpheadusers, lpShot1->lpheadfile, lpShot1->computername, lpShot1->username, lpShot1->systemtime); // I might use a struct in future!
+                        Shot(&Shot1);
+                        SaveHive(&Shot1);
                     } else {
-                        lpShot2->isloadfromhive = FALSE;
-                        Shot(lpShot2);
-                        SaveHive(lpShot2);
+                        Shot(&Shot2);
+                        SaveHive(&Shot2);
                     }
 
                     return(TRUE);
 
                 case IDM_LOAD:
                     if (is1) {
-                        //is1LoadFromHive = LoadHive(&lpShot1->lpheadlocalmachine, &lpShot1->lpheadusers, &lpShot1->lpheadfile, &lpShot1->lptemphive);
-                        lpShot1->isloadfromhive = LoadHive(lpShot1);
+                        LoadHive(&Shot1);
                     } else {
-                        //is2LoadFromHive = LoadHive(&lpShot2->lpheadlocalmachine, &lpShot2->lpheadusers, &lpShot2->lpheadfile, &lpShot2->lptemphive);
-                        lpShot2->isloadfromhive = LoadHive(lpShot2);
+                        LoadHive(&Shot2);
                     }
 
                     //if (is1LoadFromHive || is2LoadFromHive)
@@ -189,13 +179,13 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                     /*case IDC_SAVEREG:
-                        SaveRegistry(lpShot1->lpheadlocalmachine,lpShot1->lpheadusers);
+                        SaveRegistry(Shot1.lpHKLM,Shot1.lpHKU);
                         return(TRUE);*/
 
                 case IDC_COMPARE:
                     EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
                     UI_BeforeClear();
-                    CompareShots(lpShot1, lpShot2);
+                    CompareShots(&Shot1, &Shot2);
                     ShowWindow(GetDlgItem(hDlg, IDC_PBCOMPARE), SW_HIDE);
                     EnableWindow(GetDlgItem(hDlg, IDC_CLEAR1), TRUE);
                     SetFocus(GetDlgItem(hDlg, IDC_CLEAR1));
@@ -220,13 +210,13 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     //}
                     //else
                     {
-                        if (lpShot1->lpheadlocalmachine != NULL) {
+                        if (Shot1.lpHKLM != NULL) {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_ENABLED);
                         } else {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_GRAYED);
                         }
 
-                        if (lpShot2->lpheadlocalmachine != NULL) {
+                        if (Shot2.lpHKLM != NULL) {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_ENABLED);
                         } else {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_GRAYED);
@@ -239,54 +229,44 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_CLEARALLSHOTS:
                     UI_BeforeClear();
-                    FreeAllKeyContent(lpShot1);  // Note!! If loadfromhive and contains a file, we should let lpHeadFile to NULL,otherwise,we should not
-                    FreeAllKeyContent(lpShot2);
+                    FreeShot(&Shot1);
+                    FreeShot(&Shot2);
                     FreeAllCompareResults();
-
-                    FreeAllFileHead(lpShot1->lpheadfile);
-                    FreeAllFileHead(lpShot2->lpheadfile);
-
-                    lpShot1->lpheadfile = NULL;
-                    lpShot2->lpheadfile = NULL;
                     UI_AfterClear();
                     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
                     return(TRUE);
 
                 case IDM_CLEARSHOT1:
                     UI_BeforeClear();
-                    FreeAllKeyContent(lpShot1);
+                    FreeShot(&Shot1);
                     FreeAllCompareResults();
-                    FreeAllFileHead(lpShot1->lpheadfile);
-                    lpShot1->lpheadfile = NULL;
-                    ClearKeyMatchTag(lpShot2->lpheadlocalmachine);  // we clear shot2's tag
-                    ClearKeyMatchTag(lpShot2->lpheadusers);
-                    ClearHeadFileMatchTag(lpShot2->lpheadfile);
+                    ClearKeyMatchTag(Shot2.lpHKLM);  // we clear Shot2's tag
+                    ClearKeyMatchTag(Shot2.lpHKU);
+                    ClearHeadFileMatchTag(Shot2.lpHF);
                     UI_AfterClear();
                     return(TRUE);
 
                 case IDM_CLEARSHOT2:
                     UI_BeforeClear();
-                    FreeAllKeyContent(lpShot2);
+                    FreeShot(&Shot2);
                     FreeAllCompareResults();
-                    FreeAllFileHead(lpShot2->lpheadfile);
-                    lpShot2->lpheadfile = NULL;
-                    ClearKeyMatchTag(lpShot1->lpheadlocalmachine);  // we clear lpShot1's tag
-                    ClearKeyMatchTag(lpShot1->lpheadusers);
-                    ClearHeadFileMatchTag(lpShot1->lpheadfile);
+                    ClearKeyMatchTag(Shot1.lpHKLM);  // we clear Shot1's tag
+                    ClearKeyMatchTag(Shot1.lpHKU);
+                    ClearHeadFileMatchTag(Shot1.lpHF);
                     UI_AfterClear();
                     return(TRUE);
 
-                /*case IDM_CLEARRESULT:
-                    UI_BeforeClear();
-                    FreeAllCompareResults();
-                    ClearKeyMatchTag(lpShot1->lpheadlocalmachine);
-                    ClearKeyMatchTag(lpShot2->lpheadlocalmachine);
-                    ClearKeyMatchTag(lpShot1->lpheadusers);
-                    ClearKeyMatchTag(lpShot2->lpheadusers);
-                    ClearHeadFileMatchTag(lpShot1->lpheadfile);
-                    ClearHeadFileMatchTag(lpShot2->lpheadfile);
-                    UI_AfterClear();
-                    return(TRUE);*/
+                    /*case IDM_CLEARRESULT:
+                        UI_BeforeClear();
+                        FreeAllCompareResults();
+                        ClearKeyMatchTag(Shot1.lpHKLM);
+                        ClearKeyMatchTag(Shot2.lpHKLM);
+                        ClearKeyMatchTag(Shot1.lpHKU);
+                        ClearKeyMatchTag(Shot2.lpHKU);
+                        ClearHeadFileMatchTag(Shot1.lpHF);
+                        ClearHeadFileMatchTag(Shot2.lpHF);
+                        UI_AfterClear();
+                        return(TRUE);*/
 
                 case IDC_CHECKDIR:
                     if (SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
