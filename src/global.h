@@ -102,50 +102,50 @@ typedef long LONG_PTR;
 
 // Struct used for Windows Registry Key
 struct _KEYCONTENT {
-    LPTSTR lpKeyName;                        // Pointer to key's name
-    struct _VALUECONTENT FAR *lpFirstValue;  // Pointer to key's first value
-    struct _KEYCONTENT FAR *lpFirstSubKey;   // Pointer to key's first subkey
-    struct _KEYCONTENT FAR *lpBrotherKey;    // Pointer to key's brother
-    struct _KEYCONTENT FAR *lpFatherKey;     // Pointer to key's father
-    DWORD  bkeymatch;                        // Flags used when comparing, until 1.8.2 was byte
+    LPTSTR lpKeyName;                      // Pointer to key's name
+    struct _VALUECONTENT FAR *lpFirstVC;   // Pointer to key's first value
+    struct _KEYCONTENT FAR *lpFirstSubKC;  // Pointer to key's first sub key
+    struct _KEYCONTENT FAR *lpBrotherKC;   // Pointer to key's brother
+    struct _KEYCONTENT FAR *lpFatherKC;    // Pointer to key's father
+    DWORD  bkeymatch;                      // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
 
 
 // Struct used for Windows Registry Value
 struct _VALUECONTENT {
-    DWORD  typecode;                           // Type of value [DWORD,STRING...]
-    DWORD  datasize;                           // Value data size in bytes
-    LPTSTR lpValueName;                        // Pointer to value's name
-    LPBYTE lpValueData;                        // Pointer to value's data
-    struct _VALUECONTENT FAR *lpBrotherValue;  // Pointer to value's brother
-    struct _KEYCONTENT FAR *lpFatherKey;       // Pointer to value's father key
-    DWORD  bvaluematch;                        // Flags used when comparing, until 1.8.2 was byte
+    DWORD  typecode;                        // Type of value [DWORD,STRING...]
+    DWORD  datasize;                        // Value data size in bytes
+    LPTSTR lpValueName;                     // Pointer to value's name
+    LPBYTE lpValueData;                     // Pointer to value's data
+    struct _VALUECONTENT FAR *lpBrotherVC;  // Pointer to value's brother
+    struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to value's father key
+    DWORD  bvaluematch;                     // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
 
 
 // Struct used for Windows File System
 struct _FILECONTENT {
-    LPTSTR lpFileName;                        // Pointer to file's name
-    DWORD  writetimelow;                      // File write time [LOW  DWORD]
-    DWORD  writetimehigh;                     // File write time [HIGH DWORD]
-    DWORD  filesizelow;                       // File size [LOW  DWORD]
-    DWORD  filesizehigh;                      // File size [HIGH DWORD]
-    DWORD  fileattr;                          // File attributes (e.g. directory)
-    DWORD  chksum;                            // File checksum (planned for the future, currently not used)
-    struct _FILECONTENT FAR *lpFirstSubFile;  // Pointer to file's first sub file
-    struct _FILECONTENT FAR *lpBrotherFile;   // Pointer to file's brother
-    struct _FILECONTENT FAR *lpFatherFile;    // Pointer to file's father
-    DWORD  bfilematch;                        // Flags used when comparing, until 1.8.2 was byte
+    LPTSTR lpFileName;                      // Pointer to file's name
+    DWORD  writetimelow;                    // File write time [LOW  DWORD]
+    DWORD  writetimehigh;                   // File write time [HIGH DWORD]
+    DWORD  filesizelow;                     // File size [LOW  DWORD]
+    DWORD  filesizehigh;                    // File size [HIGH DWORD]
+    DWORD  fileattr;                        // File attributes (e.g. directory)
+    DWORD  chksum;                          // File checksum (planned for the future, currently not used)
+    struct _FILECONTENT FAR *lpFirstSubFC;  // Pointer to file's first sub file
+    struct _FILECONTENT FAR *lpBrotherFC;   // Pointer to file's brother
+    struct _FILECONTENT FAR *lpFatherFC;    // Pointer to file's father
+    DWORD  bfilematch;                      // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR *LPFILECONTENT;
 
 
 // Adjusted for filecontent saving. 1.8
 struct _HEADFILE {
-    struct _HEADFILE FAR *lpBrotherHeadFile;  // Pointer to next headfile struc
-    LPFILECONTENT   lpFirstFile;              // Pointer to filecontent
+    struct _HEADFILE FAR *lpBrotherHF;  // Pointer to head file's brother
+    LPFILECONTENT   lpFirstFC;          // Pointer to head file's first file
 };
 typedef struct  _HEADFILE HEADFILE, FAR *LPHEADFILE;
 
@@ -493,9 +493,9 @@ BOOL    LoadHive(LPREGSHOT lpShot);
 VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllFileHead(LPHEADFILE lpHeadFile);
-VOID    ClearKeyMatchTag(LPKEYCONTENT lpKey);
-VOID    GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent);    // HWND hDlg, first para deleted in 1.8, return from void * to void
-VOID    GetFilesSnap(LPFILECONTENT lpFatherFile);                       // HWND hDlg, first para deleted in 1.8
+VOID    ClearKeyMatchTag(LPKEYCONTENT lpKC);
+VOID    GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC);  // HWND hDlg, first para deleted in 1.8, return from void * to void
+VOID    GetFilesSnap(LPFILECONTENT lpFatherFC);                // HWND hDlg, first para deleted in 1.8
 LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
@@ -513,19 +513,24 @@ VOID    WriteHtmlbr(void);
 VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
 LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
 
+#define REGSHOT_BUFFER_BLOCK_BYTES 1024
+
+extern FILEHEADER fileheader;
+extern LPBYTE lpFileBuffer;
+extern LPTSTR lpStringBuffer;
+extern size_t nStringBufferSize;
+extern size_t nSourceSize;
+
+extern char LOCALMACHINESTRING[];
+extern char LOCALMACHINESTRING_LONG[];
+extern char USERSSTRING[];
+extern char USERSSTRING_LONG[];
+
 #ifndef _UNICODE
 extern TCHAR szEmpty[];
 #endif
 
-extern FILEHEADER fileheader;
-extern LPBYTE lpFileBuffer;
-extern LPBYTE lpszBuffer;
-extern size_t nBufferSize;
-extern size_t nSourceSize;
-
-#define REGSHOT_STRING_BUFFER_BYTES 1024
-
-size_t AdjustBuffer(LPBYTE *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
+size_t AdjustBuffer(PVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
 VOID SaveHeadFile(LPHEADFILE lpHF, DWORD nFPCaller);
 VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 

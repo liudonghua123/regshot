@@ -232,24 +232,24 @@ VOID Shot(LPREGSHOT lpShot)
                         if (lpShot->lpHF == NULL) {
                             lpShot->lpHF = lpHF;
                         } else {
-                            lpHFTemp->lpBrotherHeadFile = lpHF;
+                            lpHFTemp->lpBrotherHF = lpHF;
                         }
 
                         lpHFTemp = lpHF;
-                        lpHF->lpFirstFile = (LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
+                        lpHF->lpFirstFC = (LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
                         //lpHF->lpfilecontent2 = (LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
 
                         nSubExtDirLen = strlen(lpSubExtDir) + 1;
-                        lpHF->lpFirstFile->lpFileName = MYALLOC(nSubExtDirLen);
+                        lpHF->lpFirstFC->lpFileName = MYALLOC(nSubExtDirLen);
                         //lpHF->lpfilecontent2->lpFileName = MYALLOC(nSubExtDirLen);
 
-                        strcpy(lpHF->lpFirstFile->lpFileName, lpSubExtDir);
+                        strcpy(lpHF->lpFirstFC->lpFileName, lpSubExtDir);
                         //strcpy(lpHF->lpfilecontent2->lpFileName,lpSubExtDir);
 
-                        lpHF->lpFirstFile->fileattr = FILE_ATTRIBUTE_DIRECTORY;
+                        lpHF->lpFirstFC->fileattr = FILE_ATTRIBUTE_DIRECTORY;
                         //lpHF->lpfilecontent2->fileattr = FILE_ATTRIBUTE_DIRECTORY;
 
-                        GetFilesSnap(lpHF->lpFirstFile);
+                        GetFilesSnap(lpHF->lpFirstFC);
                         nGettingTime = GetTickCount();
                         UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
                     }

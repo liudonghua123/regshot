@@ -23,7 +23,7 @@
 
 
 // Some strings used to write to HTML or TEXT file, need [] to use with sizeof()
-char str_CR[]         = "\r\n"; // {0x0d,0x0a,0x00};
+char szCRLF[]         = "\r\n"; // {0x0d,0x0a,0x00};
 char txt_line[]       = "\r\n----------------------------------\r\n";
 char htm_BR[]         = "<BR>";
 char htm_HTMLbegin[]  = "<HTML>\r\n";
@@ -112,7 +112,7 @@ VOID WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor)
                 WriteFile(hFile, htm_BR, sizeof(htm_BR) - 1, &NBW, NULL);
             }
             //else
-            //    WriteFile(hFile,str_CR,sizeof(str_CR) - 1,&NBW,NULL);
+            //    WriteFile(hFile,szCRLF,sizeof(szCRLF) - 1,&NBW,NULL);
             // for some reason, txt doesn't wrap anymore since 1.50e, check below!
         }
 
@@ -121,7 +121,7 @@ VOID WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor)
                 WriteFile(hFile, htm_s3, sizeof(htm_s3) - 1, &NBW, NULL);
             }
         } else {
-            WriteFile(hFile, str_CR, sizeof(str_CR) - 1, &NBW, NULL); // this!
+            WriteFile(hFile, szCRLF, sizeof(szCRLF) - 1, &NBW, NULL); // this!
         }
 
 
@@ -149,7 +149,7 @@ VOID WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML)
         WriteFile(hFile, htm_Td1Over, sizeof(htm_Td1Over) - 1, &NBW, NULL);
         WriteFile(hFile, htm_TableOver, sizeof(htm_TableOver) - 1, &NBW, NULL);
     } else {
-        WriteFile(hFile, str_CR, sizeof(str_CR) - 1, &NBW, NULL);
+        WriteFile(hFile, szCRLF, sizeof(szCRLF) - 1, &NBW, NULL);
     }
 }
 
