@@ -36,7 +36,7 @@ VOID ErrMsg(LPCSTR note)
 // Routine to debug
 //-------------------------------------------------------------
 #ifdef DEBUGLOG
-extern char *str_CR;
+extern char *szCRLF;
 extern u_char *lan_errorcreatefile;
 extern u_char *lan_errormovefp;
 
@@ -60,7 +60,7 @@ VOID DebugLog(LPSTR filename, LPSTR lpstr, HWND hDlg, BOOL bisCR)
                 //ErrMsg(lan_errorwritefile);
             }
             if (bisCR == TRUE) {
-                WriteFile(hFile, str_CR, sizeof(str_CR) - 1, &NBW, NULL);
+                WriteFile(hFile, szCRLF, sizeof(szCRLF) - 1, &NBW, NULL);
             }
         }
     }

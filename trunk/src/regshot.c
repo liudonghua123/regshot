@@ -22,16 +22,16 @@
 #include "global.h"
 #include "version.h"
 
-char str_DefResPre[] = REGSHOT_RESULT_FILE;
+char szDefResPre[] = REGSHOT_RESULT_FILE;
 
-char str_filter[] = TEXT("Regshot hive files (*.hiv;*.hiv2)\0*.hiv;*.hiv2\0All files\0*.*\0\0");
+char szFilter[] = TEXT("Regshot hive files (*.hiv;*.hiv2)\0*.hiv;*.hiv2\0All files\0*.*\0\0");
 
-char str_RegshotFileSignature_SBCS[] = "REGSHOTHIVE";
-char str_RegshotFileSignature_UTF16[] = "REGSHOTHIV2";  // use a number to define a file format not compatible with older releases (e.g. "3" could be UTF-32 or Big Endian)
+char szRegshotFileSignatureSBCS[] = "REGSHOTHIVE";
+char szRegshotFileSignatureUTF16[] = "REGSHOTHIV2";  // use a number to define a file format not compatible with older releases (e.g. "3" could be UTF-32 or Big Endian)
 #ifdef _UNICODE
-#define str_RegshotFileSignature str_RegshotFileSignature_UTF16
+#define szRegshotFileSignature szRegshotFileSignatureUTF16
 #else
-#define str_RegshotFileSignature str_RegshotFileSignature_SBCS
+#define szRegshotFileSignature szRegshotFileSignatureSBCS
 #endif
 
 TCHAR szRegshotFileDefExt[] =
@@ -41,7 +41,7 @@ TCHAR szRegshotFileDefExt[] =
     TEXT("hiv");
 #endif
 
-TCHAR str_ValueDataIsNULL[] = TEXT(": (NULL!)");
+TCHAR szValueDataIsNULL[] = TEXT(": (NULL!)");
 
 #ifndef _UNICODE
 TCHAR szEmpty[] = TEXT("");
@@ -52,8 +52,8 @@ SAVEKEYCONTENT sKC;
 SAVEVALUECONTENT sVC;
 
 LPBYTE lpFileBuffer;
-LPBYTE lpszBuffer;
-size_t nBufferSize;
+LPTSTR lpStringBuffer;
+size_t nStringBufferSize;
 size_t nSourceSize;
 
 #define MAX_SIGNATURE_LENGTH 12
@@ -84,13 +84,13 @@ extern LPBYTE lan_errorexecviewer;
 extern LPBYTE lan_erroropenfile;
 
 extern char *str_prgname;   // be careful of extern ref! Must be the same when declaring them, otherwise pointer will mis-point!
-extern char str_CR[];
+extern char szCRLF[];
 
 
 //-------------------------------------------------------------
 // Routine to get whole key name from KEYCONTENT
 //-------------------------------------------------------------
-LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
+LPSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
 {
     LPKEYCONTENT lpKC;
     LPSTR   lpName;  // TODO: LPTSTR
@@ -98,7 +98,7 @@ LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
     size_t  nLen;
 
     nLen = 0;
-    for (lpKC = lpKeyContent; NULL != lpKC; lpKC = lpKC->lpFatherKey) {
+    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
             nLen += strlen(lpKC->lpKeyName) + 1;  // +1 char for backslash or NULL char  // TODO: _tcslen
         }
@@ -112,7 +112,7 @@ LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
     lpTail = lpName + nLen - 1;
     *lpTail = 0;
 
-    for (lpKC = lpKeyContent; NULL != lpKC; lpKC = lpKC->lpFatherKey) {
+    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
             nLen = strlen(lpKC->lpKeyName);
             memcpy(lpTail -= nLen, lpKC->lpKeyName, nLen);  // TODO: _tcsncpy
@@ -129,7 +129,7 @@ LPSTR GetWholeKeyName(LPKEYCONTENT lpKeyContent)
 //-------------------------------------------------------------
 // Routine to get whole value name from VALUECONTENT
 //-------------------------------------------------------------
-LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
+LPSTR GetWholeValueName(LPVALUECONTENT lpVC)
 {
     LPKEYCONTENT lpKC;
     LPSTR   lpName;  // TODO: LPTSTR
@@ -138,12 +138,12 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
     size_t  nWholeLen;
 
     nLen = 0;
-    if (NULL != lpValueContent->lpValueName) {
-        nLen += strlen(lpValueContent->lpValueName);
+    if (NULL != lpVC->lpValueName) {
+        nLen += strlen(lpVC->lpValueName);
     }
     nWholeLen = nLen + 1;  // +1 char for NULL char
 
-    for (lpKC = lpValueContent->lpFatherKey; lpKC != NULL; lpKC = lpKC->lpFatherKey) {
+    for (lpKC = lpVC->lpFatherKC; lpKC != NULL; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
             nWholeLen += strlen(lpKC->lpKeyName) + 1;  // +1 char for backslash  // TODO: _tcslen
         }
@@ -153,12 +153,12 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 
     lpTail = lpName + nWholeLen - 1;
 
-    if (NULL != lpValueContent->lpValueName) {
-        strcpy(lpTail -= nLen, lpValueContent->lpValueName);
+    if (NULL != lpVC->lpValueName) {
+        strcpy(lpTail -= nLen, lpVC->lpValueName);
         *--lpTail = '\\'; // 0x5c = '\\'  // TODO: check if works for Unicode
     }
 
-    for (lpKC = lpValueContent->lpFatherKey; NULL != lpKC; lpKC = lpKC->lpFatherKey) {
+    for (lpKC = lpVC->lpFatherKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
             nLen = strlen(lpKC->lpKeyName);
             memcpy(lpTail -= nLen, lpKC->lpKeyName, nLen);  // TODO: _tcsncpy
@@ -176,11 +176,11 @@ LPSTR GetWholeValueName(LPVALUECONTENT lpValueContent)
 // Routine Trans VALUECONTENT.data [which in binary] into strings
 // Called by GetWholeValueData()
 //-------------------------------------------------------------
-LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
+LPSTR TransData(LPVALUECONTENT lpVC, DWORD type)
 {
     LPSTR lpValueData = NULL;
     DWORD c;
-    DWORD size = lpValueContent->datasize;
+    DWORD size = lpVC->datasize;
 
     switch (type) {
         case REG_SZ:
@@ -188,39 +188,39 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
             // because some non-regular value would corrupt this.
             lpValueData = MYALLOC0(size + 5);    // 5 is enough
             strcpy(lpValueData, ": \"");
-            if (NULL != lpValueContent->lpValueData) {
-                strcat(lpValueData, (const char *)lpValueContent->lpValueData);
+            if (NULL != lpVC->lpValueData) {
+                strcat(lpValueData, (const char *)lpVC->lpValueData);
             }
             strcat(lpValueData, "\"");
             // wsprintf has a bug that can not print string too long one time!);
-            //wsprintf(lpValueData,"%s%s%s",": \"",lpValueContent->lpValueData,"\"");
+            //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
             break;
         case REG_MULTI_SZ:
             // Be sure to add below line outside of following "if",
             // for that GlobalFree(lp) must had lp already located!
             lpValueData = MYALLOC0(size + 5);    // 5 is enough
             for (c = 0; c < size; c++) {
-                if (*((LPBYTE)(lpValueContent->lpValueData + c)) == 0) {
-                    if (*((LPBYTE)(lpValueContent->lpValueData + c + 1)) != 0) {
-                        *((LPBYTE)(lpValueContent->lpValueData + c)) = 0x20;    // ???????
+                if (*((LPBYTE)(lpVC->lpValueData + c)) == 0) {
+                    if (*((LPBYTE)(lpVC->lpValueData + c + 1)) != 0) {
+                        *((LPBYTE)(lpVC->lpValueData + c)) = 0x20;    // ???????
                     } else {
                         break;
                     }
                 }
             }
-            //*((LPBYTE)(lpValueContent->lpValueData + size)) = 0x00;   // for some illegal multisz
+            //*((LPBYTE)(lpVC->lpValueData + size)) = 0x00;   // for some illegal multisz
             strcpy(lpValueData, ": '");
-            if (NULL != lpValueContent->lpValueData) {
-                strcat(lpValueData, (const char *)lpValueContent->lpValueData);
+            if (NULL != lpVC->lpValueData) {
+                strcat(lpValueData, (const char *)lpVC->lpValueData);
             }
             strcat(lpValueData, "'");
-            //wsprintf(lpValueData,"%s%s%s",": \"",lpValueContent->lpValueData,"\"");
+            //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
             break;
         case REG_DWORD:
             // case REG_DWORD_BIG_ENDIAN: Not used any more, they all included in [default]
             lpValueData = MYALLOC0(sizeof(DWORD) * 2 + 5); // 13 is enough
-            if (NULL != lpValueContent->lpValueData) {
-                sprintf(lpValueData, "%s%08X", ": 0x", *(LPDWORD)(lpValueContent->lpValueData));
+            if (NULL != lpVC->lpValueData) {
+                sprintf(lpValueData, "%s%08X", ": 0x", *(LPDWORD)(lpVC->lpValueData));
             }
             break;
         default:
@@ -228,7 +228,7 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
             *lpValueData = 0x3a;
             // for the resttype lengthofvaluedata doesn't contains the 0!
             for (c = 0; c < size; c++) {
-                sprintf(lpValueData + 3 * c + 1, " %02X", *(lpValueContent->lpValueData + c));
+                sprintf(lpValueData + 3 * c + 1, " %02X", *(lpVC->lpValueData + c));
             }
     }
 
@@ -239,57 +239,57 @@ LPSTR TransData(LPVALUECONTENT lpValueContent, DWORD type)
 //-------------------------------------------------------------
 // Routine to get whole value data from VALUECONTENT
 //-------------------------------------------------------------
-LPSTR GetWholeValueData(LPVALUECONTENT lpValueContent)
+LPSTR GetWholeValueData(LPVALUECONTENT lpVC)
 {
     LPSTR lpValueData = NULL;
     DWORD c;
-    DWORD size = lpValueContent->datasize;
+    DWORD size = lpVC->datasize;
 
-    if (NULL != lpValueContent->lpValueData) { //fix a bug at 20111228
+    if (NULL != lpVC->lpValueData) { //fix a bug at 20111228
 
-        switch (lpValueContent->typecode) {
+        switch (lpVC->typecode) {
             case REG_SZ:
             case REG_EXPAND_SZ:
-                //if (lpValueContent->lpValueData != NULL) {
-                if (size == (DWORD)strlen((const char *)(lpValueContent->lpValueData)) + 1) {
-                    lpValueData = TransData(lpValueContent, REG_SZ);
+                //if (lpVC->lpValueData != NULL) {
+                if (size == (DWORD)strlen((const char *)(lpVC->lpValueData)) + 1) {
+                    lpValueData = TransData(lpVC, REG_SZ);
                 } else {
-                    lpValueData = TransData(lpValueContent, REG_BINARY);
+                    lpValueData = TransData(lpVC, REG_BINARY);
                 }
                 //} else {
-                //    lpValueData = TransData(lpValueContent, REG_SZ);
+                //    lpValueData = TransData(lpVC, REG_SZ);
                 //}
                 break;
             case REG_MULTI_SZ:
-                if (*((LPBYTE)(lpValueContent->lpValueData)) != 0x00) {
+                if (*((LPBYTE)(lpVC->lpValueData)) != 0x00) {
                     for (c = 0;; c++) {
-                        if (*((LPWORD)(lpValueContent->lpValueData + c)) == 0) {
+                        if (*((LPWORD)(lpVC->lpValueData + c)) == 0) {
                             break;
                         }
                     }
                     if (size == c + 2) {
-                        lpValueData = TransData(lpValueContent, REG_MULTI_SZ);
+                        lpValueData = TransData(lpVC, REG_MULTI_SZ);
                     } else {
-                        lpValueData = TransData(lpValueContent, REG_BINARY);
+                        lpValueData = TransData(lpVC, REG_BINARY);
                     }
                 } else {
-                    lpValueData = TransData(lpValueContent, REG_BINARY);
+                    lpValueData = TransData(lpVC, REG_BINARY);
                 }
                 break;
             case REG_DWORD:
             case REG_DWORD_BIG_ENDIAN:
                 if (size == sizeof(DWORD)) {
-                    lpValueData = TransData(lpValueContent, REG_DWORD);
+                    lpValueData = TransData(lpVC, REG_DWORD);
                 } else {
-                    lpValueData = TransData(lpValueContent, REG_BINARY);
+                    lpValueData = TransData(lpVC, REG_BINARY);
                 }
                 break;
             default :
-                lpValueData = TransData(lpValueContent, REG_BINARY);
+                lpValueData = TransData(lpVC, REG_BINARY);
         }
     } else {
-        lpValueData = MYALLOC0(sizeof(str_ValueDataIsNULL));
-        strcpy(lpValueData, str_ValueDataIsNULL);
+        lpValueData = MYALLOC0(sizeof(szValueDataIsNULL));
+        strcpy(lpValueData, szValueDataIsNULL);
     }
     return lpValueData;
 }
@@ -383,7 +383,6 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
             lpname = GetWholeFileName(lp);
             CreateNewResult(actiontype, lpcount, lpname);
         }
-
     }
 }
 
@@ -397,24 +396,24 @@ VOID GetAllSubName(
     DWORD   typevalue,
     LPDWORD lpcountkey,
     LPDWORD lpcountvalue,
-    LPKEYCONTENT lpKeyContent
+    LPKEYCONTENT lpKC
 )
 {
+    LPVALUECONTENT lpVC;
 
-    LPVALUECONTENT lpv;
-    LogToMem(typekey, lpcountkey, lpKeyContent);
+    LogToMem(typekey, lpcountkey, lpKC);
 
-    if (lpKeyContent->lpFirstSubKey != NULL) {
-        GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKeyContent->lpFirstSubKey);
+    if (lpKC->lpFirstSubKC != NULL) {
+        GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpFirstSubKC);
     }
 
     if (needbrother == TRUE)
-        if (lpKeyContent->lpBrotherKey != NULL) {
-            GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKeyContent->lpBrotherKey);
+        if (lpKC->lpBrotherKC != NULL) {
+            GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpBrotherKC);
         }
 
-    for (lpv = lpKeyContent->lpFirstValue; lpv != NULL; lpv = lpv->lpBrotherValue) {
-        LogToMem(typevalue, lpcountvalue, lpv);
+    for (lpVC = lpKC->lpFirstVC; lpVC != NULL; lpVC = lpVC->lpBrotherVC) {
+        LogToMem(typevalue, lpcountvalue, lpVC);
     }
 }
 
@@ -422,11 +421,12 @@ VOID GetAllSubName(
 //-------------------------------------------------------------
 // Routine to walk through all values of current key
 //-------------------------------------------------------------
-VOID GetAllValue(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKeyContent)
+VOID GetAllValue(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKC)
 {
-    LPVALUECONTENT lpv;
-    for (lpv = lpKeyContent->lpFirstValue; lpv != NULL; lpv = lpv->lpBrotherValue) {
-        LogToMem(typevalue, lpcountvalue, lpv);
+    LPVALUECONTENT lpVC;
+
+    for (lpVC = lpKC->lpFirstVC; lpVC != NULL; lpVC = lpVC->lpBrotherVC) {
+        LogToMem(typevalue, lpcountvalue, lpVC);
     }
 }
 
@@ -496,74 +496,74 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 // Registry comparison engine
 //-------------------------------------------------------------
-VOID *CompareFirstSubKey(LPKEYCONTENT lpHead1, LPKEYCONTENT lpHead2)
+VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
 {
-    LPKEYCONTENT    lp1;
-    LPKEYCONTENT    lp2;
-    LPVALUECONTENT  lpvalue1;
-    LPVALUECONTENT  lpvalue2;
+    LPKEYCONTENT    lpKC1;
+    LPKEYCONTENT    lpKC2;
+    LPVALUECONTENT  lpVC1;
+    LPVALUECONTENT  lpVC2;
     //DWORD           i;
 
-    for (lp1 = lpHead1; lp1 != NULL; lp1 = lp1->lpBrotherKey) {
-        for (lp2 = lpHead2; lp2 != NULL; lp2 = lp2->lpBrotherKey) {
-            if (NOTMATCH == lp2->bkeymatch) {
-                if ((lp1->lpKeyName == lp2->lpKeyName)
-                        || ((NULL != lp1->lpKeyName) && (NULL != lp2->lpKeyName) && (0 == strcmp(lp1->lpKeyName, lp2->lpKeyName)))) { // 1.8.2 from lstrcmp to strcmp
-                    // Same key found! We compare their values and their subkeys!
-                    lp2->bkeymatch = ISMATCH;
+    for (lpKC1 = lpHeadKC1; lpKC1 != NULL; lpKC1 = lpKC1->lpBrotherKC) {
+        for (lpKC2 = lpHeadKC2; lpKC2 != NULL; lpKC2 = lpKC2->lpBrotherKC) {
+            if (NOTMATCH == lpKC2->bkeymatch) {
+                if ((lpKC1->lpKeyName == lpKC2->lpKeyName)
+                        || ((NULL != lpKC1->lpKeyName) && (NULL != lpKC2->lpKeyName) && (0 == strcmp(lpKC1->lpKeyName, lpKC2->lpKeyName)))) { // 1.8.2 from lstrcmp to strcmp
+                    // Same key found! We compare their values and their sub keys!
+                    lpKC2->bkeymatch = ISMATCH;
 
-                    if ((NULL == lp1->lpFirstValue) && (NULL != lp2->lpFirstValue)) {
-                        // Key1 has no values, so lpvalue2 is added! We find all values that belong to lp2!
-                        GetAllValue(VALADD, &nVALADD, lp2);
+                    if ((NULL == lpKC1->lpFirstVC) && (NULL != lpKC2->lpFirstVC)) {
+                        // Key1 has no values, so lpVC2 is added! We find all values that belong to lpKC2!
+                        GetAllValue(VALADD, &nVALADD, lpKC2);
                     } else {
-                        if ((NULL != lp1->lpFirstValue) && (NULL == lp2->lpFirstValue)) {
-                            // Key2 has no values, so lpvalue1 is deleted! We find all values that belong to lp1!
-                            GetAllValue(VALDEL, &nVALDEL, lp1);
+                        if ((NULL != lpKC1->lpFirstVC) && (NULL == lpKC2->lpFirstVC)) {
+                            // Key2 has no values, so lpVC1 is deleted! We find all values that belong to lpKC1!
+                            GetAllValue(VALDEL, &nVALDEL, lpKC1);
                         } else {
                             // Two keys, both have values, so we loop them
-                            for (lpvalue1 = lp1->lpFirstValue; lpvalue1 != NULL; lpvalue1 = lpvalue1->lpBrotherValue) {
-                                for (lpvalue2 = lp2->lpFirstValue; lpvalue2 != NULL; lpvalue2 = lpvalue2->lpBrotherValue) {
-                                    // Loop lp2 to find a value matchs lp1's
-                                    if ((NOTMATCH == lpvalue2->bvaluematch) && (lpvalue1->typecode == lpvalue2->typecode)) {
+                            for (lpVC1 = lpKC1->lpFirstVC; lpVC1 != NULL; lpVC1 = lpVC1->lpBrotherVC) {
+                                for (lpVC2 = lpKC2->lpFirstVC; lpVC2 != NULL; lpVC2 = lpVC2->lpBrotherVC) {
+                                    // Loop lpKC2 to find a value matchs lpKC1's
+                                    if ((NOTMATCH == lpVC2->bvaluematch) && (lpVC1->typecode == lpVC2->typecode)) {
                                         // Same valuedata type
-                                        if ((lpvalue1->lpValueName == lpvalue2->lpValueName)
-                                                || ((NULL != lpvalue1->lpValueName) && (NULL != lpvalue2->lpValueName) && (0 == strcmp(lpvalue1->lpValueName, lpvalue2->lpValueName)))) { // 1.8.2 from lstrcmp to strcmp
+                                        if ((lpVC1->lpValueName == lpVC2->lpValueName)
+                                                || ((NULL != lpVC1->lpValueName) && (NULL != lpVC2->lpValueName) && (0 == strcmp(lpVC1->lpValueName, lpVC2->lpValueName)))) { // 1.8.2 from lstrcmp to strcmp
                                             // Same valuename
-                                            if ((lpvalue1->datasize == lpvalue2->datasize)) {
+                                            if ((lpVC1->datasize == lpVC2->datasize)) {
                                                 // Same size of valuedata
-                                                if (0 == memcmp(lpvalue1->lpValueData, lpvalue2->lpValueData, lpvalue1->datasize)) { // 1.8.2
+                                                if (0 == memcmp(lpVC1->lpValueData, lpVC2->lpValueData, lpVC1->datasize)) { // 1.8.2
                                                     // Same valuedata, keys are the same!
-                                                    lpvalue2->bvaluematch = ISMATCH;
-                                                    break;  // Be sure not to do lp2 == NULL
+                                                    lpVC2->bvaluematch = ISMATCH;
+                                                    break;  // Be sure not to do lpKC2 == NULL
                                                 } else {
                                                     // Valuedata not match due to data mismatch, we found a modified valuedata!*****
-                                                    lpvalue2->bvaluematch = ISMODI;
-                                                    LogToMem(VALMODI, &nVALMODI, lpvalue1);
-                                                    LogToMem(VALMODI, &nVALMODI, lpvalue2);
+                                                    lpVC2->bvaluematch = ISMODI;
+                                                    LogToMem(VALMODI, &nVALMODI, lpVC1);
+                                                    LogToMem(VALMODI, &nVALMODI, lpVC2);
                                                     nVALMODI--;
                                                     break;
                                                 }
                                             } else {
                                                 // Valuedata does not match due to size, we found a modified valuedata!******
-                                                lpvalue2->bvaluematch = ISMODI;
-                                                LogToMem(VALMODI, &nVALMODI, lpvalue1);
-                                                LogToMem(VALMODI, &nVALMODI, lpvalue2);
+                                                lpVC2->bvaluematch = ISMODI;
+                                                LogToMem(VALMODI, &nVALMODI, lpVC1);
+                                                LogToMem(VALMODI, &nVALMODI, lpVC2);
                                                 nVALMODI--;
                                                 break;
                                             }
                                         }
                                     }
                                 }
-                                if (NULL == lpvalue2) {
-                                    // We found a value in lp1 but not in lp2, we found a deleted value*****
-                                    LogToMem(VALDEL, &nVALDEL, lpvalue1);
+                                if (NULL == lpVC2) {
+                                    // We found a value in lpKC1 but not in lpKC2, we found a deleted value*****
+                                    LogToMem(VALDEL, &nVALDEL, lpVC1);
                                 }
                             }
                             // After we loop to end, we do extra loop use flag we previously made to get added values
-                            for (lpvalue2 = lp2->lpFirstValue; lpvalue2 != NULL; lpvalue2 = lpvalue2->lpBrotherValue) {
-                                if (lpvalue2->bvaluematch != ISMATCH && lpvalue2->bvaluematch != ISMODI) {
-                                    // We found a value in lp2's but not in lp1's, we found a added value****
-                                    LogToMem(VALADD, &nVALADD, lpvalue2);
+                            for (lpVC2 = lpKC2->lpFirstVC; lpVC2 != NULL; lpVC2 = lpVC2->lpBrotherVC) {
+                                if (lpVC2->bvaluematch != ISMATCH && lpVC2->bvaluematch != ISMODI) {
+                                    // We found a value in lpKC2's but not in lpKC1's, we found a added value****
+                                    LogToMem(VALADD, &nVALADD, lpVC2);
                                 }
                             }
                         }
@@ -571,33 +571,33 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHead1, LPKEYCONTENT lpHead2)
 
                     //////////////////////////////////////////////////////////////
                     // After we walk through the values above, we now try to loop the sub keys of current key
-                    if ((NULL == lp1->lpFirstSubKey) && (NULL != lp2->lpFirstSubKey)) {
-                        // lp2's firstsubkey added!
-                        GetAllSubName(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lp2->lpFirstSubKey);
+                    if ((NULL == lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
+                        // lpKC2's firstsubkey added!
+                        GetAllSubName(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2->lpFirstSubKC);
                     }
-                    if ((NULL != lp1->lpFirstSubKey) && (NULL == lp2->lpFirstSubKey)) {
-                        // lp1's firstsubkey deleted!
-                        GetAllSubName(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lp1->lpFirstSubKey);
+                    if ((NULL != lpKC1->lpFirstSubKC) && (NULL == lpKC2->lpFirstSubKC)) {
+                        // lpKC1's firstsubkey deleted!
+                        GetAllSubName(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1->lpFirstSubKC);
                     }
-                    if ((NULL != lp1->lpFirstSubKey) && (NULL != lp2->lpFirstSubKey)) {
-                        CompareFirstSubKey(lp1->lpFirstSubKey, lp2->lpFirstSubKey);
+                    if ((NULL != lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
+                        CompareFirstSubKey(lpKC1->lpFirstSubKC, lpKC2->lpFirstSubKC);
                     }
                     break;
                 }
             }
         }
-        if (NULL == lp2) {
-            // We did not find a lp2 matches a lp1, so lp1 is deleted!
-            GetAllSubName(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lp1);
+        if (NULL == lpKC2) {
+            // We did not find a lpKC2 matches a lpKC1, so lpKC1 is deleted!
+            GetAllSubName(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1);
         }
     }
 
     // After we loop to end, we do extra loop use flag we previously made to get added keys
-    for (lp2 = lpHead2; lp2 != NULL; lp2 = lp2->lpBrotherKey) {
+    for (lpKC2 = lpHeadKC2; lpKC2 != NULL; lpKC2 = lpKC2->lpBrotherKC) {
         nComparing++;
-        if (lp2->bkeymatch == NOTMATCH) {
-            // We did not find a lp1 matches a lp2,so lp2 is added!
-            GetAllSubName(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lp2);
+        if (lpKC2->bkeymatch == NOTMATCH) {
+            // We did not find a lpKC1 matches a lpKC2,so lpKC2 is added!
+            GetAllSubName(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2);
         }
     }
 
@@ -664,8 +664,8 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         lpHF2 = lpShot1->lpHF;
     }
     // first loop
-    for (; lpHF1 != NULL; lpHF1 = lpHF1->lpBrotherHeadFile) {
-        lpfc1 = lpHF1->lpFirstFile;
+    for (; lpHF1 != NULL; lpHF1 = lpHF1->lpBrotherHF) {
+        lpfc1 = lpHF1->lpFirstFC;
         if (lpfc1 != NULL) {
             if ((lpfc2 = SearchDirChain(lpfc1->lpFileName, lpHF2)) != NULL) {   // note lpHF2 should not changed here!
                 CompareFirstSubFile(lpfc1, lpfc2);                              // if found, we do compare
@@ -683,8 +683,8 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         lpHF2 = lpShot1->lpHF;
     }
     // second loop
-    for (; lpHF2 != NULL; lpHF2 = lpHF2->lpBrotherHeadFile) {
-        lpfc2 = lpHF2->lpFirstFile;
+    for (; lpHF2 != NULL; lpHF2 = lpHF2->lpBrotherHF) {
+        lpfc2 = lpHF2->lpFirstFC;
         if (lpfc2 != NULL) {
             if ((lpfc1 = SearchDirChain(lpfc2->lpFileName, lpHF1)) == NULL) {   // in the second loop we only find those do not match
                 GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpfc2);
@@ -720,7 +720,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (ReplaceInValidFileName(lpstrcomp)) {
         strcat(lpDestFileName, lpstrcomp);
     } else {
-        strcat(lpDestFileName, str_DefResPre);
+        strcat(lpDestFileName, szDefResPre);
     }
 
     nLengthofStr = strlen(lpDestFileName);
@@ -758,7 +758,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     }
 
     WriteFile(hFile, str_prgname, (DWORD)strlen(str_prgname), &NBW, NULL);
-    WriteFile(hFile, str_CR, (DWORD)strlen(str_CR), &NBW, NULL);
+    WriteFile(hFile, szCRLF, (DWORD)strlen(szCRLF), &NBW, NULL);
 
     //_asm int 3;
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpstrcomp, COMMENTLENGTH);
@@ -887,13 +887,89 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 }
 
 
+// ----------------------------------------------------------------------
+// Clear comparison match flags in all registry keys
+// ----------------------------------------------------------------------
+VOID ClearKeyMatchTag(LPKEYCONTENT lpKC)
+{
+    LPVALUECONTENT lpVC;
+
+    if (NULL != lpKC) {
+        lpKC->bkeymatch = 0;
+        for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
+            lpVC->bvaluematch = 0;
+        }
+        ClearKeyMatchTag(lpKC->lpFirstSubKC);
+        ClearKeyMatchTag(lpKC->lpBrotherKC);
+    }
+}
+
+
+// ----------------------------------------------------------------------
+// Free all registry keys and values
+// ----------------------------------------------------------------------
+VOID FreeAllValueContent(LPVALUECONTENT lpVC)
+{
+    if (NULL != lpVC) {
+        if (NULL != lpVC->lpValueName) {
+            MYFREE(lpVC->lpValueName);
+        }
+        if (NULL != lpVC->lpValueData) {
+            MYFREE(lpVC->lpValueData);
+        }
+        FreeAllValueContent(lpVC->lpBrotherVC);
+        MYFREE(lpVC);
+    }
+}
+
+// ----------------------------------------------------------------------
+// Free all registry keys and values
+// ----------------------------------------------------------------------
+VOID FreeAllKeyContent(LPKEYCONTENT lpKC)
+{
+    if (NULL != lpKC) {
+        if (NULL != lpKC->lpKeyName) {
+            if ((lpKC->lpKeyName != LOCALMACHINESTRING)
+                    && (lpKC->lpKeyName != LOCALMACHINESTRING_LONG)
+                    && (lpKC->lpKeyName != USERSSTRING)
+                    && (lpKC->lpKeyName != USERSSTRING_LONG)) {
+                MYFREE(lpKC->lpKeyName);
+            }
+        }
+        FreeAllValueContent(lpKC->lpFirstVC);
+        FreeAllKeyContent(lpKC->lpFirstSubKC);
+        FreeAllKeyContent(lpKC->lpBrotherKC);
+        MYFREE(lpKC);
+    }
+}
+
+// ----------------------------------------------------------------------
+// Free shot completely and initialize
+// ----------------------------------------------------------------------
+VOID FreeShot(LPREGSHOT lpShot)
+{
+    if (NULL != lpShot->computername) {
+        MYFREE(lpShot->computername);
+    }
+
+    if (NULL != lpShot->username) {
+        MYFREE(lpShot->username);
+    }
+
+    FreeAllKeyContent(lpShot->lpHKLM);
+    FreeAllKeyContent(lpShot->lpHKU);
+    FreeAllFileHead(lpShot->lpHF);
+
+    ZeroMemory(lpShot, sizeof(REGSHOT));
+}
+
+
 //------------------------------------------------------------
 // Registry shot engine
 //------------------------------------------------------------
-VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
+VOID GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC)
 {
-
-    HKEY    Subhkey;
+    HKEY    hRegSubKey;
     DWORD   i;
     DWORD   NTr;
     DWORD   TypeCode;
@@ -905,17 +981,17 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
     DWORD   LengthOfLongestSubkeyName;
     //LPSTR   lpValueName;
     //LPBYTE  lpValueData;
-    LPKEYCONTENT    lpKeyContent;
-    LPVALUECONTENT  lpValueContent;
-    LPKEYCONTENT    lpKeyContentLast;
-    LPVALUECONTENT  lpValueContentLast;
+    LPKEYCONTENT    lpKC;
+    LPVALUECONTENT  lpVC;
+    LPKEYCONTENT    lpKCLast;
+    LPVALUECONTENT  lpVCLast;
 
-    lpKeyContentLast = NULL;
-    lpValueContentLast = NULL;
+    lpKCLast = NULL;
+    lpVCLast = NULL;
 
     // To detemine MAX length
     if (RegQueryInfoKey(
-                hkey,
+                hRegKey,
                 NULL,                       // lpClassName_nouse,
                 NULL,                       // &nClassName_nouse_length,
                 NULL,
@@ -946,13 +1022,12 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
 
     // Get Values
     for (i = 0;; i++) {
-
         *(LPBYTE)lpValueName = (BYTE)0x00;    // That's the bug in 2000! thanks zhangl@digiark.com!
         *(LPBYTE)lpValueData = (BYTE)0x00;
         //DebugBreak();
         LengthOfValueName = LengthOfLongestValueName;
         LengthOfValueData = LengthOfLongestValueData;
-        NTr = RegEnumValue(hkey, i, lpValueName, &LengthOfValueName, NULL, &TypeCode, lpValueData, &LengthOfValueData);
+        NTr = RegEnumValue(hRegKey, i, lpValueName, &LengthOfValueName, NULL, &TypeCode, lpValueData, &LengthOfValueData);
         if (NTr == ERROR_NO_MORE_ITEMS) {
             break;
         } else {
@@ -966,25 +1041,25 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
         DebugLog("debug_trytogetvalue.log", lpValueName, hWnd, TRUE);
 #endif
 
-        lpValueContent = MYALLOC0(sizeof(VALUECONTENT));
+        lpVC = MYALLOC0(sizeof(VALUECONTENT));
         // I had done if (i == 0) in 1.50b- ! thanks fisttk@21cn.com and non-standard
-        //if (lpFatherKeyContent->lpFirstValue == NULL) {
-        if (lpValueContentLast == NULL) {
-            lpFatherKeyContent->lpFirstValue = lpValueContent;
+        //if (lpFatherKC->lpFirstVC == NULL) {
+        if (lpVCLast == NULL) {
+            lpFatherKC->lpFirstVC = lpVC;
         } else {
-            lpValueContentLast->lpBrotherValue = lpValueContent;
+            lpVCLast->lpBrotherVC = lpVC;
         }
-        lpValueContentLast = lpValueContent;
-        lpValueContent->typecode = TypeCode;
-        lpValueContent->datasize = LengthOfValueData;
-        lpValueContent->lpFatherKey = lpFatherKeyContent;
-        lpValueContent->lpValueName = MYALLOC(strlen(lpValueName) + 1);
-        strcpy(lpValueContent->lpValueName, lpValueName);
+        lpVCLast = lpVC;
+        lpVC->typecode = TypeCode;
+        lpVC->datasize = LengthOfValueData;
+        lpVC->lpFatherKC = lpFatherKC;
+        lpVC->lpValueName = MYALLOC(strlen(lpValueName) + 1);
+        strcpy(lpVC->lpValueName, lpValueName);
 
         if (LengthOfValueData != 0) {
-            lpValueContent->lpValueData = MYALLOC(LengthOfValueData);
-            CopyMemory(lpValueContent->lpValueData, lpValueData, LengthOfValueData);
-            //*(lpValueContent->lpValueData + LengthOfValueData) = 0x00;
+            lpVC->lpValueData = MYALLOC(LengthOfValueData);
+            CopyMemory(lpVC->lpValueData, lpValueData, LengthOfValueData);
+            //*(lpVC->lpValueData + LengthOfValueData) = 0x00;
         }
         nGettingValue++;
 
@@ -992,8 +1067,8 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
         lstrdb1 = MYALLOC0(100);
         sprintf(lstrdb1, "LGVN:%08d LGVD:%08d VN:%08d VD:%08d", LengthOfLongestValueName, LengthOfLongestValueData, LengthOfValueName, LengthOfValueData);
         DebugLog("debug_valuenamedata.log", lstrdb1, hWnd, TRUE);
-        DebugLog("debug_valuenamedata.log", GetWholeValueName(lpValueContent), hWnd, FALSE);
-        DebugLog("debug_valuenamedata.log", GetWholeValueData(lpValueContent), hWnd, TRUE);
+        DebugLog("debug_valuenamedata.log", GetWholeValueName(lpVC), hWnd, FALSE);
+        DebugLog("debug_valuenamedata.log", GetWholeValueData(lpVC), hWnd, TRUE);
         //DebugLog("debug_valuenamedata.log",":",hWnd,FALSE);
         //DebugLog("debug_valuenamedata.log",lpValueData,hWnd,TRUE);
         MYFREE(lstrdb1);
@@ -1011,7 +1086,7 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
     for (i = 0;; i++) {
         LengthOfKeyName = LengthOfLongestSubkeyName;
         *(LPBYTE)lpKeyName = (BYTE)0x00;
-        NTr = RegEnumKeyEx(hkey, i, lpKeyName, &LengthOfKeyName, NULL, NULL, NULL, &ftLastWrite);
+        NTr = RegEnumKeyEx(hRegKey, i, lpKeyName, &LengthOfKeyName, NULL, NULL, NULL, &ftLastWrite);
         if (NTr == ERROR_NO_MORE_ITEMS) {
             break;
         } else {
@@ -1019,41 +1094,41 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
                 continue;
             }
         }
-        lpKeyContent = MYALLOC0(sizeof(KEYCONTENT));
-        //if (lpFatherKeyContent->lpFirstSubKey == NULL) {
-        if (lpKeyContentLast == NULL) {
-            lpFatherKeyContent->lpFirstSubKey = lpKeyContent;
+        lpKC = MYALLOC0(sizeof(KEYCONTENT));
+        //if (lpFatherKC->lpFirstSubKC == NULL) {
+        if (lpKCLast == NULL) {
+            lpFatherKC->lpFirstSubKC = lpKC;
         } else {
-            lpKeyContentLast->lpBrotherKey = lpKeyContent;
+            lpKCLast->lpBrotherKC = lpKC;
         }
-        lpKeyContentLast = lpKeyContent;
-        lpKeyContent->lpKeyName = MYALLOC(strlen(lpKeyName) + 1);
-        strcpy(lpKeyContent->lpKeyName, lpKeyName);
-        lpKeyContent->lpFatherKey = lpFatherKeyContent;
+        lpKCLast = lpKC;
+        lpKC->lpKeyName = MYALLOC(strlen(lpKeyName) + 1);
+        strcpy(lpKC->lpKeyName, lpKeyName);
+        lpKC->lpFatherKC = lpFatherKC;
         //DebugLog("debug_getkey.log",lpKeyName,hWnd,TRUE);
 
 #ifdef DEBUGLOG
         lstrdb1 = MYALLOC0(100);
         sprintf(lstrdb1, "LGKN:%08d KN:%08d", LengthOfLongestSubkeyName, LengthOfKeyName);
         DebugLog("debug_key.log", lstrdb1, hWnd, TRUE);
-        DebugLog("debug_key.log", GetWholeKeyName(lpKeyContent), hWnd, TRUE);
+        DebugLog("debug_key.log", GetWholeKeyName(lpKC), hWnd, TRUE);
         MYFREE(lstrdb1);
 
 #endif
 
         nGettingKey++;
 
-        if (RegOpenKeyEx(hkey, lpKeyName, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &Subhkey) != ERROR_SUCCESS) {
+        if (RegOpenKeyEx(hRegKey, lpKeyName, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hRegSubKey) != ERROR_SUCCESS) {
             continue;
         }
         if (IsInSkipList(lpKeyName, lplpRegSkipStrings)) {
             // tfx
-            RegCloseKey(Subhkey);  // 1.8.2 seperate
+            RegCloseKey(hRegSubKey);  // 1.8.2 seperate
             continue;
         }
 
-        GetRegistrySnap(Subhkey, lpKeyContent);
-        RegCloseKey(Subhkey);
+        GetRegistrySnap(hRegSubKey, lpKC);
+        RegCloseKey(hRegSubKey);
     }
 
     nGettingTime = GetTickCount();
@@ -1066,84 +1141,12 @@ VOID GetRegistrySnap(HKEY hkey, LPKEYCONTENT lpFatherKeyContent)
 
 
 // ----------------------------------------------------------------------
-// Clear comparison match flags in all registry keys
-// ----------------------------------------------------------------------
-VOID ClearKeyMatchTag(LPKEYCONTENT lpKeyContent)
-{
-    LPVALUECONTENT lpValue;
-
-    if (NULL != lpKeyContent) {
-        lpKeyContent->bkeymatch = 0;
-        for (lpValue = lpKeyContent->lpFirstValue; NULL != lpValue; lpValue = lpValue->lpBrotherValue) {
-            lpValue->bvaluematch = 0;
-        }
-        ClearKeyMatchTag(lpKeyContent->lpFirstSubKey);
-        ClearKeyMatchTag(lpKeyContent->lpBrotherKey);
-    }
-}
-
-
-// ----------------------------------------------------------------------
-// Free all registry keys and values
-// ----------------------------------------------------------------------
-VOID FreeAllValueContent(LPVALUECONTENT lpValueContent)
-{
-    if (NULL != lpValueContent) {
-        if (NULL != lpValueContent->lpValueName) {
-            MYFREE(lpValueContent->lpValueName);
-        }
-        if (NULL != lpValueContent->lpValueData) {
-            MYFREE(lpValueContent->lpValueData);
-        }
-        FreeAllValueContent(lpValueContent->lpBrotherValue);
-        MYFREE(lpValueContent);
-    }
-}
-
-// ----------------------------------------------------------------------
-// Free all registry keys and values
-// ----------------------------------------------------------------------
-VOID FreeAllKeyContent(LPKEYCONTENT lpKeyContent)
-{
-    if (NULL != lpKeyContent) {
-        if (NULL != lpKeyContent->lpKeyName) {
-            MYFREE(lpKeyContent->lpKeyName);
-        }
-        FreeAllValueContent(lpKeyContent->lpFirstValue);
-        FreeAllKeyContent(lpKeyContent->lpFirstSubKey);
-        FreeAllKeyContent(lpKeyContent->lpBrotherKey);
-        MYFREE(lpKeyContent);
-    }
-}
-
-// ----------------------------------------------------------------------
-// Free shot completely and initialize
-// ----------------------------------------------------------------------
-VOID FreeShot(LPREGSHOT lpShot)
-{
-    if (NULL != lpShot->computername) {
-        MYFREE(lpShot->computername);
-    }
-
-    if (NULL != lpShot->username) {
-        MYFREE(lpShot->username);
-    }
-
-    FreeAllKeyContent(lpShot->lpHKLM);
-    FreeAllKeyContent(lpShot->lpHKU);
-    FreeAllFileHead(lpShot->lpHF);
-
-    ZeroMemory(lpShot, sizeof(REGSHOT));
-}
-
-
-// ----------------------------------------------------------------------
 // Save registry key with values to HIVE file
 //
 // This routine is called recursively to store the keys of the Registry tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
+VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
 {
     DWORD nFPKey;
 
@@ -1171,8 +1174,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
 
     // New since key content version 2
     sKC.nKeyNameLen = 0;
-    if (NULL != lpKeyContent->lpKeyName) {
-        sKC.nKeyNameLen = (DWORD)_tcslen(lpKeyContent->lpKeyName);
+    if (NULL != lpKC->lpKeyName) {
+        sKC.nKeyNameLen = (DWORD)_tcslen(lpKC->lpKeyName);
 #ifdef _UNICODE
         sKC.nKeyNameLen++;  // account for NULL char
         // Key name will always be stored behind the structure, so its position is already known
@@ -1190,8 +1193,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
     WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
 
     // Write key name to file
-    if (NULL != lpKeyContent->lpKeyName) {
-        WriteFile(hFileWholeReg, lpKeyContent->lpKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
+    if (NULL != lpKC->lpKeyName) {
+        WriteFile(hFileWholeReg, lpKC->lpKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
     } else {
         // Write empty string for backward compatibility
@@ -1200,30 +1203,31 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
     }
 
     // Save the values of current key
-    if (NULL != lpKeyContent->lpFirstValue) {
-        LPVALUECONTENT lpValueContent;
+    if (NULL != lpKC->lpFirstVC) {
+        LPVALUECONTENT lpVC;
+        DWORD nFPValueCaller;
         DWORD nFPValue;
-        DWORD nFPCaller;
 
         // Write all values of key
-        nFPCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstValue);  // Write position of first value into key
-        for (lpValueContent = lpKeyContent->lpFirstValue; NULL != lpValueContent; lpValueContent = lpValueContent->lpBrotherValue) {
+        nFPValueCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstValue);  // Write position of first value into key
+        for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
             nFPValue = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
 
             // Write position of previous value content in value content field ofsBrotherValue
-            if (0 < nFPCaller) {
-                SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
+            if (0 < nFPValueCaller) {
+                SetFilePointer(hFileWholeReg, nFPValueCaller, NULL, FILE_BEGIN);
                 WriteFile(hFileWholeReg, &nFPValue, sizeof(nFPValue), &NBW, NULL);
 
                 SetFilePointer(hFileWholeReg, nFPValue, NULL, FILE_BEGIN);
             }
+            nFPValueCaller = nFPValue + offsetof(SAVEVALUECONTENT, ofsBrotherValue);
 
             // Initialize key content
             ZeroMemory(&sVC, sizeof(sVC));
 
             // Copy values
-            sVC.typecode = lpValueContent->typecode;
-            sVC.datasize = lpValueContent->datasize;
+            sVC.typecode = lpVC->typecode;
+            sVC.datasize = lpVC->datasize;
 
             // Set file positions of the relatives inside the tree
             sVC.ofsValueData = 0;       // not known yet, may be re-written in this iteration
@@ -1232,8 +1236,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
 
             // New since value content version 2
             sVC.nValueNameLen = 0;
-            if (NULL != lpValueContent->lpValueName) {
-                sVC.nValueNameLen = (DWORD)_tcslen(lpValueContent->lpValueName);
+            if (NULL != lpVC->lpValueName) {
+                sVC.nValueNameLen = (DWORD)_tcslen(lpVC->lpValueName);
 #ifdef _UNICODE
                 sVC.nValueNameLen++;  // account for NULL char
                 // Value name will always be stored behind the structure, so its position is already known
@@ -1251,8 +1255,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
             WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
 
             // Write value name to file
-            if (NULL != lpValueContent->lpValueName) {
-                WriteFile(hFileWholeReg, lpValueContent->lpValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
+            if (NULL != lpVC->lpValueName) {
+                WriteFile(hFileWholeReg, lpVC->lpValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
             } else {
                 // Write empty string for backward compatibility
@@ -1261,7 +1265,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
             }
 
             // Write value data to file
-            if (0 < lpValueContent->datasize) {
+            if (0 < lpVC->datasize) {
                 DWORD nFPValueData;
 
                 // Write position of value data in value content field ofsValueData
@@ -1273,10 +1277,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
                 SetFilePointer(hFileWholeReg, nFPValueData, NULL, FILE_BEGIN);
 
                 // Write value data
-                WriteFile(hFileWholeReg, lpValueContent->lpValueData, lpValueContent->datasize, &NBW, NULL);
+                WriteFile(hFileWholeReg, lpVC->lpValueData, lpVC->datasize, &NBW, NULL);
             }
-
-            nFPCaller = nFPValue + offsetof(SAVEVALUECONTENT, ofsBrotherValue);
         }
     }
 
@@ -1284,14 +1286,14 @@ VOID SaveRegKey(LPKEYCONTENT lpKeyContent, DWORD nFPFatherKey, DWORD nFPCaller)
 
     // If the entry has childs, then do a recursive call for the first child
     // Pass this entry as father and "ofsFirstSubKey" position for storing the first child's position
-    if (NULL != lpKeyContent->lpFirstSubKey) {
-        SaveRegKey(lpKeyContent->lpFirstSubKey, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
+    if (NULL != lpKC->lpFirstSubKC) {
+        SaveRegKey(lpKC->lpFirstSubKC, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
     }
 
     // If the entry has a following brother, then do a recursive call for the following brother
     // Pass father as father and "ofsBrotherKey" position for storing the next brother's position
-    if (NULL != lpKeyContent->lpBrotherKey) {
-        SaveRegKey(lpKeyContent->lpBrotherKey, nFPFatherKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsBrotherKey));
+    if (NULL != lpKC->lpBrotherKC) {
+        SaveRegKey(lpKC->lpBrotherKC, nFPFatherKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsBrotherKey));
     }
 
     // TODO: Need to adjust progress bar para!!
@@ -1327,7 +1329,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     ZeroMemory(&opfn, sizeof(opfn));
     opfn.lStructSize = sizeof(opfn);
     opfn.hwndOwner = hWnd;
-    opfn.lpstrFilter = str_filter;
+    opfn.lpstrFilter = szFilter;
     opfn.lpstrFile = filepath;
     opfn.nMaxFile = MAX_PATH;  // incl. NULL character
     opfn.lpstrInitialDir = lpLastSaveDir;
@@ -1354,7 +1356,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     ZeroMemory(&fileheader, sizeof(fileheader));
 
     // Copy SBCS signature to header (even in Unicode builds for backwards compatibility)
-    strncpy(fileheader.signature, str_RegshotFileSignature, MAX_SIGNATURE_LENGTH);
+    strncpy(fileheader.signature, szRegshotFileSignature, MAX_SIGNATURE_LENGTH);
 
     // Set file positions of hives inside the file
     fileheader.ofsHKLM = 0;   // not known yet, may be empty
@@ -1474,7 +1476,7 @@ VOID SaveHive(LPREGSHOT lpShot)
 // ----------------------------------------------------------------------
 //
 // ----------------------------------------------------------------------
-size_t AdjustBuffer(LPBYTE *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign)
+size_t AdjustBuffer(PVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign)
 {
     if (NULL == *lpBuffer) {
         nCurrentSize = 0;
@@ -1505,9 +1507,9 @@ size_t AdjustBuffer(LPBYTE *lpBuffer, size_t nCurrentSize, size_t nWantedSize, s
 // ----------------------------------------------------------------------
 // Load registry key with values from HIVE file
 // ----------------------------------------------------------------------
-VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lplpCaller)
+VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
 {
-    LPKEYCONTENT lpKey;
+    LPKEYCONTENT lpKC;
     DWORD ofsFirstSubKey;
     DWORD ofsBrotherKey;
 
@@ -1517,16 +1519,16 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lpl
 
     // Create new key content
     // put in a separate var for later use
-    lpKey = MYALLOC0(sizeof(KEYCONTENT));
-    ZeroMemory(lpKey, sizeof(KEYCONTENT));
+    lpKC = MYALLOC0(sizeof(KEYCONTENT));
+    ZeroMemory(lpKC, sizeof(KEYCONTENT));
 
     // Write pointer to current key into caller's pointer
     if (NULL != lplpCaller) {
-        *lplpCaller = lpKey;
+        *lplpCaller = lpKC;
     }
 
     // Set father of current key
-    lpKey->lpFatherKey = lpFatherKey;
+    lpKC->lpFatherKC = lpFatherKC;
 
     // Copy key name
     if (KEYCONTENT_VERSION_2 > fileheader.nKCVersion) {
@@ -1538,18 +1540,18 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lpl
     if (0 < sKC.nKeyNameLen) {  // otherwise leave it NULL
         // Copy string to an aligned memory block
         nSourceSize = sKC.nKeyNameLen * fileheader.nCharSize;
-        nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, nSourceSize, REGSHOT_STRING_BUFFER_BYTES);
-        ZeroMemory(lpszBuffer, nBufferSize);
-        CopyMemory(lpszBuffer, (lpFileBuffer + sKC.ofsKeyName), nSourceSize);
+        nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+        ZeroMemory(lpStringBuffer, nStringBufferSize);
+        CopyMemory(lpStringBuffer, (lpFileBuffer + sKC.ofsKeyName), nSourceSize);
 
-        lpKey->lpKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
+        lpKC->lpKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
         if (sizeof(TCHAR) == fileheader.nCharSize) {
-            _tcscpy(lpKey->lpKeyName, (LPTSTR)lpszBuffer);
+            _tcscpy(lpKC->lpKeyName, lpStringBuffer);
         } else {
 #ifdef _UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, -1, lpKey->lpKeyName, sKC.nKeyNameLen);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpKC->lpKeyName, sKC.nKeyNameLen);
 #else
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpszBuffer, -1, lpKey->lpKeyName, sKC.nKeyNameLen, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpKC->lpKeyName, sKC.nKeyNameLen, NULL, NULL);
 #endif
         }
     }
@@ -1558,36 +1560,36 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lpl
 
     // Copy the value contents of the current key
     if (0 != sKC.ofsFirstValue) {
-        LPVALUECONTENT lpValue;
-        LPVALUECONTENT lpValuePrev;
+        LPVALUECONTENT lpVC;
+        LPVALUECONTENT lpVCPrev;
         DWORD ofsValueContent;
 
-        lpValuePrev = NULL;
+        lpVCPrev = NULL;
         for (ofsValueContent = sKC.ofsFirstValue; 0 != ofsValueContent; ofsValueContent = sVC.ofsBrotherValue) {
             // Copy SAVEVALUECONTENT to aligned memory block
             ZeroMemory(&sVC, sizeof(sVC));
             CopyMemory(&sVC, (lpFileBuffer + ofsValueContent), fileheader.nVCSize);
 
             // Create new value content
-            lpValue = MYALLOC0(sizeof(VALUECONTENT));
-            ZeroMemory(lpValue, sizeof(VALUECONTENT));
+            lpVC = MYALLOC0(sizeof(VALUECONTENT));
+            ZeroMemory(lpVC, sizeof(VALUECONTENT));
 
             // Write pointer to current value into key's first value pointer (only once)
-            if (NULL != lpKey->lpFirstValue) {
-                lpKey->lpFirstValue = lpValue;
+            if (NULL != lpKC->lpFirstVC) {
+                lpKC->lpFirstVC = lpVC;
             }
-
             // Write pointer to current value into previous value's next value pointer
-            if (NULL != lpValuePrev) {
-                lpValuePrev->lpBrotherValue = lpValue;
+            if (NULL != lpVCPrev) {
+                lpVCPrev->lpBrotherVC = lpVC;
             }
+            lpVCPrev = lpVC;
 
             // Set father key to current key
-            lpValue->lpFatherKey = lpKey;
+            lpVC->lpFatherKC = lpKC;
 
             // Copy values
-            lpValue->typecode = sVC.typecode;
-            lpValue->datasize = sVC.datasize;
+            lpVC->typecode = sVC.typecode;
+            lpVC->datasize = sVC.datasize;
 
             // Copy value name
             if (VALUECONTENT_VERSION_2 > fileheader.nVCVersion) {
@@ -1599,29 +1601,27 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lpl
             if (0 < sVC.nValueNameLen) {  // otherwise leave it NULL
                 // Copy string to an aligned memory block
                 nSourceSize = sVC.nValueNameLen * fileheader.nCharSize;
-                nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, nSourceSize, REGSHOT_STRING_BUFFER_BYTES);
-                ZeroMemory(lpszBuffer, nBufferSize);
-                CopyMemory(lpszBuffer, (lpFileBuffer + sVC.ofsValueName), nSourceSize);
+                nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+                ZeroMemory(lpStringBuffer, nStringBufferSize);
+                CopyMemory(lpStringBuffer, (lpFileBuffer + sVC.ofsValueName), nSourceSize);
 
-                lpValue->lpValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
+                lpVC->lpValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
                 if (sizeof(TCHAR) == fileheader.nCharSize) {
-                    _tcscpy(lpValue->lpValueName, (LPTSTR)lpszBuffer);
+                    _tcscpy(lpVC->lpValueName, lpStringBuffer);
                 } else {
 #ifdef _UNICODE
-                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, -1, lpValue->lpValueName, sVC.nValueNameLen);
+                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpVC->lpValueName, sVC.nValueNameLen);
 #else
-                    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpszBuffer, -1, lpValue->lpValueName, sVC.nValueNameLen, NULL, NULL);
+                    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpVC->lpValueName, sVC.nValueNameLen, NULL, NULL);
 #endif
                 }
             }
 
             // Copy value data
             if (0 < sVC.datasize) {  // otherwise leave it NULL
-                lpValue->lpValueData = MYALLOC0(sVC.datasize);
-                CopyMemory(lpValue->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.datasize);
+                lpVC->lpValueData = MYALLOC0(sVC.datasize);
+                CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.datasize);
             }
-
-            lpValuePrev = lpValue;
 
             nGettingValue++;
         }
@@ -1638,15 +1638,15 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKey, LPKEYCONTENT *lpl
     // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
 
     // If the entry has childs, then do a recursive call for the first child
-    // Pass this entry as father and "lpFirstSubKey" pointer for storing the first child's pointer
+    // Pass this entry as father and "lpFirstSubKC" pointer for storing the first child's pointer
     if (0 != ofsFirstSubKey) {
-        LoadRegKey(ofsFirstSubKey, lpKey, &lpKey->lpFirstSubKey);
+        LoadRegKey(ofsFirstSubKey, lpKC, &lpKC->lpFirstSubKC);
     }
 
     // If the entry has a following brother, then do a recursive call for the following brother
-    // Pass father as father and "lpBrotherKey" pointer for storing the next brother's pointer
+    // Pass father as father and "lpBrotherKC" pointer for storing the next brother's pointer
     if (0 != ofsBrotherKey) {
-        LoadRegKey(ofsBrotherKey, lpFatherKey, &lpKey->lpBrotherKey);
+        LoadRegKey(ofsBrotherKey, lpFatherKC, &lpKC->lpBrotherKC);
     }
 }
 
@@ -1670,7 +1670,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     ZeroMemory(&opfn, sizeof(opfn));
     opfn.lStructSize = sizeof(opfn);
     opfn.hwndOwner = hWnd;
-    opfn.lpstrFilter = str_filter;
+    opfn.lpstrFilter = szFilter;
     opfn.lpstrFile = filepath;
     opfn.nMaxFile = MAX_PATH;  // incl. NULL character
     opfn.lpstrInitialDir = lpLastOpenDir;
@@ -1703,7 +1703,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     ReadFile(hFileWholeReg, &fileheader, offsetof(FILEHEADER, ofsHKLM), &NBW, NULL);
 
     // Check file signature
-    if ((0 != strncmp(str_RegshotFileSignature_SBCS, fileheader.signature, MAX_SIGNATURE_LENGTH)) && (0 != strncmp(str_RegshotFileSignature_UTF16, fileheader.signature, MAX_SIGNATURE_LENGTH))) {
+    if ((0 != strncmp(szRegshotFileSignatureSBCS, fileheader.signature, MAX_SIGNATURE_LENGTH)) && (0 != strncmp(szRegshotFileSignatureUTF16, fileheader.signature, MAX_SIGNATURE_LENGTH))) {
         CloseHandle(hFileWholeReg);
         ErrMsg(TEXT("It is not a valid Regshot hive file!"));
         return FALSE;
@@ -1827,25 +1827,25 @@ BOOL LoadHive(LPREGSHOT lpShot)
     // * remember that files from older versions do not provide these additional data
 
     // New temporary string buffer
-    lpszBuffer = NULL;
+    lpStringBuffer = NULL;
 
     // Copy computer name from file header to shot data
     if (FILEHEADER_VERSION_2 <= fileheader.nFHVersion) {
         if (0 < fileheader.nComputerNameLen) {  // otherwise leave it NULL
             // Copy string to an aligned memory block
             nSourceSize = fileheader.nComputerNameLen * fileheader.nCharSize;
-            nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, nSourceSize, REGSHOT_STRING_BUFFER_BYTES);
-            ZeroMemory(lpszBuffer, nBufferSize);
-            CopyMemory(lpszBuffer, lpFileBuffer + fileheader.ofsComputerName, nSourceSize);
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, (lpFileBuffer + fileheader.ofsComputerName), nSourceSize);
 
             lpShot->computername = MYALLOC0(fileheader.nComputerNameLen * sizeof(TCHAR));
             if (sizeof(TCHAR) == fileheader.nCharSize) {
-                _tcscpy(lpShot->computername, (LPTSTR)lpszBuffer);
+                _tcscpy(lpShot->computername, lpStringBuffer);
             } else {
 #ifdef _UNICODE
-                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, -1, lpShot->computername, fileheader.nComputerNameLen);
+                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpShot->computername, fileheader.nComputerNameLen);
 #else
-                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpszBuffer, -1, lpShot->computername, fileheader.nComputerNameLen, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpShot->computername, fileheader.nComputerNameLen, NULL, NULL);
 #endif
             }
         }
@@ -1853,15 +1853,15 @@ BOOL LoadHive(LPREGSHOT lpShot)
         // Copy string to an aligned memory block
         nSourceSize = strnlen((const char *)&fileheader.computername, OLD_COMPUTERNAMELEN);
         if (0 < nSourceSize) {  // otherwise leave it NULL
-            nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, (nSourceSize + 1), REGSHOT_STRING_BUFFER_BYTES);
-            ZeroMemory(lpszBuffer, nBufferSize);
-            CopyMemory(lpszBuffer, &fileheader.computername, nSourceSize);
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, (nSourceSize + 1), REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, &fileheader.computername, nSourceSize);
 
             lpShot->computername = MYALLOC0((nSourceSize + 1) * sizeof(TCHAR));
 #ifdef _UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, (nSourceSize + 1), lpShot->computername, (nSourceSize + 1));
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, (nSourceSize + 1), lpShot->computername, (nSourceSize + 1));
 #else
-            strncpy(lpShot->computername, (const char *)lpszBuffer, nSourceSize);
+            strncpy(lpShot->computername, lpStringBuffer, nSourceSize);
 #endif
             lpShot->computername[nSourceSize] = 0;
         }
@@ -1872,18 +1872,18 @@ BOOL LoadHive(LPREGSHOT lpShot)
         if (0 < fileheader.nUserNameLen) {  // otherwise leave it NULL
             // Copy string to an aligned memory block
             nSourceSize = fileheader.nUserNameLen * fileheader.nCharSize;
-            nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, nSourceSize, REGSHOT_STRING_BUFFER_BYTES);
-            ZeroMemory(lpszBuffer, nBufferSize);
-            CopyMemory(lpszBuffer, lpFileBuffer + fileheader.ofsUserName, nSourceSize);
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, (lpFileBuffer + fileheader.ofsUserName), nSourceSize);
 
             lpShot->username = MYALLOC0(fileheader.nUserNameLen * sizeof(TCHAR));
             if (sizeof(TCHAR) == fileheader.nCharSize) {
-                _tcscpy(lpShot->username, (LPTSTR)lpszBuffer);
+                _tcscpy(lpShot->username, lpStringBuffer);
             } else {
 #ifdef _UNICODE
-                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, -1, lpShot->username, fileheader.nUserNameLen);
+                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpShot->username, fileheader.nUserNameLen);
 #else
-                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpszBuffer, -1, lpShot->username, fileheader.nUserNameLen, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpShot->username, fileheader.nUserNameLen, NULL, NULL);
 #endif
             }
         }
@@ -1891,15 +1891,15 @@ BOOL LoadHive(LPREGSHOT lpShot)
         // Copy string to an aligned memory block
         nSourceSize = strnlen((const char *)&fileheader.username, OLD_COMPUTERNAMELEN);
         if (0 < nSourceSize) {  // otherwise leave it NULL
-            nBufferSize = AdjustBuffer(&lpszBuffer, nBufferSize, (nSourceSize + 1), REGSHOT_STRING_BUFFER_BYTES);
-            ZeroMemory(lpszBuffer, nBufferSize);
-            CopyMemory(lpszBuffer, &fileheader.username, nSourceSize);
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, (nSourceSize + 1), REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, &fileheader.username, nSourceSize);
 
             lpShot->username = MYALLOC0((nSourceSize + 1) * sizeof(TCHAR));
 #ifdef _UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpszBuffer, (nSourceSize + 1), lpShot->username, (nSourceSize + 1));
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, (nSourceSize + 1), lpShot->username, (nSourceSize + 1));
 #else
-            strncpy(lpShot->username, (const char *)lpszBuffer, nSourceSize);
+            strncpy(lpShot->username, lpStringBuffer, nSourceSize);
 #endif
             lpShot->username[nSourceSize] = 0;
         }
@@ -1930,11 +1930,15 @@ BOOL LoadHive(LPREGSHOT lpShot)
         SetDlgItemText(hWnd, IDC_EDITDIR, TEXT(""));
     }
 
-    MYFREE(lpszBuffer);
-    lpszBuffer = NULL;
+    if (NULL != lpStringBuffer) {
+        MYFREE(lpStringBuffer);
+        lpStringBuffer = NULL;
+    }
 
-    MYFREE(lpFileBuffer);
-    lpFileBuffer = NULL;
+    if (NULL != lpFileBuffer) {
+        MYFREE(lpFileBuffer);
+        lpFileBuffer = NULL;
+    }
 
     UI_AfterShot();
 
