@@ -28,10 +28,6 @@
 SAVEFILECONTENT sFC;
 SAVEHEADFILE sHF;
 
-extern LPBYTE lan_dir;
-extern LPBYTE lan_file;
-
-
 //-------------------------------------------------------------
 // Routine to get Whole File Name[root dir] from a FILECONTENT
 //-------------------------------------------------------------
@@ -196,7 +192,7 @@ VOID GetFilesSnap(LPFILECONTENT lpFatherFC)
 
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
-        UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
+        UpdateCounters(asLangTexts[iszTextDir].lpString, asLangTexts[iszTextFile].lpString, nGettingDir, nGettingFile);
     }
 
     return ;
@@ -555,7 +551,7 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
 
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
-        UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
+        UpdateCounters(asLangTexts[iszTextDir].lpString, asLangTexts[iszTextFile].lpString, nGettingDir, nGettingFile);
     }
 
     // ATTENTION!!! sFC is INVALID from this point on, due to recursive calls

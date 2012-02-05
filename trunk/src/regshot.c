@@ -59,30 +59,6 @@ size_t nSourceSize;
 #define MAX_SIGNATURE_LENGTH 12
 #define REGSHOT_READ_BLOCK_SIZE 8192
 
-extern LPBYTE lan_errorcreatefile;
-extern LPBYTE lan_comments;
-extern LPBYTE lan_datetime;
-extern LPBYTE lan_computer;
-extern LPBYTE lan_username;
-extern LPBYTE lan_keydel;
-extern LPBYTE lan_keyadd;
-extern LPBYTE lan_valdel;
-extern LPBYTE lan_valadd;
-extern LPBYTE lan_valmodi;
-extern LPBYTE lan_filedel;
-extern LPBYTE lan_fileadd;
-extern LPBYTE lan_filemodi;
-extern LPBYTE lan_diradd;
-extern LPBYTE lan_dirdel;
-extern LPBYTE lan_dirmodi;
-extern LPBYTE lan_total;
-extern LPBYTE lan_key;
-extern LPBYTE lan_value;
-extern LPBYTE lan_dir;
-extern LPBYTE lan_file;
-extern LPBYTE lan_errorexecviewer;
-extern LPBYTE lan_erroropenfile;
-
 extern char *str_prgname;   // be careful of extern ref! Must be the same when declaring them, otherwise pointer will mis-point!
 extern char szCRLF[];
 
@@ -739,7 +715,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
                 if (GetLastError() == ERROR_FILE_EXISTS) {    // My God! I use stupid ERROR_ALREADY_EXISTS first!!
                     continue;
                 } else {
-                    ErrMsg((LPCSTR)lan_errorcreatefile);
+                    ErrMsg(asLangTexts[iszTextErrorCreateFile].lpString);
                     return FALSE;
                 }
             } else {
@@ -747,7 +723,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
             }
         }
         if (filetail >= MAXAMOUNTOFFILE) {
-            ErrMsg((LPCSTR)lan_errorcreatefile);
+            ErrMsg(asLangTexts[iszTextErrorCreateFile].lpString);
             return FALSE;
         }
 
@@ -762,7 +738,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     //_asm int 3;
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpstrcomp, COMMENTLENGTH);
-    WriteTitle((LPSTR)lan_comments, lpstrcomp, isHTML);
+    WriteTitle(asLangTexts[iszTextComments].lpString, lpstrcomp, isHTML);
 
 
     sprintf(lpstrcomp, "%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d",
@@ -781,7 +757,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
            );
 
-    WriteTitle((LPSTR)lan_datetime, lpstrcomp, isHTML);
+    WriteTitle(asLangTexts[iszTextDateTime].lpString, lpstrcomp, isHTML);
 
 
     *lpstrcomp = 0x00;    //ZeroMemory(lpstrcomp,buffersize);
@@ -793,7 +769,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (NULL != lpShot2->computername) {
         strcat(lpstrcomp, lpShot2->computername);
     }
-    WriteTitle((LPSTR)lan_computer, lpstrcomp, isHTML);
+    WriteTitle(asLangTexts[iszTextComputer].lpString, lpstrcomp, isHTML);
 
     *lpstrcomp = 0x00;    //ZeroMemory(lpstrcomp,buffersize);
 
@@ -805,63 +781,63 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         strcat(lpstrcomp, lpShot2->username);
     }
 
-    WriteTitle((LPSTR)lan_username, lpstrcomp, isHTML);
+    WriteTitle(asLangTexts[iszTextUsername].lpString, lpstrcomp, isHTML);
 
     MYFREE(lpstrcomp);
 
     // Write keydel part
     if (nKEYDEL != 0) {
-        WriteHead(lan_keydel, nKEYDEL, isHTML);
+        WriteHead(asLangTexts[iszTextKeyDel].lpString, nKEYDEL, isHTML);
         WritePart(lpKEYDELHEAD, isHTML, FALSE);
     }
     // Write keyadd part
     if (nKEYADD != 0) {
-        WriteHead(lan_keyadd, nKEYADD, isHTML);
+        WriteHead(asLangTexts[iszTextKeyAdd].lpString, nKEYADD, isHTML);
         WritePart(lpKEYADDHEAD, isHTML, FALSE);
     }
     // Write valdel part
     if (nVALDEL != 0) {
-        WriteHead(lan_valdel, nVALDEL, isHTML);
+        WriteHead(asLangTexts[iszTextValDel].lpString, nVALDEL, isHTML);
         WritePart(lpVALDELHEAD, isHTML, FALSE);
     }
     // Write valadd part
     if (nVALADD != 0) {
-        WriteHead(lan_valadd, nVALADD, isHTML);
+        WriteHead(asLangTexts[iszTextValAdd].lpString, nVALADD, isHTML);
         WritePart(lpVALADDHEAD, isHTML, FALSE);
     }
     // Write valmodi part
     if (nVALMODI != 0) {
-        WriteHead(lan_valmodi, nVALMODI, isHTML);
+        WriteHead(asLangTexts[iszTextValModi].lpString, nVALMODI, isHTML);
         WritePart(lpVALMODIHEAD, isHTML, TRUE);
     }
     // Write file add part
     if (nFILEADD != 0) {
-        WriteHead(lan_fileadd, nFILEADD, isHTML);
+        WriteHead(asLangTexts[iszTextFileAdd].lpString, nFILEADD, isHTML);
         WritePart(lpFILEADDHEAD, isHTML, FALSE);
     }
     // Write file del part
     if (nFILEDEL != 0) {
-        WriteHead(lan_filedel, nFILEDEL, isHTML);
+        WriteHead(asLangTexts[iszTextFileDel].lpString, nFILEDEL, isHTML);
         WritePart(lpFILEDELHEAD, isHTML, FALSE);
     }
     // Write file modi part
     if (nFILEMODI != 0) {
-        WriteHead(lan_filemodi, nFILEMODI, isHTML);
+        WriteHead(asLangTexts[iszTextFileModi].lpString, nFILEMODI, isHTML);
         WritePart(lpFILEMODIHEAD, isHTML, FALSE);
     }
     // Write directory add part
     if (nDIRADD != 0) {
-        WriteHead(lan_diradd, nDIRADD, isHTML);
+        WriteHead(asLangTexts[iszTextDirAdd].lpString, nDIRADD, isHTML);
         WritePart(lpDIRADDHEAD, isHTML, FALSE);
     }
     // Write directory del part
     if (nDIRDEL != 0) {
-        WriteHead(lan_dirdel, nDIRDEL, isHTML);
+        WriteHead(asLangTexts[iszTextDirDel].lpString, nDIRDEL, isHTML);
         WritePart(lpDIRDELHEAD, isHTML, FALSE);
     }
     // Write directory modi part
     if (nDIRMODI != 0) {
-        WriteHead(lan_dirmodi, nDIRMODI, isHTML);
+        WriteHead(asLangTexts[iszTextDirModi].lpString, nDIRMODI, isHTML);
         WritePart(lpDIRMODIHEAD, isHTML, FALSE);
     }
 
@@ -869,7 +845,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (isHTML == TRUE) {
         WriteHtmlbr();
     }
-    WriteHead(lan_total, nTotal, isHTML);
+    WriteHead(asLangTexts[iszTextTotal].lpString, nTotal, isHTML);
     if (isHTML == TRUE) {
         WriteHtmlover();
     }
@@ -878,7 +854,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     CloseHandle(hFile);
 
     if ((size_t)ShellExecute(hWnd, "open", lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
-        ErrMsg((LPCSTR)lan_errorexecviewer);
+        ErrMsg(asLangTexts[iszTextErrorExecViewer].lpString);
     }
     MYFREE(lpDestFileName);
 
@@ -1133,7 +1109,7 @@ VOID GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC)
 
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
-        UpdateCounters(lan_key, lan_value, nGettingKey, nGettingValue);
+        UpdateCounters(asLangTexts[iszTextKey].lpString, asLangTexts[iszTextValue].lpString, nGettingKey, nGettingValue);
     }
 
     return ;
@@ -1344,7 +1320,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     // Open file for writing
     hFileWholeReg = CreateFile(opfn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFileWholeReg) {
-        ErrMsg((LPCSTR)lan_errorcreatefile);
+        ErrMsg(asLangTexts[iszTextErrorCreateFile].lpString);
         return;
     }
 
@@ -1632,7 +1608,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
 
     nGettingTime = GetTickCount();
     if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
-        UpdateCounters(lan_key, lan_value, nGettingKey, nGettingValue);
+        UpdateCounters(asLangTexts[iszTextKey].lpString, asLangTexts[iszTextValue].lpString, nGettingKey, nGettingValue);
     }
 
     // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
@@ -1685,7 +1661,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     // Open file for reading
     hFileWholeReg = CreateFile(opfn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFileWholeReg) {
-        ErrMsg((LPCSTR)lan_erroropenfile);
+        ErrMsg(asLangTexts[iszTextErrorOpenFile].lpString);
         return FALSE;
     }
 

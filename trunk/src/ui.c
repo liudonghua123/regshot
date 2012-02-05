@@ -22,20 +22,13 @@
 #include "global.h"
 #include "LMCons.h"  // for UNLEN define
 
-extern LPBYTE lan_time;
-extern LPBYTE lan_key;
-extern LPBYTE lan_value;
-extern LPBYTE lan_dir;
-extern LPBYTE lan_file;
-extern LPBYTE lan_menushot;
-extern LPBYTE lan_menushotsave;
-extern LPBYTE lan_menuload;
-
 
 char USERSSTRING_LONG[]        = "HKEY_USERS";   // 1.6 using long name, so in 1.8.1 add an option
 char USERSSTRING[]             = "HKU";          // in regshot.ini, "UseLongRegHead" to control this
 char LOCALMACHINESTRING[]      = "HKLM";
 char LOCALMACHINESTRING_LONG[] = "HKEY_LOCAL_MACHINE";
+
+LPTSTR lpszMessage;
 
 
 void ShowHideCounters(int nCmdShow) // 1.8.2
@@ -62,16 +55,16 @@ VOID InitProgressBar(VOID)
 }
 
 
-void UpdateCounters(LPBYTE title1, LPBYTE title2, DWORD count1, DWORD count2)
+VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2)
 {
     //nGettingTime = GetTickCount();
     nBASETIME1 = nGettingTime;
-    sprintf(lpMESSAGE, "%s%u%s%u%s", lan_time, (nGettingTime - nBASETIME) / 1000, "s", (nGettingTime - nBASETIME) % 1000, "ms");
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
-    sprintf(lpMESSAGE, "%s%u", title1, count1);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
-    sprintf(lpMESSAGE, "%s%u", title2, count2);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
+    _stprintf(lpszMessage, TEXT("%s%u%s%u%s"), asLangTexts[iszTextTime].lpString, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    _stprintf(lpszMessage, TEXT("%s%u"), lpszTitle1, nCount1);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    _stprintf(lpszMessage, TEXT("%s%u"), lpszTitle2, nCount2);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
     UpdateWindow(hWnd);
     PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
@@ -88,10 +81,10 @@ VOID UI_BeforeShot(DWORD id)
     hSaveCursor = SetCursor(hHourGlass);
     EnableWindow(GetDlgItem(hWnd, id), FALSE);
     // Added in 1.8.2
-    strcpy(lpMESSAGE, " "); // clear the counters
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpMESSAGE);
+    strcpy(lpszMessage, " "); // clear the counters
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     ShowHideCounters(SW_SHOW);
 }
 
@@ -200,7 +193,7 @@ VOID Shot(LPREGSHOT lpShot)
     GetRegistrySnap(HKEY_LOCAL_MACHINE, lpShot->lpHKLM);
     GetRegistrySnap(HKEY_USERS, lpShot->lpHKU);
     nGettingTime = GetTickCount();
-    UpdateCounters(lan_key, lan_value, nGettingKey, nGettingValue);
+    UpdateCounters(asLangTexts[iszTextKey].lpString, asLangTexts[iszTextValue].lpString, nGettingKey, nGettingValue);
 
     if (SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
         size_t  nLengthofStr;
@@ -251,7 +244,7 @@ VOID Shot(LPREGSHOT lpShot)
 
                         GetFilesSnap(lpHF->lpFirstFC);
                         nGettingTime = GetTickCount();
-                        UpdateCounters(lan_dir, lan_file, nGettingDir, nGettingFile);
+                        UpdateCounters(asLangTexts[iszTextDir].lpString, asLangTexts[iszTextFile].lpString, nGettingDir, nGettingFile);
                     }
                     lpSubExtDir = lpExtDir + i + 1;
                 }
@@ -279,9 +272,9 @@ VOID Shot(LPREGSHOT lpShot)
 VOID CreateShotPopupMenu(VOID)
 {
     hMenu = CreatePopupMenu();
-    AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, (LPCSTR)lan_menushot);
-    AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, (LPCSTR)lan_menushotsave);
+    AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, asLangTexts[iszTextMenuShot].lpString);
+    AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, asLangTexts[iszTextMenuShotSave].lpString);
     AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
-    AppendMenu(hMenu, MF_STRING, IDM_LOAD, (LPCSTR)lan_menuload);
+    AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuShotLoad].lpString);
     SetMenuDefaultItem(hMenu, IDM_SHOTONLY, FALSE);
 }
