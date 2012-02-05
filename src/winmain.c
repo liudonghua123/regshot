@@ -27,18 +27,11 @@
 char *str_prgname = REGSHOT_TITLE " " REGSHOT_VERSION_STRING;  // tfx  add program titile
 char *str_aboutme = "Regshot is a free and open source registry compare utility.\nversion: " REGSHOT_VERSION_DESCRIPTION "\n\nhttp://sourceforge.net/projects/regshot/\n\n" REGSHOT_VERSION_COPYRIGHT "\n\n";
 
-LPSTR   REGSHOTINI          = "regshot.ini"; // tfx
-LPSTR   REGSHOTLANGUAGEFILE = "language.ini";
+LPTSTR REGSHOTINI          = TEXT("regshot.ini"); // tfx
+LPTSTR REGSHOTLANGUAGEFILE = TEXT("language.ini");
 
 REGSHOT Shot1;
 REGSHOT Shot2;
-
-extern LPBYTE lan_menuclearallshots;  // Be careful of extern ref! must be the same when declare them,
-extern LPBYTE lan_menuclearshot1;     // otherwise pointer would mis-point, and I can not use sizeof
-extern LPBYTE lan_menuclearshot2;     // to get real array size in extern ref
-extern LPBYTE lan_about;
-extern LPSTR str_DefaultLanguage;
-extern LPSTR str_Original;
 
 
 // this new function added by Youri in 1.8.2, for expanding path in browse dialog
@@ -70,25 +63,22 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN / 2), (LPARAM)0);
 
             //enlarge some buffer in 201201
-            lpCurrentLanguage = MYALLOC0(SIZEOF_SINGLE_LANGUAGENAME);
+            lpszLanguage      = NULL;
             lpExtDir          = MYALLOC0(EXTDIRLEN + 4);      // EXTDIRLEN is actually 4*max_path
             lpLanguageIni     = MYALLOC0(MAX_PATH * 4 + 4);   // for language.ini
             lpRegshotIni      = MYALLOC0(MAX_PATH * 4 + 4);   // for regshot.ini
             lpKeyName         = MYALLOC0(MAX_PATH * 2 + 2);   // For scan engine store keyname
             lpValueName       = MYALLOC0(1024 * 16 * 2);      // For scan engine store valuename
-            lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);    // For scan engine store valuedata estimate
-            lpMESSAGE         = MYALLOC0(256);                // For status bar text message store
+            lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);  // For scan engine store valuedata estimate
+            lpszMessage       = MYALLOC0(256 * sizeof(TCHAR));        // For status bar text message store
             lpWindowsDirName  = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
             lpTempPath        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
             lpStartDir        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
-            lpOutputpath      = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));   // store last save/open hive file dir, +1 for possible change in CompareShots()
-            lpLangStrings     = MYALLOC0(SIZEOF_LANGSTRINGS);
-            lplpLangStrings   = MYALLOC0(sizeof(LPSTR) * 60); // max is 60 strings
+            lpOutputpath      = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));  // store last save/open hive file dir, +1 for possible change in CompareShots()
+            lpgrszLangSection = NULL;
 
             ZeroMemory(&Shot1, sizeof(Shot1));
             ZeroMemory(&Shot2, sizeof(Shot2));
-
-            lpCurrentTranslator = str_Original;
 
             GetWindowsDirectory(lpWindowsDirName, MAX_PATH);
             nLengthofStr = strlen(lpWindowsDirName);
@@ -105,11 +95,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             strcat(lpLanguageIni, REGSHOTLANGUAGEFILE);
 
-
-            if (GetLanguageType(hDlg)) {
-                GetLanguageStrings(hDlg);
-            } else {
-                GetDefaultStrings();
+            SetTextsToDefaultLanguage();
+            LoadAvailableLanguagesFromIni(hDlg);
+            if (GetSelectedLanguage(hDlg)) {
+                SetTextsToSelectedLanguage(hDlg);
             }
 
             SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
@@ -196,10 +185,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_CLEAR1:
                     hMenuClear = CreatePopupMenu();
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, (LPCSTR)lan_menuclearallshots);
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpString);
                     AppendMenu(hMenuClear, MF_MENUBARBREAK, IDM_BREAK, NULL);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT1, (LPCSTR)lan_menuclearshot1);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT2, (LPCSTR)lan_menuclearshot2);
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpString);
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpString);
                     //AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear comparison result");
                     SetMenuDefaultItem(hMenuClear, IDM_CLEARALLSHOTS, FALSE);
 
@@ -349,7 +338,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 return(TRUE);
 
                 case IDC_COMBOLANGUAGE:
-                    GetLanguageStrings(hDlg);
+                    SetTextsToDefaultLanguage();
+                    SetTextsToSelectedLanguage(hDlg);
                     return(TRUE);
 
                 case IDC_ABOUT: {
@@ -357,8 +347,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     //_asm int 3;
                     lpAboutBox = MYALLOC0(SIZEOF_ABOUTBOX);
                     // it is silly that when wsprintf encounters a NULL string, it will write the whole string to NULL!
-                    sprintf(lpAboutBox, "%s%s%s%s%s%s", str_aboutme, "[", (strlen(lpCurrentLanguage) == 0) ? str_DefaultLanguage : lpCurrentLanguage, "]", " by: ", lpCurrentTranslator);
-                    MessageBox(hDlg, lpAboutBox, (LPCSTR)lan_about, MB_OK);
+                    sprintf(lpAboutBox, "%s%s%s%s%s%s", str_aboutme, "[", lpszLanguage, "]", " by: ", lpCurrentTranslator);
+                    MessageBox(hDlg, lpAboutBox, asLangTexts[iszTextAbout].lpString, MB_OK);
                     MYFREE(lpAboutBox);
                     return(TRUE);
                 }

@@ -96,7 +96,7 @@ typedef long LONG_PTR;
 // Some definitions of MutiLanguage strings [Free space length]
 #define SIZEOF_LANGUAGE_SECTIONNAMES_BUFFER 2048
 #define SIZEOF_SINGLE_LANGUAGENAME          64
-#define SIZEOF_LANGSTRINGS                  16384
+#define MAX_INI_SECTION_CHARS               32767
 #define SIZEOF_ABOUTBOX                     4096
 
 
@@ -414,25 +414,22 @@ LPBYTE  lpValueData;
 LPBYTE  lpValueDataS;
 
 
-LPSTR   lpMESSAGE;
+extern LPTSTR lpszMessage;
 LPSTR   lpExtDir;
 LPTSTR  lpOutputpath;
 LPTSTR  lpLastSaveDir;
 LPTSTR  lpLastOpenDir;
-LPSTR   lpCurrentLanguage;
+extern LPTSTR lpszLanguage;
 LPSTR   lpWindowsDirName;
 LPSTR   lpTempPath;
 LPSTR   lpStartDir;
 LPSTR   lpLanguageIni;  // For language.ini
-LPSTR   lpLangStrings;
 LPSTR   lpCurrentTranslator;
 LPSTR   lpRegshotIni;
 
-LPBYTE  lpRegSkipStrings;
-LPBYTE  lpFileSkipStrings;
-LPBYTE *lplpRegSkipStrings;
-LPBYTE *lplpFileSkipStrings;
-LPVOID  lplpLangStrings;
+LPTSTR *lplpRegSkipStrings;
+LPTSTR *lplpFileSkipStrings;
+extern LPTSTR lpgrszLangSection;
 //LPSTR REGSHOTDATFILE = "rgst152.dat";
 //LPSTR   lpProgramDir;   // tfx define
 //LPSTR   lpSnapKey;
@@ -473,13 +470,13 @@ HANDLE          hHeap;              // 1.8.2
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
-BOOL    IsInSkipList(LPSTR lpStr, LPBYTE *lpSkipList);
-VOID    UpdateCounters(LPBYTE title1, LPBYTE title2, DWORD count1, DWORD count2);
-LPBYTE  AtPos(LPBYTE lpMaster, LPBYTE lp, size_t size, size_t sizep);
-BOOL    GetLanguageType(HWND hDlg);
-VOID    GetDefaultStrings(VOID);
-VOID    PointToNewStrings(VOID);
-BOOL    GetLanguageStrings(HWND hDlg);
+BOOL    IsInSkipList(LPTSTR lpStr, LPTSTR *lpSkipList);
+VOID    UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
+LPTSTR  FindKeyInIniSection(LPTSTR lpgrszSection, LPTSTR lpszSearch, size_t cchSectionLen, size_t cchSearchLen);
+VOID    SetTextsToDefaultLanguage(VOID);
+VOID    LoadAvailableLanguagesFromIni(HWND hDlg);
+BOOL    GetSelectedLanguage(HWND hDlg);
+VOID    SetTextsToSelectedLanguage(HWND hDlg);
 VOID    CreateShotPopupMenu(VOID);
 VOID    UI_BeforeShot(DWORD id);
 VOID    UI_AfterShot(VOID);
@@ -501,7 +498,7 @@ VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
 BOOL    ReplaceInValidFileName(LPSTR lpf);
 VOID    ErrMsg(LPCSTR note);
-VOID    WriteHead(u_char *lpstr, DWORD count, BOOL isHTML);
+VOID    WriteHead(LPTSTR lpstr, DWORD count, BOOL isHTML);
 VOID    WritePart(LPCOMRESULT lpcomhead, BOOL isHTML, BOOL usecolor);
 VOID    WriteTitle(LPSTR lph, LPSTR lpb, BOOL isHTML);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
@@ -514,6 +511,69 @@ VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD l
 LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
+
+// List of all language strings
+// NEVER CHANGE THE ORDER, LEAVE OLD ENTRIES UNTOUCHED
+enum eLangTexts {
+    iszTextKey = 0,
+    iszTextValue,
+    iszTextDir,
+    iszTextFile,
+    iszTextTime,
+    iszTextKeyAdd,
+    iszTextKeyDel,
+    iszTextValAdd,
+    iszTextValDel,
+    iszTextValModi,
+    iszTextFileAdd,
+    iszTextFileDel,
+    iszTextFileModi,
+    iszTextDirAdd,
+    iszTextDirDel,
+    iszTextDirModi,
+    iszTextTotal,
+    iszTextComments,
+    iszTextDateTime,
+    iszTextComputer,
+    iszTextUsername,
+    iszTextAbout,
+    iszTextError,
+    iszTextErrorExecViewer,
+    iszTextErrorCreateFile,
+    iszTextErrorOpenFile,
+    iszTextErrorMoveFP,
+    //
+    iszTextButtonShot1,
+    iszTextButtonShot2,
+    iszTextButtonCompare,
+    iszTextButtonClear,
+    iszTextButtonQuit,
+    iszTextButtonAbout,
+    iszTextTextMonitor,
+    iszTextTextCompare,
+    iszTextTextOutput,
+    iszTextTextComment,
+    iszTextRadioPlain,
+    iszTextRadioHTML,
+    iszTextTextScan,
+    //
+    iszTextMenuShot,
+    iszTextMenuShotSave,
+    iszTextMenuShotLoad,
+    iszTextMenuClearAllShots,
+    iszTextMenuClearShot1,
+    iszTextMenuClearShot2,
+    // ATTENTION: add new language strings before this line, the last line is used to determine the count
+    cLangStrings
+};
+
+struct _LANGUAGETEXT {
+    LPTSTR lpString;
+    int nIDDlgItem;
+};
+typedef struct _LANGUAGETEXT LANGUAGETEXT, FAR *LPLANGUAGETEXT;
+
+extern LANGUAGETEXT asLangTexts[];
 
 extern FILEHEADER fileheader;
 extern LPBYTE lpFileBuffer;
