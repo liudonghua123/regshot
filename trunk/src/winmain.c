@@ -70,7 +70,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             lpKeyName         = MYALLOC0(MAX_PATH * 2 + 2);   // For scan engine store keyname
             lpValueName       = MYALLOC0(1024 * 16 * 2);      // For scan engine store valuename
             lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);  // For scan engine store valuedata estimate
-            lpszMessage       = MYALLOC0(256 * sizeof(TCHAR));        // For status bar text message store
+            lpszMessage       = MYALLOC0((REGSHOT_MESSAGE_LENGTH + 1) * sizeof(TCHAR));  // For status bar text message store
             lpWindowsDirName  = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
             lpTempPath        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
             lpStartDir        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
