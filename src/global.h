@@ -414,6 +414,7 @@ LPBYTE  lpValueData;
 LPBYTE  lpValueDataS;
 
 
+#define REGSHOT_MESSAGE_LENGTH 256
 extern LPTSTR lpszMessage;
 LPSTR   lpExtDir;
 LPTSTR  lpOutputpath;
@@ -478,7 +479,7 @@ VOID    LoadAvailableLanguagesFromIni(HWND hDlg);
 BOOL    GetSelectedLanguage(HWND hDlg);
 VOID    SetTextsToSelectedLanguage(HWND hDlg);
 VOID    CreateShotPopupMenu(VOID);
-VOID    UI_BeforeShot(DWORD id);
+VOID    UI_BeforeShot(DWORD nID);
 VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);

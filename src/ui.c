@@ -55,15 +55,19 @@ VOID InitProgressBar(VOID)
 }
 
 
+// ----------------------------------------------------------------------
+// Update counters in the "status bar" of the window
+// ----------------------------------------------------------------------
 VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2)
 {
     //nGettingTime = GetTickCount();
     nBASETIME1 = nGettingTime;
-    _stprintf(lpszMessage, TEXT("%s%u%s%u%s"), asLangTexts[iszTextTime].lpString, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
+    lpszMessage[REGSHOT_MESSAGE_LENGTH] = 0;  // safety NULL char, as translated strings could exceed buffer length
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s"), asLangTexts[iszTextTime].lpString, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    _stprintf(lpszMessage, TEXT("%s%u"), lpszTitle1, nCount1);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u"), lpszTitle1, nCount1);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    _stprintf(lpszMessage, TEXT("%s%u"), lpszTitle2, nCount2);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u"), lpszTitle2, nCount2);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
     UpdateWindow(hWnd);
@@ -72,16 +76,16 @@ VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD n
 }
 
 
-//--------------------------------------------------
+// ----------------------------------------------------------------------
 // Prepare the GUI for the shot about to be taken
-//--------------------------------------------------
-VOID UI_BeforeShot(DWORD id)
+// ----------------------------------------------------------------------
+VOID UI_BeforeShot(DWORD nID)
 {
     hHourGlass = LoadCursor(NULL, IDC_WAIT);
     hSaveCursor = SetCursor(hHourGlass);
-    EnableWindow(GetDlgItem(hWnd, id), FALSE);
+    EnableWindow(GetDlgItem(hWnd, nID), FALSE);
     // Added in 1.8.2
-    strcpy(lpszMessage, " "); // clear the counters
+    _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
