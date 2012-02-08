@@ -21,12 +21,12 @@
 #include "global.h"
 
 
-//-------------------------------------------------------------
+// ----------------------------------------------------------------------
 // Show error message
-//-------------------------------------------------------------
-VOID ErrMsg(LPCSTR note)
+// ----------------------------------------------------------------------
+VOID ErrMsg(LPTSTR lpszErrMsg)
 {
-    MessageBox(hWnd, note, asLangTexts[iszTextError].lpString, MB_ICONHAND);
+    MessageBox(hWnd, lpszErrMsg, asLangTexts[iszTextError].lpString, MB_ICONHAND);
 }
 
 
