@@ -690,7 +690,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     strcpy(lpDestFileName, lpOutputpath);
 
     //bSaveWithCommentName = TRUE;
-    if (ReplaceInValidFileName(lpstrcomp)) {
+    if (ReplaceInvalidFileNameChars(lpstrcomp)) {
         strcat(lpDestFileName, lpstrcomp);
     } else {
         strcat(lpDestFileName, szDefResPre);
