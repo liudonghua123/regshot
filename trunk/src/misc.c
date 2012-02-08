@@ -69,28 +69,43 @@ VOID DebugLog(LPTSTR lpszFileName, LPTSTR lpszDbgMsg, BOOL fAddCRLF)
 #endif
 
 
-//------------------------------------------------------------
-// Routine to replace invalid chars in comment fields
-//------------------------------------------------------------
-BOOL ReplaceInValidFileName(LPSTR lpf)
+// ----------------------------------------------------------------------
+// Replace invalid chars for a file name
+// ----------------------------------------------------------------------
+TCHAR szInvalid[] = TEXT("\\/:*?\"<>|");  // 1.8.2
+
+BOOL ReplaceInvalidFileNameChars(LPTSTR lpszFileName)
 {
-    char lpInvalid[] = "\\/:*?\"<>|"; // 1.8.2
-    DWORD   i, j;
-    size_t  nLen;
-    BOOL    bLegal = FALSE;
-    nLen = strlen(lpf);
+    size_t nInvalidLen;
+    size_t nFileNameLen;
+    size_t i, j;
+    BOOL fFileNameIsLegal;
+    BOOL fCharIsValid;
 
-    for (i = 0; i < nLen; i++) {
-        for (j = 0; j < sizeof(lpInvalid) - 1; j++) { // changed at 1.8.2 from 9 to sizeof()-1
-            if (*(lpf + i) == *(lpInvalid + j)) {
-                *(lpf + i) = '-';                     // 0x2D; check for invalid chars and replace it (return FALSE;)
-            } else if (*(lpf + i) != 0x20 && *(lpf + i) != 0x09) { // At least one non-space, non-tab char needed!
-                bLegal = TRUE;
+    nInvalidLen = _tcslen(szInvalid);
+    nFileNameLen = _tcslen(lpszFileName);
+
+    fFileNameIsLegal = FALSE;
+    for (i = 0; i < nFileNameLen; i++) {
+        fCharIsValid = TRUE;  // valid chars expected
+
+        if ((TCHAR)'\t' == lpszFileName[i]) {  // replace tab with space
+            lpszFileName[i] = (TCHAR)' ';
+        } else {  // replace invalid char with underscore
+            for (j = 0; j < nInvalidLen; j++) {
+                if (lpszFileName[i] == szInvalid[j]) {
+                    lpszFileName[i] = (TCHAR)'_';
+                    fCharIsValid = FALSE;
+                    break;
+                }
             }
+        }
 
+        if ((fCharIsValid) && ((TCHAR)' ' != lpszFileName[i])) {  // At least one valid non-space char needed
+            fFileNameIsLegal = TRUE;
         }
     }
-    return bLegal;
+    return fFileNameIsLegal;
 }
 
 

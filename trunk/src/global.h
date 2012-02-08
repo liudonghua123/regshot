@@ -492,7 +492,7 @@ VOID    GetFilesSnap(LPFILECONTENT lpFatherFC);                  // HWND hDlg, f
 LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
-BOOL    ReplaceInValidFileName(LPSTR lpf);
+BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
 VOID    ErrMsg(LPTSTR lpszErrMsg);
 VOID    WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML);
 VOID    WritePart(LPCOMRESULT lpComResultStart, BOOL fAsHTML, BOOL fUseColor);
