@@ -30,34 +30,40 @@ VOID ErrMsg(LPTSTR lpszErrMsg)
 }
 
 
-//-------------------------------------------------------------
-// Routine to debug
-//-------------------------------------------------------------
 #ifdef DEBUGLOG
-VOID DebugLog(LPSTR filename, LPSTR lpstr, HWND hDlg, BOOL bisCR)
+// debug log files
+TCHAR szDebugTryToGetValueLog[] = TEXT("debug_trytogetvalue.log");
+TCHAR szDebugValueNameDataLog[] = TEXT("debug_valuenamedata.log");
+TCHAR szDebugKeyLog[] = TEXT("debug_key.log");
+
+// ----------------------------------------------------------------------
+// Write message to debug log file
+// ----------------------------------------------------------------------
+VOID DebugLog(LPTSTR lpszFileName, LPTSTR lpszDbgMsg, BOOL fAddCRLF)
 {
-    DWORD   length;
-    DWORD   nPos;
+    size_t nLen;
+    DWORD nPos;
 
-    hFile = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
+    hFile = CreateFile(lpszFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (INVALID_HANDLE_VALUE == hFile) {
         ErrMsg(asLangTexts[iszTextErrorCreateFile].lpString);
-    } else {
-        nPos = SetFilePointer(hFile, 0, NULL, FILE_END);
-        if (nPos == 0xFFFFFFFF) {
-            ErrMsg(asLangTexts[iszTextErrorMoveFP].lpString);
-        } else {
+        return;
+    }
 
-            length = strlen(lpstr);
-            WriteFile(hFile, lpstr, length, &NBW, NULL);
-            if (NBW != length) {
-                //ErrMsg(asLangTexts[iszTextErrorWriteFile].lpString);
-            }
-            if (bisCR == TRUE) {
-                WriteFile(hFile, szCRLF, (DWORD)(_tcslen(szCRLF) * sizeof(TCHAR)), &NBW, NULL);
-            }
+    nPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+    if (0xFFFFFFFF == nPos) {
+        ErrMsg(asLangTexts[iszTextErrorMoveFP].lpString);
+    } else {
+        nLen = _tcslen(lpszDbgMsg) * sizeof(TCHAR);
+        WriteFile(hFile, lpszDbgMsg, (DWORD)nLen, &NBW, NULL);
+        if (NBW != nLen) {
+            //ErrMsg(asLangTexts[iszTextErrorWriteFile].lpString);
+        }
+        if (fAddCRLF) {
+            WriteFile(hFile, szCRLF, (DWORD)(_tcslen(szCRLF) * sizeof(TCHAR)), &NBW, NULL);
         }
     }
+
     CloseHandle(hFile);
 }
 #endif
