@@ -590,7 +590,7 @@ extern TCHAR *lpszProgramName;
 extern TCHAR szEmpty[];
 #endif
 
-size_t AdjustBuffer(PVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
+size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
 VOID SaveHeadFile(LPHEADFILE lpHF, DWORD nFPCaller);
 VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 
