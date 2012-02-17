@@ -425,7 +425,6 @@ VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllFileHead(LPHEADFILE lpHeadFile);
 VOID    ClearKeyMatchTag(LPKEYCONTENT lpKC);
-VOID    GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC);  // HWND hDlg, first para deleted in 1.8, return from void * to void
 VOID    GetFilesSnap(LPFILECONTENT lpFatherFC);                  // HWND hDlg, first para deleted in 1.8
 LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
@@ -514,11 +513,6 @@ extern LPBYTE lpFileBuffer;
 extern LPTSTR lpStringBuffer;
 extern size_t nStringBufferSize;
 extern size_t nSourceSize;
-
-extern char LOCALMACHINESTRING[];
-extern char LOCALMACHINESTRING_LONG[];
-extern char USERSSTRING[];
-extern char USERSSTRING_LONG[];
 
 extern TCHAR szCRLF[];
 
