@@ -115,6 +115,9 @@ LPSTR lpValueName;
 LPBYTE lpValueData;
 LPBYTE lpValueDataS;
 
+HANDLE   hFileWholeReg;  // Handle of file regshot use
+FILETIME ftLastWrite;    // Filetime struct
+
 
 //-------------------------------------------------------------
 // Routine to get whole key name from KEYCONTENT
