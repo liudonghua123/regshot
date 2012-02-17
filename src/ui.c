@@ -30,6 +30,9 @@ char LOCALMACHINESTRING_LONG[] = "HKEY_LOCAL_MACHINE";
 
 LPTSTR lpszMessage;
 
+HCURSOR hHourGlass;   // Handle of cursor
+HCURSOR hSaveCursor;  // Handle of cursor
+
 
 void ShowHideCounters(int nCmdShow) // 1.8.2
 {

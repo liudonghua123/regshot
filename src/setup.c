@@ -42,6 +42,8 @@ LPTSTR lpgrszFileSkipStrings;
 LPTSTR *lplpRegSkipStrings;
 LPTSTR *lplpFileSkipStrings;
 
+BOOL bUseLongRegHead;  // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
+
 
 BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
 {
