@@ -119,94 +119,95 @@ LPBYTE lpValueDataS;
 HANDLE   hFileWholeReg;  // Handle of file regshot use
 FILETIME ftLastWrite;    // Filetime struct
 
-char USERSSTRING_LONG[]        = "HKEY_USERS";   // 1.6 using long name, so in 1.8.1 add an option
-char USERSSTRING[]             = "HKU";          // in regshot.ini, "UseLongRegHead" to control this
-char LOCALMACHINESTRING[]      = "HKLM";
-char LOCALMACHINESTRING_LONG[] = "HKEY_LOCAL_MACHINE";
+TCHAR LOCALMACHINESTRING[]      = TEXT("HKLM");
+TCHAR LOCALMACHINESTRING_LONG[] = TEXT("HKEY_LOCAL_MACHINE");
+TCHAR USERSSTRING[]             = TEXT("HKU");          // in regshot.ini, "UseLongRegHead" to control this
+TCHAR USERSSTRING_LONG[]        = TEXT("HKEY_USERS");   // 1.6 using long name, so in 1.8.1 add an option
 
 
-//-------------------------------------------------------------
-// Routine to get whole key name from KEYCONTENT
-//-------------------------------------------------------------
-LPSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
+// ----------------------------------------------------------------------
+// Get whole registry key name from KEYCONTENT
+// ----------------------------------------------------------------------
+LPTSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
 {
     LPKEYCONTENT lpKC;
-    LPSTR   lpName;  // TODO: LPTSTR
-    LPSTR   lpTail;  // TODO: LPTSTR
-    size_t  nLen;
+    LPTSTR lpszName;
+    LPTSTR lpszTail;
+    size_t nLen;
 
     nLen = 0;
     for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
-            nLen += strlen(lpKC->lpKeyName) + 1;  // +1 char for backslash or NULL char  // TODO: _tcslen
+            nLen += _tcslen(lpKC->lpKeyName) + 1;  // +1 char for backslash or NULL char
         }
     }
     if (0 == nLen) {  // at least create an empty string with NULL char
         nLen++;
     }
 
-    lpName = MYALLOC(nLen * sizeof(TCHAR));
+    lpszName = MYALLOC(nLen * sizeof(TCHAR));
 
-    lpTail = lpName + nLen - 1;
-    *lpTail = 0;
+    lpszTail = &lpszName[nLen];
+    *lpszTail = 0;
 
     for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
-            nLen = strlen(lpKC->lpKeyName);
-            memcpy(lpTail -= nLen, lpKC->lpKeyName, nLen);  // TODO: _tcsncpy
-            if (lpTail > lpName) {
-                *--lpTail = '\\';    // 0x5c = '\\'  // TODO: check if works for Unicode
+            nLen = _tcslen(lpKC->lpKeyName);
+            _tcsncpy(lpszTail -= nLen, lpKC->lpKeyName, nLen);
+            if (lpszTail > lpszName) {
+                *--lpszTail = (TCHAR)'\\';    // 0x5c = '\\'  // TODO: check if works for Unicode
             }
         }
     }
 
-    return lpName;
+    return lpszName;
 }
 
 
-//-------------------------------------------------------------
-// Routine to get whole value name from VALUECONTENT
-//-------------------------------------------------------------
-LPSTR GetWholeValueName(LPVALUECONTENT lpVC)
+// ----------------------------------------------------------------------
+// Get whole value name from VALUECONTENT
+// ----------------------------------------------------------------------
+LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
 {
     LPKEYCONTENT lpKC;
-    LPSTR   lpName;  // TODO: LPTSTR
-    LPSTR   lpTail;  // TODO: LPTSTR
-    size_t  nLen;
-    size_t  nWholeLen;
+    LPTSTR lpszName;
+    LPTSTR lpszTail;
+    size_t nLen;
+    size_t nWholeLen;
 
     nLen = 0;
     if (NULL != lpVC->lpValueName) {
-        nLen += strlen(lpVC->lpValueName);
+        nLen += _tcslen(lpVC->lpValueName);
     }
     nWholeLen = nLen + 1;  // +1 char for NULL char
 
     for (lpKC = lpVC->lpFatherKC; lpKC != NULL; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
-            nWholeLen += strlen(lpKC->lpKeyName) + 1;  // +1 char for backslash  // TODO: _tcslen
+            nWholeLen += _tcslen(lpKC->lpKeyName) + 1;  // +1 char for backslash
         }
     }
 
-    lpName = MYALLOC(nWholeLen * sizeof(TCHAR));
+    lpszName = MYALLOC(nWholeLen * sizeof(TCHAR));
 
-    lpTail = lpName + nWholeLen - 1;
+    lpszTail = &lpszName[nWholeLen];
+    *lpszTail = 0;
 
     if (NULL != lpVC->lpValueName) {
-        strcpy(lpTail -= nLen, lpVC->lpValueName);
-        *--lpTail = '\\'; // 0x5c = '\\'  // TODO: check if works for Unicode
+        _tcscpy(lpszTail -= nLen, lpVC->lpValueName);
+        *--lpszTail = (TCHAR)'\\'; // 0x5c = '\\'  // TODO: check if works for Unicode
     }
 
     for (lpKC = lpVC->lpFatherKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpKeyName) {
-            nLen = strlen(lpKC->lpKeyName);
-            memcpy(lpTail -= nLen, lpKC->lpKeyName, nLen);  // TODO: _tcsncpy
-            if (lpTail > lpName) {
-                *--lpTail = '\\';    // 0x5c = '\\'  // TODO: check if works for Unicode
+            nLen = _tcslen(lpKC->lpKeyName);
+            _tcsncpy(lpszTail -= nLen, lpKC->lpKeyName, nLen);
+            if (lpszTail > lpszName) {
+                *--lpszTail = (TCHAR)'\\';    // 0x5c = '\\'  // TODO: check if works for Unicode
             }
         }
     }
 
-    return lpName;
+    return lpszName;
 }
 
 
