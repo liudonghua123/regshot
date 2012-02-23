@@ -27,7 +27,7 @@ HCURSOR hHourGlass;   // Handle of cursor
 HCURSOR hSaveCursor;  // Handle of cursor
 
 
-void ShowHideCounters(int nCmdShow) // 1.8.2
+VOID ShowHideCounters(int nCmdShow)  // 1.8.2
 {
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT1), nCmdShow);
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT2), nCmdShow);
@@ -93,19 +93,19 @@ VOID UI_BeforeShot(DWORD nID)
 //--------------------------------------------------
 VOID UI_AfterShot(VOID)
 {
-    DWORD iddef;
+    DWORD nIDDef;
 
-    if (Shot1.lpHKLM == NULL) {
-        iddef = IDC_1STSHOT;
-    } else if (Shot2.lpHKLM == NULL) {
-        iddef = IDC_2NDSHOT;
+    if (NULL == Shot1.lpHKLM) {
+        nIDDef = IDC_1STSHOT;
+    } else if (NULL == Shot2.lpHKLM) {
+        nIDDef = IDC_2NDSHOT;
     } else {
-        iddef = IDC_COMPARE;
+        nIDDef = IDC_COMPARE;
     }
     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), TRUE);
-    EnableWindow(GetDlgItem(hWnd, iddef), TRUE);
-    SendMessage(hWnd, DM_SETDEFID, (WPARAM)iddef, (LPARAM)0);
-    SetFocus(GetDlgItem(hWnd, iddef));
+    EnableWindow(GetDlgItem(hWnd, nIDDef), TRUE);
+    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDef, (LPARAM)0);
+    SetFocus(GetDlgItem(hWnd, nIDDef));
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 }
@@ -129,30 +129,30 @@ VOID UI_BeforeClear(VOID)
 //--------------------------------------------------
 VOID UI_AfterClear(VOID)
 {
-    DWORD   iddef = 0;
-    //BOOL    bChk;   // used for file scan disable
+    DWORD nIDDef;
+    //BOOL fChk;  // used for file scan disable
 
-    if (Shot1.lpHKLM == NULL) {
-        iddef = IDC_1STSHOT;
-    } else if (Shot2.lpHKLM == NULL) {
-        iddef = IDC_2NDSHOT;
+    nIDDef = 0;
+    if (NULL == Shot1.lpHKLM) {
+        nIDDef = IDC_1STSHOT;
+    } else if (NULL == Shot2.lpHKLM) {
+        nIDDef = IDC_2NDSHOT;
     }
-    EnableWindow(GetDlgItem(hWnd, iddef), TRUE);
+    EnableWindow(GetDlgItem(hWnd, nIDDef), TRUE);
     EnableWindow(GetDlgItem(hWnd, IDC_COMPARE), FALSE);
 
-    if ((Shot1.lpHKLM == NULL) && (Shot2.lpHKLM == NULL)) {
+    //fChk = FALSE;
+    if ((NULL == Shot1.lpHKLM) && (NULL == Shot2.lpHKLM)) {
         EnableWindow(GetDlgItem(hWnd, IDC_2NDSHOT), FALSE);
         EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
-        //bChk = TRUE;
+        //fChk = TRUE;
     }
-    //else  // I forgot to comment this out, fixed in 1.8.2
-    //bChk = FALSE;
 
-    //EnableWindow(GetDlgItem(hWnd,IDC_CHECKDIR),bChk); // Not used in 1.8; we only enable chk when clear all
-    //SendMessage(hWnd,WM_COMMAND,(WPARAM)IDC_CHECKDIR,(LPARAM)0);
+    //EnableWindow(GetDlgItem(hWnd, IDC_CHECKDIR), fChk);  // Not used in 1.8; we only enable fChk when clear all
+    //SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
 
-    SetFocus(GetDlgItem(hWnd, iddef));
-    SendMessage(hWnd, DM_SETDEFID, (WPARAM)iddef, (LPARAM)0);
+    SetFocus(GetDlgItem(hWnd, nIDDef));
+    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDef, (LPARAM)0);
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 }
