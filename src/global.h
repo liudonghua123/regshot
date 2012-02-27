@@ -382,8 +382,8 @@ extern LPSTR lpLanguageIni;  // For language.ini
 extern LPSTR lpCurrentTranslator;
 extern LPSTR lpRegshotIni;
 
-extern LPTSTR *lplpRegSkipStrings;
-extern LPTSTR *lplpFileSkipStrings;
+extern LPTSTR *lprgszRegSkipStrings;
+extern LPTSTR *lprgszFileSkipStrings;
 extern LPTSTR lpgrszLangSection;
 
 
@@ -404,7 +404,7 @@ extern BOOL    bUseLongRegHead;    // 1.8.1 for compatibility with 1.61e5 and un
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
-BOOL    IsInSkipList(LPTSTR lpStr, LPTSTR *lpSkipList);
+BOOL    IsInSkipList(LPTSTR lpszString, LPTSTR lpszSkipList[]);
 VOID    UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
 LPTSTR  FindKeyInIniSection(LPTSTR lpgrszSection, LPTSTR lpszSearch, size_t cchSectionLen, size_t cchSearchLen);
 VOID    SetTextsToDefaultLanguage(VOID);
