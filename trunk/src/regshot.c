@@ -1170,7 +1170,7 @@ VOID GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC)
         if (RegOpenKeyEx(hRegKey, lpKeyName, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hRegSubKey) != ERROR_SUCCESS) {
             continue;
         }
-        if (IsInSkipList(lpKeyName, lplpRegSkipStrings)) {
+        if (IsInSkipList(lpKeyName, lprgszRegSkipStrings)) {
             // tfx
             RegCloseKey(hRegSubKey);  // 1.8.2 seperate
             continue;
