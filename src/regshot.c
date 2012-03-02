@@ -211,64 +211,72 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
 }
 
 
-//-------------------------------------------------------------
-// Routine Trans VALUECONTENT.data [which in binary] into strings
+// ----------------------------------------------------------------------
+// Transform VALUECONTENT.data from binary into string
 // Called by GetWholeValueData()
-//-------------------------------------------------------------
-LPSTR TransData(LPVALUECONTENT lpVC, DWORD type)
+// ----------------------------------------------------------------------
+LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
 {
-    LPSTR lpValueData = NULL;
-    DWORD c;
-    DWORD size = lpVC->datasize;
+    LPTSTR lpValueData;
+    DWORD nCount;
+    DWORD nSize;
 
-    switch (type) {
-        case REG_SZ:
-            // case REG_EXPAND_SZ: Not used any more, they all included in [default],
-            // because some non-regular value would corrupt this.
-            lpValueData = MYALLOC0(size + 5);    // 5 is enough
-            strcpy(lpValueData, ": \"");
-            if (NULL != lpVC->lpValueData) {
-                strcat(lpValueData, (const char *)lpVC->lpValueData);
-            }
-            strcat(lpValueData, "\"");
-            // wsprintf has a bug that can not print string too long one time!);
-            //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
-            break;
-        case REG_MULTI_SZ:
-            // Be sure to add below line outside of following "if",
-            // for that GlobalFree(lp) must had lp already located!
-            lpValueData = MYALLOC0(size + 5);    // 5 is enough
-            for (c = 0; c < size; c++) {
-                if (*((LPBYTE)(lpVC->lpValueData + c)) == 0) {
-                    if (*((LPBYTE)(lpVC->lpValueData + c + 1)) != 0) {
-                        *((LPBYTE)(lpVC->lpValueData + c)) = 0x20;    // ???????
-                    } else {
-                        break;
+    lpValueData = NULL;
+    nSize = lpVC->datasize;
+
+    if (NULL == lpVC->lpValueData) {
+        lpValueData = MYALLOC0(sizeof(szValueDataIsNULL));
+        _tcscpy(lpValueData, szValueDataIsNULL);
+    } else {
+        switch (type) {
+            case REG_SZ:
+                // case REG_EXPAND_SZ: Not used any more, they all included in [default],
+                // because some non-regular value would corrupt this.
+                lpValueData = MYALLOC0(nSize + 5);    // 5 is enough
+                strcpy(lpValueData, ": \"");
+                if (NULL != lpVC->lpValueData) {
+                    strcat(lpValueData, (const char *)lpVC->lpValueData);
+                }
+                strcat(lpValueData, "\"");
+                // wsprintf has a bug that can not print string too long one time!);
+                //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
+                break;
+            case REG_MULTI_SZ:
+                // Be sure to add below line outside of following "if",
+                // for that GlobalFree(lp) must had lp already located!
+                lpValueData = MYALLOC0(nSize + 5);    // 5 is enough
+                for (nCount = 0; nCount < nSize; nCount++) {
+                    if (*((LPBYTE)(lpVC->lpValueData + nCount)) == 0) {
+                        if (*((LPBYTE)(lpVC->lpValueData + nCount + 1)) != 0) {
+                            *((LPBYTE)(lpVC->lpValueData + nCount)) = 0x20;    // ???????
+                        } else {
+                            break;
+                        }
                     }
                 }
-            }
-            //*((LPBYTE)(lpVC->lpValueData + size)) = 0x00;   // for some illegal multisz
-            strcpy(lpValueData, ": '");
-            if (NULL != lpVC->lpValueData) {
-                strcat(lpValueData, (const char *)lpVC->lpValueData);
-            }
-            strcat(lpValueData, "'");
-            //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
-            break;
-        case REG_DWORD:
-            // case REG_DWORD_BIG_ENDIAN: Not used any more, they all included in [default]
-            lpValueData = MYALLOC0(sizeof(DWORD) * 2 + 5); // 13 is enough
-            if (NULL != lpVC->lpValueData) {
-                sprintf(lpValueData, "%s%08X", ": 0x", *(LPDWORD)(lpVC->lpValueData));
-            }
-            break;
-        default:
-            lpValueData = MYALLOC0(3 * (size + 1)); // 3*(size + 1) is enough
-            *lpValueData = 0x3a;
-            // for the resttype lengthofvaluedata doesn't contains the 0!
-            for (c = 0; c < size; c++) {
-                sprintf(lpValueData + 3 * c + 1, " %02X", *(lpVC->lpValueData + c));
-            }
+                //*((LPBYTE)(lpVC->lpValueData + nSize)) = 0x00;   // for some illegal multisz
+                strcpy(lpValueData, ": '");
+                if (NULL != lpVC->lpValueData) {
+                    strcat(lpValueData, (const char *)lpVC->lpValueData);
+                }
+                strcat(lpValueData, "'");
+                //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
+                break;
+            case REG_DWORD:
+                // case REG_DWORD_BIG_ENDIAN: Not used any more, they all included in [default]
+                lpValueData = MYALLOC0(sizeof(DWORD) * 2 + 5); // 13 is enough
+                if (NULL != lpVC->lpValueData) {
+                    sprintf(lpValueData, "%s%08X", ": 0x", *(LPDWORD)(lpVC->lpValueData));
+                }
+                break;
+            default:
+                lpValueData = MYALLOC0(3 * (nSize + 1)); // 3*(nSize + 1) is enough
+                *lpValueData = 0x3a;
+                // for the resttype lengthofvaluedata doesn't contains the 0!
+                for (nCount = 0; nCount < nSize; nCount++) {
+                    sprintf(lpValueData + 3 * nCount + 1, " %02X", *(lpVC->lpValueData + nCount));
+                }
+        }
     }
 
     return lpValueData;
