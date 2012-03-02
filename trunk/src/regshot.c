@@ -230,51 +230,48 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
     } else {
         switch (type) {
             case REG_SZ:
-                // case REG_EXPAND_SZ: Not used any more, they all included in [default],
-                // because some non-regular value would corrupt this.
-                lpValueData = MYALLOC0(nSize + 5);    // 5 is enough
-                strcpy(lpValueData, ": \"");
+                // case REG_EXPAND_SZ: Not used any more, is included in [default], because some non-regular value would corrupt this.
+                lpValueData = MYALLOC0(((3 + 2) * sizeof(TCHAR)) + nSize);  // format  ": \"<string>\"\0"
+                _tcscpy(lpValueData, TEXT(": \""));
                 if (NULL != lpVC->lpValueData) {
-                    strcat(lpValueData, (const char *)lpVC->lpValueData);
+                    _tcscat(lpValueData, (LPTSTR)lpVC->lpValueData);
                 }
-                strcat(lpValueData, "\"");
+                _tcscat(lpValueData, TEXT("\""));
                 // wsprintf has a bug that can not print string too long one time!);
                 //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
                 break;
             case REG_MULTI_SZ:
                 // Be sure to add below line outside of following "if",
                 // for that GlobalFree(lp) must had lp already located!
-                lpValueData = MYALLOC0(nSize + 5);    // 5 is enough
+                lpValueData = MYALLOC0(((3 + 2) * sizeof(TCHAR)) + nSize);  // format  ": \"<string>\"\0"
+                nSize /= sizeof(TCHAR);  // convert bytes to chars
+                nSize--;  // account for last NULL char
                 for (nCount = 0; nCount < nSize; nCount++) {
-                    if (*((LPBYTE)(lpVC->lpValueData + nCount)) == 0) {
-                        if (*((LPBYTE)(lpVC->lpValueData + nCount + 1)) != 0) {
-                            *((LPBYTE)(lpVC->lpValueData + nCount)) = 0x20;    // ???????
-                        } else {
-                            break;
-                        }
+                    if (0 == ((LPTSTR)lpVC->lpValueData)[nCount]) {        // look for a NULL char before the end of the data
+                        ((LPTSTR)lpVC->lpValueData)[nCount] = (TCHAR)' ';  // then overwrite with space  // TODO: check if works with Unicode
                     }
                 }
-                //*((LPBYTE)(lpVC->lpValueData + nSize)) = 0x00;   // for some illegal multisz
-                strcpy(lpValueData, ": '");
+                _tcscpy(lpValueData, TEXT(": \""));
                 if (NULL != lpVC->lpValueData) {
-                    strcat(lpValueData, (const char *)lpVC->lpValueData);
+                    _tcscat(lpValueData, (LPTSTR)lpVC->lpValueData);
                 }
-                strcat(lpValueData, "'");
+                _tcscat(lpValueData, TEXT("\""));
                 //wsprintf(lpValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
                 break;
             case REG_DWORD:
                 // case REG_DWORD_BIG_ENDIAN: Not used any more, they all included in [default]
-                lpValueData = MYALLOC0(sizeof(DWORD) * 2 + 5); // 13 is enough
+                lpValueData = MYALLOC0((4 + 8 + 1) * sizeof(TCHAR));  // format  ": 0xXXXXXXXX\0"
+                _tcscpy(lpValueData, TEXT(": "));
                 if (NULL != lpVC->lpValueData) {
-                    sprintf(lpValueData, "%s%08X", ": 0x", *(LPDWORD)(lpVC->lpValueData));
+                    _stprintf(lpValueData + 2, TEXT("%s%08X"), TEXT("0x"), *(LPDWORD)(lpVC->lpValueData));
                 }
                 break;
             default:
-                lpValueData = MYALLOC0(3 * (nSize + 1)); // 3*(nSize + 1) is enough
-                *lpValueData = 0x3a;
+                lpValueData = MYALLOC0((2 + (nSize * 3) + 1) * sizeof(TCHAR));  // format ": [ xx][ xx]...[ xx]\0"
+                _tcscpy(lpValueData, TEXT(": "));
                 // for the resttype lengthofvaluedata doesn't contains the 0!
                 for (nCount = 0; nCount < nSize; nCount++) {
-                    sprintf(lpValueData + 3 * nCount + 1, " %02X", *(lpVC->lpValueData + nCount));
+                    _stprintf(lpValueData + (2 + (nCount * 3)), TEXT(" %02X"), *(lpVC->lpValueData + nCount));
                 }
         }
     }
