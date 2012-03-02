@@ -1180,7 +1180,7 @@ VOID GetRegistrySnap(HKEY hRegKey, LPKEYCONTENT lpFatherKC)
     }
 
     nGettingTime = GetTickCount();
-    if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
+    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
         UpdateCounters(asLangTexts[iszTextKey].lpString, asLangTexts[iszTextValue].lpString, nGettingKey, nGettingValue);
     }
 
@@ -1786,7 +1786,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
     ofsBrotherKey = sKC.ofsBrotherKey;
 
     nGettingTime = GetTickCount();
-    if ((nGettingTime - nBASETIME1) > REFRESHINTERVAL) {
+    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
         UpdateCounters(asLangTexts[iszTextKey].lpString, asLangTexts[iszTextValue].lpString, nGettingKey, nGettingValue);
     }
 
