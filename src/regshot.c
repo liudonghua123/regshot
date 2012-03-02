@@ -275,38 +275,39 @@ LPSTR TransData(LPVALUECONTENT lpVC, DWORD type)
 }
 
 
-//-------------------------------------------------------------
-// Routine to get whole value data from VALUECONTENT
-//-------------------------------------------------------------
-LPSTR GetWholeValueData(LPVALUECONTENT lpVC)
+// ----------------------------------------------------------------------
+// Get value data from VALUECONTENT as string
+// ----------------------------------------------------------------------
+LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
 {
-    LPSTR lpValueData = NULL;
-    DWORD c;
-    DWORD size = lpVC->datasize;
+    LPTSTR lpValueData;
+    DWORD nCount;
+    DWORD nSize;
 
-    if (NULL != lpVC->lpValueData) { //fix a bug at 20111228
+    lpValueData = NULL;
+    nSize = lpVC->datasize;
 
+    if (NULL == lpVC->lpValueData) {
+        lpValueData = MYALLOC0(sizeof(szValueDataIsNULL));
+        _tcscpy(lpValueData, szValueDataIsNULL);
+    } else {
         switch (lpVC->typecode) {
             case REG_SZ:
             case REG_EXPAND_SZ:
-                //if (lpVC->lpValueData != NULL) {
-                if (size == (DWORD)strlen((const char *)(lpVC->lpValueData)) + 1) {
+                if ((DWORD)((_tcslen((LPTSTR)lpVC->lpValueData) + 1) * sizeof(TCHAR)) == nSize) {
                     lpValueData = TransData(lpVC, REG_SZ);
                 } else {
                     lpValueData = TransData(lpVC, REG_BINARY);
                 }
-                //} else {
-                //    lpValueData = TransData(lpVC, REG_SZ);
-                //}
                 break;
             case REG_MULTI_SZ:
-                if (*((LPBYTE)(lpVC->lpValueData)) != 0x00) {
-                    for (c = 0;; c++) {
-                        if (*((LPWORD)(lpVC->lpValueData + c)) == 0) {
+                if (0 != ((LPTSTR)lpVC->lpValueData)[0]) {
+                    for (nCount = 0; ; nCount++) {
+                        if (0 == ((LPTSTR)lpVC->lpValueData)[nCount]) {
                             break;
                         }
                     }
-                    if (size == c + 2) {
+                    if (((nCount + 1) * sizeof(TCHAR)) == nSize) {
                         lpValueData = TransData(lpVC, REG_MULTI_SZ);
                     } else {
                         lpValueData = TransData(lpVC, REG_BINARY);
@@ -317,7 +318,7 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpVC)
                 break;
             case REG_DWORD:
             case REG_DWORD_BIG_ENDIAN:
-                if (size == sizeof(DWORD)) {
+                if (sizeof(DWORD) == nSize) {
                     lpValueData = TransData(lpVC, REG_DWORD);
                 } else {
                     lpValueData = TransData(lpVC, REG_BINARY);
@@ -326,10 +327,8 @@ LPSTR GetWholeValueData(LPVALUECONTENT lpVC)
             default :
                 lpValueData = TransData(lpVC, REG_BINARY);
         }
-    } else {
-        lpValueData = MYALLOC0(sizeof(szValueDataIsNULL));
-        strcpy(lpValueData, szValueDataIsNULL);
     }
+
     return lpValueData;
 }
 
