@@ -17,9 +17,13 @@
     along with Regshot.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef REGSHOT_VERSION_REV_H
-#define REGSHOT_VERSION_REV_H
+#ifndef REGSHOT_REVISION_H
+#define REGSHOT_REVISION_H
 
-#define REGSHOT_VERSION_REV $WCREV$
 
-#endif // REGSHOT_VERSION_REV_H
+#define REGSHOT_REVISION_NUM          $WCREV$
+#define REGSHOT_REVISION_NUM_SUFFIX   $WCMODS?M:$$WCMIXED?M:$
+#define REGSHOT_REVISION_MOD          $WCMODS?1:0$$WCMIXED?1:0$
+
+
+#endif // REGSHOT_REVISION_H

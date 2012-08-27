@@ -87,10 +87,10 @@ extern HANDLE hHeap;
 #define ESTIMATE_VALUEDATA_LENGTH 1024*1024 //Define estimated value data in scan
 #define REFRESHINTERVAL 110          // Define progress refresh rate
 #define MAXPBPOSITION   100          // Define progress bar length
-#define COMMENTLENGTH   50           // Define commentfield length on the MainForm
+#define COMMENTLENGTH   51           // Define commentfield length on the MainForm in TCHARs incl. NULL
 #define HTMLWRAPLENGTH  1000         // Define html output wrap length
-#define MAXAMOUNTOFFILE 10000        // Define out put file counts
-#define EXTDIRLEN       MAX_PATH * 4 // Define searching directory field length
+#define MAXAMOUNTOFFILE 10000        // Define output file counts
+#define EXTDIRLEN       MAX_PATH * 4 // Define searching directory field length in TCHARs (MAX_PATH includes NULL)
 #define OLD_COMPUTERNAMELEN 64       // Define COMPUTER name length, do not change
 
 
@@ -103,68 +103,68 @@ extern HANDLE hHeap;
 
 // Struct used for Windows Registry Key
 struct _KEYCONTENT {
-    LPTSTR lpKeyName;                         // Pointer to key's name
-    struct _VALUECONTENT FAR *lpFirstVC;   // Pointer to key's first value
-    struct _KEYCONTENT FAR *lpFirstSubKC;  // Pointer to key's first sub key
-    struct _KEYCONTENT FAR *lpBrotherKC;   // Pointer to key's brother
-    struct _KEYCONTENT FAR *lpFatherKC;    // Pointer to key's father
-    DWORD  bkeymatch;                         // Flags used when comparing, until 1.8.2 was byte
+    LPTSTR lpszKeyName;                     // Pointer to key's name
+    struct _VALUECONTENT FAR *lpFirstVC;    // Pointer to key's first value
+    struct _KEYCONTENT FAR *lpFirstSubKC;   // Pointer to key's first sub key
+    struct _KEYCONTENT FAR *lpBrotherKC;    // Pointer to key's brother
+    struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to key's father
+    DWORD  bkeymatch;                       // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
 
 
 // Struct used for Windows Registry Value
 struct _VALUECONTENT {
-    DWORD  typecode;                          // Type of value [DWORD,STRING...]
-    DWORD  datasize;                          // Value data size in bytes
-    LPTSTR lpValueName;                       // Pointer to value's name
-    LPBYTE lpValueData;                       // Pointer to value's data
-    struct _VALUECONTENT FAR *lpBrotherVC;    // Pointer to value's brother
-    struct _KEYCONTENT FAR *lpFatherKC;       // Pointer to value's father key
-    DWORD  bvaluematch;                       // Flags used when comparing, until 1.8.2 was byte
+    DWORD  typecode;                        // Type of value [DWORD,STRING...]
+    DWORD  datasize;                        // Value data size in bytes
+    LPTSTR lpszValueName;                   // Pointer to value's name
+    LPBYTE lpValueData;                     // Pointer to value's data
+    struct _VALUECONTENT FAR *lpBrotherVC;  // Pointer to value's brother
+    struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to value's father key
+    DWORD  bvaluematch;                     // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
 
 
 // Struct used for Windows File System
 struct _FILECONTENT {
-    LPTSTR lpFileName;                        // Pointer to file's name
-    DWORD  writetimelow;                      // File write time [LOW  DWORD]
-    DWORD  writetimehigh;                     // File write time [HIGH DWORD]
-    DWORD  filesizelow;                       // File size [LOW  DWORD]
-    DWORD  filesizehigh;                      // File size [HIGH DWORD]
-    DWORD  fileattr;                          // File attributes (e.g. directory)
-    DWORD  chksum;                            // File checksum (planned for the future, currently not used)
-    struct _FILECONTENT FAR *lpFirstSubFC;    // Pointer to file's first sub file
-    struct _FILECONTENT FAR *lpBrotherFC;     // Pointer to file's brother
-    struct _FILECONTENT FAR *lpFatherFC;      // Pointer to file's father
-    DWORD  bfilematch;                        // Flags used when comparing, until 1.8.2 was byte
+    LPTSTR lpszFileName;                    // Pointer to file's name
+    DWORD  writetimelow;                    // File write time [LOW  DWORD]
+    DWORD  writetimehigh;                   // File write time [HIGH DWORD]
+    DWORD  filesizelow;                     // File size [LOW  DWORD]
+    DWORD  filesizehigh;                    // File size [HIGH DWORD]
+    DWORD  fileattr;                        // File attributes (e.g. directory)
+    DWORD  chksum;                          // File checksum (planned for the future, currently not used)
+    struct _FILECONTENT FAR *lpFirstSubFC;  // Pointer to file's first sub file
+    struct _FILECONTENT FAR *lpBrotherFC;   // Pointer to file's brother
+    struct _FILECONTENT FAR *lpFatherFC;    // Pointer to file's father
+    DWORD  bfilematch;                      // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR *LPFILECONTENT;
 
 
 // Adjusted for filecontent saving. 1.8
 struct _HEADFILE {
-    struct _HEADFILE FAR *lpBrotherHF;        // Pointer to head file's brother
-    LPFILECONTENT   lpFirstFC;                // Pointer to head file's first file
+    struct _HEADFILE FAR *lpBrotherHF;      // Pointer to head file's brother
+    LPFILECONTENT   lpFirstFC;              // Pointer to head file's first file
 };
 typedef struct  _HEADFILE HEADFILE, FAR *LPHEADFILE;
 
 
 // Struct used for comparing result output
 struct _COMRESULT {
-    LPSTR  lpresult;                          // Pointer to result string
-    struct _COMRESULT FAR *lpnextresult;      // Pointer to next _COMRESULT
+    LPTSTR  lpszResult;                     // Pointer to result string
+    struct _COMRESULT FAR *lpnextresult;    // Pointer to next _COMRESULT
 };
 typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
 
 // Struct for shot,2012.
 struct _REGSHOT {
-    LPKEYCONTENT  lpHKLM;        // Pointer to Shot's HKLM registry keys
-    LPKEYCONTENT  lpHKU;         // Pointer to Shot's HKU registry keys
-    LPHEADFILE    lpHF;          // Pointer to Shot's head files
-    LPTSTR        computername;  // Pointer to Shot's computer name
-    LPTSTR        username;      // Pointer to Shot's user name
+    LPKEYCONTENT  lpHKLM;            // Pointer to Shot's HKLM registry keys
+    LPKEYCONTENT  lpHKU;             // Pointer to Shot's HKU registry keys
+    LPHEADFILE    lpHF;              // Pointer to Shot's head files
+    LPTSTR        lpszComputerName;  // Pointer to Shot's computer name
+    LPTSTR        lpszUserName;      // Pointer to Shot's user name
     SYSTEMTIME    systemtime;
 };
 typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
@@ -363,24 +363,18 @@ LPHEADFILE      lpHeadFile1;            // Pointer to headfile
 LPHEADFILE      lpHeadFile2;
 */
 
-// Some pointers need to allocate enough space to working
-extern LPSTR lpKeyName;
-extern LPSTR lpValueName;
-extern LPBYTE lpValueData;
-
-
 #define REGSHOT_MESSAGE_LENGTH 256
 extern LPTSTR lpszMessage;
-extern LPSTR lpExtDir;
-extern LPTSTR lpOutputpath;
-extern LPTSTR lpLastSaveDir;
-extern LPTSTR lpLastOpenDir;
+extern LPTSTR lpszExtDir;
+extern LPTSTR lpszOutputPath;
+extern LPTSTR lpszLastSaveDir;
+extern LPTSTR lpszLastOpenDir;
 extern LPTSTR lpszLanguage;
-extern LPSTR lpWindowsDirName;
-extern LPSTR lpTempPath;
-extern LPSTR lpLanguageIni;  // For language.ini
-extern LPSTR lpCurrentTranslator;
-extern LPSTR lpRegshotIni;
+extern LPTSTR lpszWindowsDirName;
+extern LPTSTR lpszTempPath;
+extern LPTSTR lpszLanguageIni;  // For language.ini
+extern LPTSTR lpszCurrentTranslator;
+extern LPTSTR lpszRegshotIni;
 
 extern LPTSTR *lprgszRegSkipStrings;
 extern LPTSTR *lprgszFileSkipStrings;
@@ -426,7 +420,7 @@ VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllFileHead(LPHEADFILE lpHeadFile);
 VOID    ClearKeyMatchTag(LPKEYCONTENT lpKC);
 VOID    GetFilesSnap(LPFILECONTENT lpFatherFC);                  // HWND hDlg, first para deleted in 1.8
-LPSTR   GetWholeFileName(LPFILECONTENT lpFileContent);
+LPTSTR  GetWholeFileName(LPFILECONTENT lpFileContent);
 VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
@@ -438,10 +432,10 @@ VOID    WriteHTMLBegin(void);
 VOID    WriteHTMLEnd(void);
 VOID    WriteHTML_BR(void);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
-VOID    FindDirChain(LPHEADFILE lpHF, LPSTR lpDir, size_t nMaxLen);
+VOID    FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nMaxLen);
 BOOL    DirChainMatch(LPHEADFILE lphf1, LPHEADFILE lphf2);
 VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
-LPFILECONTENT SearchDirChain(LPSTR lpname, LPHEADFILE lpHF);
+LPFILECONTENT SearchDirChain(LPTSTR lpname, LPHEADFILE lpHF);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
@@ -501,7 +495,7 @@ enum eLangTexts {
 };
 
 struct _LANGUAGETEXT {
-    LPTSTR lpString;
+    LPTSTR lpszText;
     int nIDDlgItem;
 };
 typedef struct _LANGUAGETEXT LANGUAGETEXT, FAR *LPLANGUAGETEXT;
@@ -514,12 +508,12 @@ extern LPTSTR lpStringBuffer;
 extern size_t nStringBufferSize;
 extern size_t nSourceSize;
 
-extern TCHAR szCRLF[];
+extern LPTSTR lpszCRLF;
 
-extern TCHAR *lpszProgramName;
+extern LPTSTR lpszProgramName;
 
 #ifndef _UNICODE
-extern TCHAR szEmpty[];
+extern LPTSTR lpszEmpty;
 #endif
 
 size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
@@ -527,11 +521,11 @@ VOID SaveHeadFile(LPHEADFILE lpHF, DWORD nFPCaller);
 VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 
 #ifdef DEBUGLOG
-#define REGSHOT_DEBUG_MESSAGE_LENGTH 100
+#define REGSHOT_DEBUG_MESSAGE_LENGTH 101
 
-extern TCHAR szDebugTryToGetValueLog[];
-extern TCHAR szDebugValueNameDataLog[];
-extern TCHAR szDebugKeyLog[];
+extern LPTSTR lpszDebugTryToGetValueLog;
+extern LPTSTR lpszDebugValueNameDataLog;
+extern LPTSTR lpszDebugKeyLog;
 
 VOID DebugLog(LPTSTR lpszFileName, LPTSTR lpszDbgMsg, BOOL fAddCRLF);
 #endif

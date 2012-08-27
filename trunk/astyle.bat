@@ -18,8 +18,7 @@ AStyle.exe --style=kr^
  --pad-header --pad-oper --unpad-paren^
  --align-pointer=name^
  --preserve-date^
- --exclude=version.h^
- --recursive ..\src\*.c ..\src\*.h
+ --recursive src\*.c src\*.h src\*.in
 
 IF %ERRORLEVEL% NEQ 0 (
   ECHO.

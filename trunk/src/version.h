@@ -22,82 +22,56 @@
 #ifndef REGSHOT_VERSION_H
 #define REGSHOT_VERSION_H
 
-#include "VersionRev.h"
 
-#define DO_STRINGIFY(x) #x
-#define STRINGIFY(x)    DO_STRINGIFY(x)
+#include "version.rc.h"  /* resource related version macros */
 
-#define REGSHOT_VERSION_MAJOR     1
-#define REGSHOT_VERSION_MINOR     8
-#define REGSHOT_VERSION_PATCH     3
+#define DO_STRINGIFY(x)   #x
+#define STRINGIFY(x)      DO_STRINGIFY(x)
 
-#define REGSHOT_VERSION_COPYRIGHT "Copyright (C) 1999-2012, all contributors"
-#define REGSHOT_VERSION_NUM       REGSHOT_VERSION_MAJOR,REGSHOT_VERSION_MINOR,REGSHOT_VERSION_PATCH,REGSHOT_VERSION_REV
-#define REGSHOT_VERSION           STRINGIFY(REGSHOT_VERSION_MAJOR) ", " STRINGIFY(REGSHOT_VERSION_MINOR) ", " STRINGIFY(REGSHOT_VERSION_PATCH) ", " STRINGIFY(REGSHOT_VERSION_REV)
-#define REGSHOT_VERSION_STRING    STRINGIFY(REGSHOT_VERSION_MAJOR) "." STRINGIFY(REGSHOT_VERSION_MINOR) "." STRINGIFY(REGSHOT_VERSION_PATCH) "-beta2"
-
-#ifdef _WIN64
-#define REGSHOT_TITLE             "Regshot x64"
-#define REGSHOT_RESULT_FILE       "~res-x64"
-#define REGSHOT_VERSION_PLATFORM  "x64"
-#else
-#define REGSHOT_TITLE             "Regshot"
-#define REGSHOT_RESULT_FILE       "~res"
-#define REGSHOT_VERSION_PLATFORM  "win32"
-#endif // _WIN64
-
-#ifdef _DEBUG
-#define REGSHOT_VERSION_BUILDTYPE "d"
-#else
-#define REGSHOT_VERSION_BUILDTYPE "r"
-#endif
-
-#define DO_STRINGIFY(x) #x
-#define STRINGIFY(x)    DO_STRINGIFY(x)
-
+/*
+    Define macros for compiler version
+*/
 #if defined(__GNUC__)
-    #define REGSHOT_VERSION_COMPILER "GCC "STRINGIFY(__GNUC__)"."STRINGIFY(__GNUC_MINOR__)"."STRINGIFY(__GNUC_PATCHLEVEL__)
+#   define REGSHOT_VERSION_COMPILER   TEXT("GCC ") TEXT(STRINGIFY(__GNUC__)) TEXT(".") TEXT(STRINGIFY(__GNUC_MINOR__)) TEXT(".") TEXT(STRINGIFY(__GNUC_PATCHLEVEL__))
 #elif defined(__INTEL_COMPILER)
-    #if __INTEL_COMPILER >= 1200
-        #define REGSHOT_VERSION_COMPILER "Intel Compiler 12"
-    #else
-        #define REGSHOT_VERSION_COMPILER "Intel Compiler (version unknown)"
-    #endif
+#   if __INTEL_COMPILER >= 1200
+#       define REGSHOT_VERSION_COMPILER TEXT("Intel Compiler 12")
+#   else
+#       define REGSHOT_VERSION_COMPILER TEXT("Intel Compiler (version unknown)")
+#   endif
 #elif defined(WDK_BUILD)
-    #if _MSC_VER == 1600
-        #if (_MSC_FULL_VER >= 160040219)
-            #define REGSHOT_VERSION_COMPILER "WDK (MSVC 2010 SP1)"
-        #else
-            #define REGSHOT_VERSION_COMPILER "WDK (MSVC 2010)"
-        #endif
-    #elif _MSC_VER == 1500
-        #if (_MSC_FULL_VER == 150030729)
-            #define REGSHOT_VERSION_COMPILER "WDK"
-        #else
-            #define REGSHOT_VERSION_COMPILER "WDK (version unknown)"
-        #endif
-    #endif
+#   if _MSC_VER == 1600
+#       if (_MSC_FULL_VER >= 160040219)
+#           define REGSHOT_VERSION_COMPILER TEXT("WDK (MSVC 2010 SP1)")
+#       else
+#           define REGSHOT_VERSION_COMPILER TEXT("WDK (MSVC 2010 SP0)")
+#       endif
+#   elif _MSC_VER == 1500
+#       if (_MSC_FULL_VER == 150030729)
+#           define REGSHOT_VERSION_COMPILER TEXT("WDK")
+#       else
+#           define REGSHOT_VERSION_COMPILER TEXT("WDK (version unknown)")
+#       endif
+#   endif
 #elif defined(_MSC_VER)
-    #if _MSC_VER == 1600
-        #if (_MSC_FULL_VER >= 160040219)
-            #define REGSHOT_VERSION_COMPILER "MSVC 2010 SP1"
-        #else
-            #define REGSHOT_VERSION_COMPILER "MSVC 2010"
-        #endif
-    #elif _MSC_VER == 1500
-        #if (_MSC_FULL_VER >= 150030729)
-            #define REGSHOT_VERSION_COMPILER "MSVC 2008 SP1"
-        #else
-            #define REGSHOT_VERSION_COMPILER "MSVC 2008"
-        #endif
-    #else
-        #define REGSHOT_VERSION_COMPILER "MSVC (version unknown)"
-    #endif
+#   if _MSC_VER == 1600
+#       if (_MSC_FULL_VER >= 160040219)
+#           define REGSHOT_VERSION_COMPILER TEXT("MSVC 2010 SP1")
+#       else
+#           define REGSHOT_VERSION_COMPILER TEXT("MSVC 2010 SP0")
+#       endif
+#   elif _MSC_VER == 1500
+#       if (_MSC_FULL_VER >= 150030729)
+#           define REGSHOT_VERSION_COMPILER TEXT("MSVC 2008 SP1")
+#       else
+#           define REGSHOT_VERSION_COMPILER TEXT("MSVC 2008 SP0")
+#       endif
+#   else
+#       define REGSHOT_VERSION_COMPILER TEXT("MSVC (version unknown)")
+#   endif
 #else
-    #define REGSHOT_VERSION_COMPILER "(Unknown compiler)"
+#   define REGSHOT_VERSION_COMPILER TEXT("(Unknown compiler)")
 #endif
-
-#define REGSHOT_VERSION_DESCRIPTION   REGSHOT_VERSION_STRING ", " REGSHOT_VERSION_PLATFORM ", " REGSHOT_VERSION_BUILDTYPE ", " REGSHOT_VERSION_COMPILER
 
 
 #endif // REGSHOT_VERSION_H

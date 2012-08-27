@@ -22,10 +22,10 @@
 
 LANGUAGETEXT asLangTexts[cLangStrings];
 
-LPTSTR szDefaultLanguage = TEXT("English");
-LPTSTR szItemTranslator  = TEXT("Translator=");
-LPTSTR szSectionCurrent  = TEXT("CURRENT");
-LPTSTR szOriginal        = TEXT("[Original]");
+LPTSTR lpszDefaultLanguage = TEXT("English");
+LPTSTR lpszItemTranslator  = TEXT("Translator=");
+LPTSTR lpszSectionCurrent  = TEXT("CURRENT");
+LPTSTR lpszOriginal        = TEXT("[Original]");
 
 LPTSTR lpszLanguage;
 size_t cchMaxLanguageNameLen;
@@ -42,82 +42,82 @@ VOID SetTextsToDefaultLanguage(VOID)
     ZeroMemory(asLangTexts, sizeof(asLangTexts));
 
     // Set English default language strings
-    asLangTexts[iszTextKey].lpString               = TEXT("Keys:");
-    asLangTexts[iszTextValue].lpString             = TEXT("Values:");
-    asLangTexts[iszTextDir].lpString               = TEXT("Dirs:");
-    asLangTexts[iszTextFile].lpString              = TEXT("Files:");
-    asLangTexts[iszTextTime].lpString              = TEXT("Time:");
-    asLangTexts[iszTextKeyAdd].lpString            = TEXT("Keys added: ");
-    asLangTexts[iszTextKeyDel].lpString            = TEXT("Keys deleted: ");
-    asLangTexts[iszTextValAdd].lpString            = TEXT("Values added: ");
-    asLangTexts[iszTextValDel].lpString            = TEXT("Values deleted: ");
-    asLangTexts[iszTextValModi].lpString           = TEXT("Values modified: ");
-    asLangTexts[iszTextFileAdd].lpString           = TEXT("Files added: ");
-    asLangTexts[iszTextFileDel].lpString           = TEXT("Files deleted: ");
-    asLangTexts[iszTextFileModi].lpString          = TEXT("Files [attributes?] modified: ");
-    asLangTexts[iszTextDirAdd].lpString            = TEXT("Folders added: ");
-    asLangTexts[iszTextDirDel].lpString            = TEXT("Folders deleted: ");
-    asLangTexts[iszTextDirModi].lpString           = TEXT("Folders attributes changed: ");
-    asLangTexts[iszTextTotal].lpString             = TEXT("Total changes: ");
-    asLangTexts[iszTextComments].lpString          = TEXT("Comments: ");
-    asLangTexts[iszTextDateTime].lpString          = TEXT("Datetime: ");
-    asLangTexts[iszTextComputer].lpString          = TEXT("Computer: ");
-    asLangTexts[iszTextUsername].lpString          = TEXT("Username: ");
-    asLangTexts[iszTextAbout].lpString             = TEXT("About");
-    asLangTexts[iszTextError].lpString             = TEXT("Error");
-    asLangTexts[iszTextErrorExecViewer].lpString   = TEXT("Error call External Viewer!");
-    asLangTexts[iszTextErrorCreateFile].lpString   = TEXT("Error creating file!");
-    asLangTexts[iszTextErrorOpenFile].lpString     = TEXT("Error open file!");
-    asLangTexts[iszTextErrorMoveFP].lpString       = TEXT("Error move file pointer!");
+    asLangTexts[iszTextKey].lpszText               = TEXT("Keys:");
+    asLangTexts[iszTextValue].lpszText             = TEXT("Values:");
+    asLangTexts[iszTextDir].lpszText               = TEXT("Dirs:");
+    asLangTexts[iszTextFile].lpszText              = TEXT("Files:");
+    asLangTexts[iszTextTime].lpszText              = TEXT("Time:");
+    asLangTexts[iszTextKeyAdd].lpszText            = TEXT("Keys added: ");
+    asLangTexts[iszTextKeyDel].lpszText            = TEXT("Keys deleted: ");
+    asLangTexts[iszTextValAdd].lpszText            = TEXT("Values added: ");
+    asLangTexts[iszTextValDel].lpszText            = TEXT("Values deleted: ");
+    asLangTexts[iszTextValModi].lpszText           = TEXT("Values modified: ");
+    asLangTexts[iszTextFileAdd].lpszText           = TEXT("Files added: ");
+    asLangTexts[iszTextFileDel].lpszText           = TEXT("Files deleted: ");
+    asLangTexts[iszTextFileModi].lpszText          = TEXT("Files [attributes?] modified: ");
+    asLangTexts[iszTextDirAdd].lpszText            = TEXT("Folders added: ");
+    asLangTexts[iszTextDirDel].lpszText            = TEXT("Folders deleted: ");
+    asLangTexts[iszTextDirModi].lpszText           = TEXT("Folders attributes changed: ");
+    asLangTexts[iszTextTotal].lpszText             = TEXT("Total changes: ");
+    asLangTexts[iszTextComments].lpszText          = TEXT("Comments: ");
+    asLangTexts[iszTextDateTime].lpszText          = TEXT("Datetime: ");
+    asLangTexts[iszTextComputer].lpszText          = TEXT("Computer: ");
+    asLangTexts[iszTextUsername].lpszText          = TEXT("Username: ");
+    asLangTexts[iszTextAbout].lpszText             = TEXT("About");
+    asLangTexts[iszTextError].lpszText             = TEXT("Error");
+    asLangTexts[iszTextErrorExecViewer].lpszText   = TEXT("Error call External Viewer!");
+    asLangTexts[iszTextErrorCreateFile].lpszText   = TEXT("Error creating file!");
+    asLangTexts[iszTextErrorOpenFile].lpszText     = TEXT("Error open file!");
+    asLangTexts[iszTextErrorMoveFP].lpszText       = TEXT("Error move file pointer!");
 
-    asLangTexts[iszTextButtonShot1].lpString       = TEXT("&1st shot");
+    asLangTexts[iszTextButtonShot1].lpszText       = TEXT("&1st shot");
     asLangTexts[iszTextButtonShot1].nIDDlgItem     = IDC_1STSHOT;
 
-    asLangTexts[iszTextButtonShot2].lpString       = TEXT("&2nd shot");
+    asLangTexts[iszTextButtonShot2].lpszText       = TEXT("&2nd shot");
     asLangTexts[iszTextButtonShot2].nIDDlgItem     = IDC_2NDSHOT;
 
-    asLangTexts[iszTextButtonCompare].lpString     = TEXT("C&ompare");
+    asLangTexts[iszTextButtonCompare].lpszText     = TEXT("C&ompare");
     asLangTexts[iszTextButtonCompare].nIDDlgItem   = IDC_COMPARE;
 
-    asLangTexts[iszTextButtonClear].lpString       = TEXT("&Clear");
+    asLangTexts[iszTextButtonClear].lpszText       = TEXT("&Clear");
     asLangTexts[iszTextButtonClear].nIDDlgItem     = IDC_CLEAR1;
 
-    asLangTexts[iszTextButtonQuit].lpString        = TEXT("&Quit");
+    asLangTexts[iszTextButtonQuit].lpszText        = TEXT("&Quit");
     asLangTexts[iszTextButtonQuit].nIDDlgItem      = IDC_CANCEL1;
 
-    asLangTexts[iszTextButtonAbout].lpString       = TEXT("&About");
+    asLangTexts[iszTextButtonAbout].lpszText       = TEXT("&About");
     asLangTexts[iszTextButtonAbout].nIDDlgItem     = IDC_ABOUT;
 
-    asLangTexts[iszTextTextMonitor].lpString       = TEXT("&Monitor..");
+    asLangTexts[iszTextTextMonitor].lpszText       = TEXT("&Monitor..");
     //asLangTexts[iszTextTextMonitor].nIDDlgItem     = IDC_MONITOR;
 
-    asLangTexts[iszTextTextCompare].lpString       = TEXT("Compare logs save as:");
+    asLangTexts[iszTextTextCompare].lpszText       = TEXT("Compare logs save as:");
     asLangTexts[iszTextTextCompare].nIDDlgItem     = IDC_STATICSAVEFORMAT;
 
-    asLangTexts[iszTextTextOutput].lpString        = TEXT("Output path:");
+    asLangTexts[iszTextTextOutput].lpszText        = TEXT("Output path:");
     asLangTexts[iszTextTextOutput].nIDDlgItem      = IDC_STATICOUTPUTPATH;
 
-    asLangTexts[iszTextTextComment].lpString       = TEXT("Add comment into the log:");
+    asLangTexts[iszTextTextComment].lpszText       = TEXT("Add comment into the log:");
     asLangTexts[iszTextTextComment].nIDDlgItem     = IDC_STATICADDCOMMENT;
 
-    asLangTexts[iszTextRadioPlain].lpString        = TEXT("Plain &TXT");
+    asLangTexts[iszTextRadioPlain].lpszText        = TEXT("Plain &TXT");
     asLangTexts[iszTextRadioPlain].nIDDlgItem      = IDC_RADIO1;
 
-    asLangTexts[iszTextRadioHTML].lpString         = TEXT("&HTML document");
+    asLangTexts[iszTextRadioHTML].lpszText         = TEXT("&HTML document");
     asLangTexts[iszTextRadioHTML].nIDDlgItem       = IDC_RADIO2;
 
-    asLangTexts[iszTextTextScan].lpString          = TEXT("&Scan dir1[;dir2;dir3;...;dir nn]:");
+    asLangTexts[iszTextTextScan].lpszText          = TEXT("&Scan dir1[;dir2;dir3;...;dir nn]:");
     asLangTexts[iszTextTextScan].nIDDlgItem        = IDC_CHECKDIR;
 
-    asLangTexts[iszTextMenuShot].lpString          = TEXT("&Shot");
-    asLangTexts[iszTextMenuShotSave].lpString      = TEXT("Shot and Sa&ve...");
-    asLangTexts[iszTextMenuShotLoad].lpString      = TEXT("Loa&d...");
-    asLangTexts[iszTextMenuClearAllShots].lpString = TEXT("&Clear All");
-    asLangTexts[iszTextMenuClearShot1].lpString    = TEXT("Clear &1st shot");
-    asLangTexts[iszTextMenuClearShot2].lpString    = TEXT("Clear &2nd shot");
+    asLangTexts[iszTextMenuShot].lpszText          = TEXT("&Shot");
+    asLangTexts[iszTextMenuShotSave].lpszText      = TEXT("Shot and Sa&ve...");
+    asLangTexts[iszTextMenuShotLoad].lpszText      = TEXT("Loa&d...");
+    asLangTexts[iszTextMenuClearAllShots].lpszText = TEXT("&Clear All");
+    asLangTexts[iszTextMenuClearShot1].lpszText    = TEXT("Clear &1st shot");
+    asLangTexts[iszTextMenuClearShot2].lpszText    = TEXT("Clear &2nd shot");
 
     // Set translator too
-    lpCurrentTranslator = szOriginal;
+    lpszCurrentTranslator = lpszOriginal;
 }
 
 // ----------------------------------------------------------------------
@@ -133,13 +133,13 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
     size_t nLanguageNameLen;
 
     // Always add default language to combo box and select it as default
-    nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)szDefaultLanguage);  // TODO: handle CB_ERR and CB_ERRSPACE
+    nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)lpszDefaultLanguage);  // TODO: handle CB_ERR and CB_ERRSPACE
     SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_SETCURSEL, (WPARAM)nResult, (LPARAM)0);
-    cchMaxLanguageNameLen = _tcslen(szDefaultLanguage);
+    cchMaxLanguageNameLen = _tcslen(lpszDefaultLanguage);
 
     // Get sections (=language names) from language ini
     lpgrszSectionNames = MYALLOC0(MAX_INI_SECTION_CHARS * sizeof(TCHAR));
-    cchSectionNames = GetPrivateProfileSectionNames(lpgrszSectionNames, MAX_INI_SECTION_CHARS, lpLanguageIni);
+    cchSectionNames = GetPrivateProfileSectionNames(lpgrszSectionNames, MAX_INI_SECTION_CHARS, lpszLanguageIni);  // length incl. double NULL character
     if (1 < cchSectionNames) {
         for (i = 0; i < cchSectionNames; i++) {
             if (0 == lpgrszSectionNames[i]) {  // reached the end of the section names buffer
@@ -148,7 +148,7 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
 
             nLanguageNameLen = _tcslen(&lpgrszSectionNames[i]);
 
-            if ((0 != _tcsicmp(&lpgrszSectionNames[i], szSectionCurrent)) && (0 != _tcsicmp(&lpgrszSectionNames[i], szDefaultLanguage))) {
+            if ((0 != _tcsicmp(&lpgrszSectionNames[i], lpszSectionCurrent)) && (0 != _tcsicmp(&lpgrszSectionNames[i], lpszDefaultLanguage))) {
                 nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)&lpgrszSectionNames[i]);  // TODO: handle CB_ERR and CB_ERRSPACE
                 if (nLanguageNameLen > cchMaxLanguageNameLen) {
                     cchMaxLanguageNameLen = nLanguageNameLen;
@@ -162,7 +162,7 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
 
     // Allocate memory for longest language name, and copy default language name to it
     lpszLanguage = MYALLOC0((cchMaxLanguageNameLen + 1) * sizeof(TCHAR));
-    _tcscpy(lpszLanguage, szDefaultLanguage);
+    _tcscpy(lpszLanguage, lpszDefaultLanguage);
 }
 
 // ----------------------------------------------------------------------
@@ -175,7 +175,7 @@ BOOL GetSelectedLanguage(HWND hDlg)
     LRESULT nResult;
 
     lpszSelectedLanguage = MYALLOC0((cchMaxLanguageNameLen + 1) * sizeof(TCHAR));
-    cchLanguageName = GetPrivateProfileString(szSectionCurrent, szSectionCurrent, NULL, lpszLanguage, (DWORD)(cchMaxLanguageNameLen + 1), lpLanguageIni);
+    cchLanguageName = GetPrivateProfileString(lpszSectionCurrent, lpszSectionCurrent, NULL, lpszLanguage, (DWORD)(cchMaxLanguageNameLen + 1), lpszLanguageIni);  // length incl. NULL character
     if (1 < cchLanguageName) {
         nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_FINDSTRINGEXACT, (WPARAM)0, (LPARAM)lpszLanguage);
         if (CB_ERR != nResult) {
@@ -216,10 +216,10 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
     }
 
     // Write new language selection to language ini
-    WritePrivateProfileString(szSectionCurrent, szSectionCurrent, lpszLanguage, lpLanguageIni);
+    WritePrivateProfileString(lpszSectionCurrent, lpszSectionCurrent, lpszLanguage, lpszLanguageIni);
 
     // Nothing more to do for default language
-    if (0 == _tcsicmp(lpszLanguage, szDefaultLanguage)) {
+    if (0 == _tcsicmp(lpszLanguage, lpszDefaultLanguage)) {
         return;
     }
 
@@ -227,29 +227,29 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
     if (NULL == lpgrszLangSection) {
         lpgrszLangSection = MYALLOC0(MAX_INI_SECTION_CHARS * sizeof(TCHAR));
     }
-    cchSection = GetPrivateProfileSection(lpszLanguage, lpgrszLangSection, MAX_INI_SECTION_CHARS, lpLanguageIni);
+    cchSection = GetPrivateProfileSection(lpszLanguage, lpgrszLangSection, MAX_INI_SECTION_CHARS, lpszLanguageIni);  // length incl. double NULL character
 
     // Find language strings and assign if not empty
-    szIniKey[16] = 0;  // saftey NULL char
     for (i = 0; i < cLangStrings; i++) {
-        _sntprintf(szIniKey, 16, TEXT("%u%s"), (i + 1), TEXT("="));
+        _sntprintf(szIniKey, 17, TEXT("%u%s\0"), (i + 1), TEXT("="));
+        szIniKey[16] = (TCHAR)'\0';  // saftey NULL char
         lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, szIniKey, cchSection, _tcslen(szIniKey));
         if (NULL != lpszMatchValue) {
             // pointer returned points to char directly after equal char ("="), and is not empty
-            asLangTexts[i].lpString = lpszMatchValue;
+            asLangTexts[i].lpszText = lpszMatchValue;
         }
 
         // Update gui text with language string if id provided
         if (0 != asLangTexts[i].nIDDlgItem) {
-            SetDlgItemText(hDlg, asLangTexts[i].nIDDlgItem, asLangTexts[i].lpString);
+            SetDlgItemText(hDlg, asLangTexts[i].nIDDlgItem, asLangTexts[i].lpszText);
         }
     }
 
     // Get translator's name
-    lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, szItemTranslator, cchSection, _tcslen(szItemTranslator));
+    lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, lpszItemTranslator, cchSection, _tcslen(lpszItemTranslator));
     if (NULL != lpszMatchValue) {
-        lpCurrentTranslator = lpszMatchValue;
+        lpszCurrentTranslator = lpszMatchValue;
     } else {
-        lpCurrentTranslator = szOriginal;
+        lpszCurrentTranslator = lpszOriginal;
     }
 }
