@@ -1,7 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "version.h"
+#include "version.rc.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -28,32 +28,32 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDD_DIALOG1 DIALOGEX 0, 0, 194, 166
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION REGSHOT_TITLE
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
+CAPTION REGSHOT_CAPTION
+FONT 8, TEXT("MS Shell Dlg"), 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&1st shot",IDC_1STSHOT,137,10,49,13
-    PUSHBUTTON      "&2nd shot",IDC_2NDSHOT,137,27,49,13,WS_DISABLED
-    PUSHBUTTON      "C&ompare",IDC_COMPARE,137,45,49,13,WS_DISABLED
-    PUSHBUTTON      "&Clear",IDC_CLEAR1,137,63,49,13,WS_DISABLED
-    PUSHBUTTON      "&Quit",IDC_CANCEL1,137,81,49,13
-    PUSHBUTTON      "&About",IDC_ABOUT,137,99,49,13
+    DEFPUSHBUTTON   TEXT("&1st shot"),IDC_1STSHOT,137,10,49,13
+    PUSHBUTTON      TEXT("&2nd shot"),IDC_2NDSHOT,137,27,49,13,WS_DISABLED
+    PUSHBUTTON      TEXT("C&ompare"),IDC_COMPARE,137,45,49,13,WS_DISABLED
+    PUSHBUTTON      TEXT("&Clear"),IDC_CLEAR1,137,63,49,13,WS_DISABLED
+    PUSHBUTTON      TEXT("&Quit"),IDC_CANCEL1,137,81,49,13
+    PUSHBUTTON      TEXT("&About"),IDC_ABOUT,137,99,49,13
     COMBOBOX        IDC_COMBOLANGUAGE,137,134,50,55,CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Plain &TXT",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,11,19,46,10
-    CONTROL         "&HTML document",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,60,19,71,10
-    CONTROL         "&Scan dir1[;dir2;dir3;...;dir nn]:",IDC_CHECKDIR,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,45,120,10
+    CONTROL         TEXT("Plain &TXT"),IDC_RADIO1,TEXT("Button"),BS_AUTORADIOBUTTON,11,19,46,10
+    CONTROL         TEXT("&HTML document"),IDC_RADIO2,TEXT("Button"),BS_AUTORADIOBUTTON,60,19,71,10
+    CONTROL         TEXT("&Scan dir1[;dir2;dir3;...;dir nn]:"),IDC_CHECKDIR,TEXT("Button"),BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,11,45,120,10
     EDITTEXT        IDC_EDITDIR,11,58,94,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BROWSE1,108,58,18,13
+    PUSHBUTTON      TEXT("..."),IDC_BROWSE1,108,58,18,13
     EDITTEXT        IDC_EDITPATH,12,94,94,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BROWSE2,108,95,18,13
+    PUSHBUTTON      TEXT("..."),IDC_BROWSE2,108,95,18,13
     EDITTEXT        IDC_EDITCOMMENT,11,128,114,14,ES_AUTOHSCROLL
-    LTEXT           "",IDC_TEXTCOUNT1,8,153,54,8,NOT WS_VISIBLE
-    LTEXT           "",IDC_TEXTCOUNT2,69,153,59,8,NOT WS_VISIBLE
-    LTEXT           "",IDC_TEXTCOUNT3,134,153,55,8,NOT WS_VISIBLE
-    GROUPBOX        "Compare logs save as:",IDC_STATICSAVEFORMAT,6,7,125,27
-    GROUPBOX        "",IDC_STATIC,6,37,125,40
-    GROUPBOX        "Output path:",IDC_STATICOUTPUTPATH,6,82,125,31
-    GROUPBOX        "Add comment into the log:",IDC_STATICADDCOMMENT,6,117,125,31
-    CONTROL         "Progress1",IDC_PBCOMPARE,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,7,153,180,9
+    LTEXT           TEXT(""),IDC_TEXTCOUNT1,8,153,54,8,NOT WS_VISIBLE
+    LTEXT           TEXT(""),IDC_TEXTCOUNT2,69,153,59,8,NOT WS_VISIBLE
+    LTEXT           TEXT(""),IDC_TEXTCOUNT3,134,153,55,8,NOT WS_VISIBLE
+    GROUPBOX        TEXT("Compare logs save as:"),IDC_STATICSAVEFORMAT,6,7,125,27
+    GROUPBOX        TEXT(""),IDC_STATIC,6,37,125,40
+    GROUPBOX        TEXT("Output path:"),IDC_STATICOUTPUTPATH,6,82,125,31
+    GROUPBOX        TEXT("Add comment into the log:"),IDC_STATICADDCOMMENT,6,117,125,31
+    CONTROL         TEXT("Progress1"),IDC_PBCOMPARE,TEXT("msctls_progress32"),NOT WS_VISIBLE | WS_BORDER,7,153,180,9
 END
 
 
@@ -86,18 +86,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -128,8 +128,8 @@ IDI_MAINICON            ICON                    "res\\regshot.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    REGSHOT_VERSION_NUM
- PRODUCTVERSION REGSHOT_VERSION_NUM
+ FILEVERSION    REGSHOT_FILEVERSION
+ PRODUCTVERSION REGSHOT_FILEVERSION
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -144,14 +144,18 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName",      "Regshot Team"
+            VALUE "CompanyName",      TEXT("Regshot Team")
             VALUE "FileDescription",  REGSHOT_TITLE
-            VALUE "FileVersion",      REGSHOT_VERSION
-            VALUE "InternalName",     "Regshot"
+            VALUE "FileVersion",      REGSHOT_PRODUCTVERSION
+            VALUE "InternalName",     REGSHOT_BASENAME
             VALUE "LegalCopyright",   REGSHOT_VERSION_COPYRIGHT
-            VALUE "OriginalFilename", "Regshot.exe"
-            VALUE "ProductName",      "Regshot"
-            VALUE "ProductVersion",    REGSHOT_VERSION
+            VALUE "OriginalFilename", TEXT(STRINGIFY(TARGETFILENAME))
+            VALUE "ProductName",      REGSHOT_BASENAME
+            VALUE "ProductVersion",   REGSHOT_PRODUCTVERSION
+#ifdef REGSHOT_SPECIALBUILD
+            VALUE "SpecialBuild",     REGSHOT_SPECIALBUILD
+#endif
+            VALUE "Comments",         REGSHOT_URL
         END
     END
     BLOCK "VarFileInfo"

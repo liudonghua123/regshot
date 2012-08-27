@@ -26,15 +26,15 @@
 // ----------------------------------------------------------------------
 VOID ErrMsg(LPTSTR lpszErrMsg)
 {
-    MessageBox(hWnd, lpszErrMsg, asLangTexts[iszTextError].lpString, MB_ICONHAND);
+    MessageBox(hWnd, lpszErrMsg, asLangTexts[iszTextError].lpszText, MB_ICONHAND);
 }
 
 
 #ifdef DEBUGLOG
 // debug log files
-TCHAR szDebugTryToGetValueLog[] = TEXT("debug_trytogetvalue.log");
-TCHAR szDebugValueNameDataLog[] = TEXT("debug_valuenamedata.log");
-TCHAR szDebugKeyLog[] = TEXT("debug_key.log");
+LPTSTR lpszDebugTryToGetValueLog = TEXT("debug_trytogetvalue.log");
+LPTSTR lpszDebugValueNameDataLog = TEXT("debug_valuenamedata.log");
+LPTSTR lpszDebugKeyLog           = TEXT("debug_key.log");
 
 // ----------------------------------------------------------------------
 // Write message to debug log file
@@ -46,21 +46,21 @@ VOID DebugLog(LPTSTR lpszFileName, LPTSTR lpszDbgMsg, BOOL fAddCRLF)
 
     hFile = CreateFile(lpszFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFile) {
-        ErrMsg(asLangTexts[iszTextErrorCreateFile].lpString);
+        ErrMsg(asLangTexts[iszTextErrorCreateFile].lpszText);
         return;
     }
 
     nPos = SetFilePointer(hFile, 0, NULL, FILE_END);
     if (0xFFFFFFFF == nPos) {
-        ErrMsg(asLangTexts[iszTextErrorMoveFP].lpString);
+        ErrMsg(asLangTexts[iszTextErrorMoveFP].lpszText);
     } else {
         nLen = _tcslen(lpszDbgMsg) * sizeof(TCHAR);
         WriteFile(hFile, lpszDbgMsg, (DWORD)nLen, &NBW, NULL);
         if (NBW != nLen) {
-            //ErrMsg(asLangTexts[iszTextErrorWriteFile].lpString);
+            //ErrMsg(asLangTexts[iszTextErrorWriteFile].lpszText);
         }
         if (fAddCRLF) {
-            WriteFile(hFile, szCRLF, (DWORD)(_tcslen(szCRLF) * sizeof(TCHAR)), &NBW, NULL);
+            WriteFile(hFile, lpszCRLF, (DWORD)(_tcslen(lpszCRLF) * sizeof(TCHAR)), &NBW, NULL);
         }
     }
 
@@ -72,7 +72,7 @@ VOID DebugLog(LPTSTR lpszFileName, LPTSTR lpszDbgMsg, BOOL fAddCRLF)
 // ----------------------------------------------------------------------
 // Replace invalid chars for a file name
 // ----------------------------------------------------------------------
-TCHAR szInvalid[] = TEXT("\\/:*?\"<>|");  // 1.8.2
+LPTSTR lpszInvalid = TEXT("\\/:*?\"<>|");  // 1.8.2
 
 BOOL ReplaceInvalidFileNameChars(LPTSTR lpszFileName)
 {
@@ -82,7 +82,7 @@ BOOL ReplaceInvalidFileNameChars(LPTSTR lpszFileName)
     BOOL fFileNameIsLegal;
     BOOL fCharIsValid;
 
-    nInvalidLen = _tcslen(szInvalid);
+    nInvalidLen = _tcslen(lpszInvalid);
     nFileNameLen = _tcslen(lpszFileName);
 
     fFileNameIsLegal = FALSE;
@@ -93,7 +93,7 @@ BOOL ReplaceInvalidFileNameChars(LPTSTR lpszFileName)
             lpszFileName[i] = (TCHAR)' ';
         } else {  // replace invalid char with underscore
             for (j = 0; j < nInvalidLen; j++) {
-                if (lpszFileName[i] == szInvalid[j]) {
+                if (lpszFileName[i] == lpszInvalid[j]) {
                     lpszFileName[i] = (TCHAR)'_';
                     fCharIsValid = FALSE;
                     break;

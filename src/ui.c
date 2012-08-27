@@ -57,12 +57,14 @@ VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD n
 {
     //nGettingTime = GetTickCount();
     nBASETIME1 = nGettingTime;
-    lpszMessage[REGSHOT_MESSAGE_LENGTH] = 0;  // safety NULL char, as translated strings could exceed buffer length
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s"), asLangTexts[iszTextTime].lpString, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s\0"), asLangTexts[iszTextTime].lpszText, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
+    lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u"), lpszTitle1, nCount1);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle1, nCount1);
+    lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u"), lpszTitle2, nCount2);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle2, nCount2);
+    lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
     UpdateWindow(hWnd);
@@ -164,9 +166,9 @@ VOID UI_AfterClear(VOID)
 VOID CreateShotPopupMenu(VOID)
 {
     hMenu = CreatePopupMenu();
-    AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, asLangTexts[iszTextMenuShot].lpString);
-    AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, asLangTexts[iszTextMenuShotSave].lpString);
+    AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, asLangTexts[iszTextMenuShot].lpszText);
+    AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, asLangTexts[iszTextMenuShotSave].lpszText);
     AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
-    AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuShotLoad].lpString);
+    AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuShotLoad].lpszText);
     SetMenuDefaultItem(hMenu, IDM_SHOTONLY, FALSE);
 }

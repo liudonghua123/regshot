@@ -140,7 +140,7 @@ $(OBJDIR)\regshot.obj: \
     $(SRC)\regshot.c \
     $(SRC)\global.h \
     $(SRC)\version.h \
-    $(SRC)\VersionRev.h
+    $(SRC)\revision.h
 
 $(OBJDIR)\regshot.res: \
     $(SRC)\regshot.rc \
@@ -148,7 +148,7 @@ $(OBJDIR)\regshot.res: \
     $(RES)\Regshot.exe.manifest \
     $(RES)\regshot.ico \
     $(SRC)\version.h \
-    $(SRC)\VersionRev.h
+    $(SRC)\revision.h
 
 $(OBJDIR)\setup.obj: \
     $(SRC)\setup.c \
@@ -162,4 +162,4 @@ $(OBJDIR)\winmain.obj: \
     $(SRC)\winmain.c \
     $(SRC)\global.h \
     $(SRC)\version.h \
-    $(SRC)\VersionRev.h
+    $(SRC)\revision.h

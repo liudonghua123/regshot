@@ -24,25 +24,41 @@
 #include "global.h"
 #include "version.h"
 
-TCHAR *lpszProgramName = REGSHOT_TITLE " " REGSHOT_VERSION_STRING;  // tfx  add program titile
-char *str_aboutme = "Regshot is a free and open source registry compare utility.\nversion: " REGSHOT_VERSION_DESCRIPTION "\n\nhttp://sourceforge.net/projects/regshot/\n\n" REGSHOT_VERSION_COPYRIGHT "\n\n";
+/*
+    Define window title for main with version, revision, etc. (see version.rc.h for title structure)
+*/
+LPTSTR lpszProgramName = REGSHOT_TITLE;  // tfx  add program titile
+LPTSTR lpszAboutRegshot = TEXT("Regshot is a free and open source registry compare utility.\n")
+                          TEXT("Version:") REGSHOT_VERSION_NUM_DOTS2 REGSHOT_VERSION_NAME4 TEXT("\n")
+                          TEXT("Revision: ") REGSHOT_REVISION_NUM2 REGSHOT_REVISION_NUM_SUFFIX2 TEXT("\n")
+                          TEXT("Architecture: ") REGSHOT_VERSION_PLATFORM TEXT("\n")
+                          TEXT("Codepage: ") REGSHOT_CODEPAGE TEXT("\n")
+                          TEXT("Compiler: ") REGSHOT_VERSION_COMPILER TEXT("\n")
+#ifdef REGSHOT_BUILDTYPE
+                          TEXT("Build: ") REGSHOT_BUILDTYPE TEXT("\n")
+#endif
+                          TEXT("\n")
+                          REGSHOT_URL TEXT("\n")
+                          TEXT("\n")
+                          REGSHOT_VERSION_COPYRIGHT TEXT("\n")
+                          TEXT("\n");
 
-LPTSTR REGSHOTINI          = TEXT("regshot.ini"); // tfx
-LPTSTR REGSHOTLANGUAGEFILE = TEXT("language.ini");
+LPTSTR lpszIniFileName      = TEXT("regshot.ini"); // tfx
+LPTSTR lpszLanguageFileName = TEXT("language.ini");
 
 REGSHOT Shot1;
 REGSHOT Shot2;
 
-LPSTR lpExtDir;
-LPTSTR lpOutputpath;
-LPTSTR lpLastSaveDir;
-LPTSTR lpLastOpenDir;
-LPSTR lpWindowsDirName;
-LPSTR lpTempPath;
-LPSTR lpStartDir;
-LPSTR lpLanguageIni;  // For language.ini
-LPSTR lpCurrentTranslator;
-LPSTR lpRegshotIni;
+LPTSTR lpszExtDir;
+LPTSTR lpszOutputPath;
+LPTSTR lpszLastSaveDir;
+LPTSTR lpszLastOpenDir;
+LPTSTR lpszWindowsDirName;
+LPTSTR lpszTempPath;
+LPTSTR lpszStartDir;
+LPTSTR lpszLanguageIni;  // For language.ini
+LPTSTR lpszCurrentTranslator;
+LPTSTR lpszRegshotIni;
 
 MSG        msg;          // Windows MSG struct
 HWND       hWnd;         // The handle of REGSHOT
@@ -73,7 +89,7 @@ int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 //--------------------------------------------------
 BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    size_t  nLengthofStr;
+    size_t  nLen;
     //BYTE    nFlag;
 
     UNREFERENCED_PARAMETER(lParam);
@@ -81,42 +97,44 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message) {
         case WM_INITDIALOG:
 
-            SendDlgItemMessage(hDlg, IDC_EDITCOMMENT, EM_SETLIMITTEXT, (WPARAM)COMMENTLENGTH, (LPARAM)0);
-            SendDlgItemMessage(hDlg, IDC_EDITPATH, EM_SETLIMITTEXT, (WPARAM)MAX_PATH, (LPARAM)0);
-            SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN / 2), (LPARAM)0);
+            SendDlgItemMessage(hDlg, IDC_EDITCOMMENT, EM_SETLIMITTEXT, (WPARAM)(COMMENTLENGTH - 1), (LPARAM)0);
+            SendDlgItemMessage(hDlg, IDC_EDITPATH, EM_SETLIMITTEXT, (WPARAM)(MAX_PATH - 1), (LPARAM)0);
+            SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN - 1), (LPARAM)0);
 
             //enlarge some buffer in 201201
-            lpszLanguage      = NULL;
-            lpExtDir          = MYALLOC0(EXTDIRLEN + 4);      // EXTDIRLEN is actually 4*max_path
-            lpLanguageIni     = MYALLOC0(MAX_PATH * 4 + 4);   // for language.ini
-            lpRegshotIni      = MYALLOC0(MAX_PATH * 4 + 4);   // for regshot.ini
-            lpKeyName         = MYALLOC0(MAX_PATH * 2 + 2);   // For scan engine store keyname
-            lpValueName       = MYALLOC0(1024 * 16 * 2);      // For scan engine store valuename
-            lpValueData       = MYALLOC0(ESTIMATE_VALUEDATA_LENGTH);  // For scan engine store valuedata estimate
-            lpszMessage       = MYALLOC0((REGSHOT_MESSAGE_LENGTH + 1) * sizeof(TCHAR));  // For status bar text message store
-            lpWindowsDirName  = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
-            lpTempPath        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
-            lpStartDir        = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));
-            lpOutputpath      = MYALLOC0((MAX_PATH + 1) * sizeof(TCHAR));  // store last save/open hive file dir, +1 for possible change in CompareShots()
-            lpgrszLangSection = NULL;
+            lpszLanguage       = NULL;
+            lpszExtDir         = MYALLOC0(EXTDIRLEN * sizeof(TCHAR));      // EXTDIRLEN is actually MAX_PATH * 4
+            lpszLanguageIni    = MYALLOC0((MAX_PATH + 1 + _tcslen(lpszLanguageFileName)) * sizeof(TCHAR));   // for language.ini
+            lpszRegshotIni     = MYALLOC0((MAX_PATH + 1 + _tcslen(lpszIniFileName)) * sizeof(TCHAR));   // for regshot.ini
+            lpszMessage        = MYALLOC0(REGSHOT_MESSAGE_LENGTH * sizeof(TCHAR));  // For status bar text message store
+            lpszWindowsDirName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+            lpszTempPath       = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+            lpszStartDir       = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+            lpszOutputPath     = MYALLOC0(MAX_PATH * sizeof(TCHAR));  // store last save/open hive file dir, +1 for possible change in CompareShots()
+            lpgrszLangSection  = NULL;
 
             ZeroMemory(&Shot1, sizeof(Shot1));
             ZeroMemory(&Shot2, sizeof(Shot2));
 
-            GetWindowsDirectory(lpWindowsDirName, MAX_PATH);
-            nLengthofStr = strlen(lpWindowsDirName);
-            if (nLengthofStr > 0 && *(lpWindowsDirName + nLengthofStr - 1) == '\\') {
-                *(lpWindowsDirName + nLengthofStr - 1) = 0x00;
-            }
-            GetTempPath(MAX_PATH, lpTempPath);
+            GetWindowsDirectory(lpszWindowsDirName, MAX_PATH);
+            lpszWindowsDirName[MAX_PATH] = (TCHAR)'\0';
+
+            GetTempPath(MAX_PATH, lpszTempPath);
+            lpszTempPath[MAX_PATH] = (TCHAR)'\0';
 
             //_asm int 3;
-            GetCurrentDirectory(MAX_PATH + 1, lpStartDir);      // fixed in 1.8.2 former version use getcommandline()
-            strcpy(lpLanguageIni, lpStartDir);
-            if (*(lpLanguageIni + strlen(lpLanguageIni) - 1) != '\\') {    // 1.8.2
-                strcat(lpLanguageIni, "\\");
+            GetCurrentDirectory(MAX_PATH, lpszStartDir);      // fixed in 1.8.2 former version use getcommandline()
+            lpszStartDir[MAX_PATH] = (TCHAR)'\0';
+
+            _tcscpy(lpszLanguageIni, lpszStartDir);
+            nLen = _tcslen(lpszLanguageIni);
+            if (nLen > 0) {
+                nLen--;
+                if (lpszLanguageIni[nLen] != (TCHAR)'\\') {
+                    _tcscat(lpszLanguageIni, TEXT("\\"));
+                }
             }
-            strcat(lpLanguageIni, REGSHOTLANGUAGEFILE);
+            _tcscat(lpszLanguageIni, lpszLanguageFileName);
 
             SetTextsToDefaultLanguage();
             LoadAvailableLanguagesFromIni(hDlg);
@@ -126,14 +144,18 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
 
-            lpLastSaveDir = lpOutputpath;
-            lpLastOpenDir = lpOutputpath;
+            lpszLastSaveDir = lpszOutputPath;
+            lpszLastOpenDir = lpszOutputPath;
 
-            strcpy(lpRegshotIni, lpStartDir);
-            if (*(lpRegshotIni + strlen(lpRegshotIni) - 1) != '\\') {
-                strcat(lpRegshotIni, "\\");
+            _tcscpy(lpszRegshotIni, lpszStartDir);
+            nLen = _tcslen(lpszRegshotIni);
+            if (nLen > 0) {
+                nLen--;
+                if (lpszRegshotIni[nLen] != (TCHAR)'\\') {
+                    _tcscat(lpszRegshotIni, TEXT("\\"));
+                }
             }
-            strcat(lpRegshotIni, REGSHOTINI);
+            _tcscat(lpszRegshotIni, lpszIniFileName);
 
             LoadSettingsFromIni(hDlg); // tfx
 
@@ -186,12 +208,12 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     }
 
                     //if (is1LoadFromHive || is2LoadFromHive)
-                    //  SendMessage(GetDlgItem(hWnd,IDC_CHECKDIR),BM_SETCHECK,(WPARAM)0x00,(LPARAM)0);
+                    //  SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
 
                     return(TRUE);
 
                     /*case IDC_SAVEREG:
-                        SaveRegistry(Shot1.lpHKLM,Shot1.lpHKU);
+                        SaveRegistry(Shot1.lpHKLM, Shot1.lpHKU);
                         return(TRUE);*/
 
                 case IDC_COMPARE:
@@ -208,17 +230,17 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_CLEAR1:
                     hMenuClear = CreatePopupMenu();
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpString);
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpszText);
                     AppendMenu(hMenuClear, MF_MENUBARBREAK, IDM_BREAK, NULL);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpString);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpString);
-                    //AppendMenu(hMenuClear,MF_STRING,IDM_CLEARRESULT,"Clear comparison result");
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpszText);
+                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpszText);
+                    //AppendMenu(hMenuClear, MF_STRING, IDM_CLEARRESULT, TEXT("Clear comparison result"));
                     SetMenuDefaultItem(hMenuClear, IDM_CLEARALLSHOTS, FALSE);
 
                     //if (lpHeadFile != NULL)
                     //{
-                    //  EnableMenuItem(hMenuClear,IDM_CLEARSHOT1,MF_BYCOMMAND|MF_GRAYED);
-                    //  EnableMenuItem(hMenuClear,IDM_CLEARSHOT2,MF_BYCOMMAND|MF_GRAYED);
+                    //  EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND|MF_GRAYED);
+                    //  EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND|MF_GRAYED);
                     //}
                     //else
                     {
@@ -298,11 +320,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDC_BROWSE1: {
-
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
-                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * 2 + 2);
-                    //BrowseInfo1.lpszTitle = "Select:";
+                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+                    //BrowseInfo1.lpszTitle = TEXT("Select:");
                     BrowseInfo1.ulFlags = 0;     // 3 lines added in 1.8.2
                     BrowseInfo1.lpfn = NULL;
                     BrowseInfo1.lParam = 0;
@@ -310,21 +331,27 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
 
                     if (lpidlist != NULL) {
-                        size_t  nWholeLen;
+                        size_t nWholeLen;
 
                         SHGetPathFromIDList(lpidlist, BrowseInfo1.pszDisplayName);
-                        nLengthofStr = GetDlgItemText(hDlg, IDC_EDITDIR, lpExtDir, EXTDIRLEN / 2);
-                        nWholeLen = nLengthofStr + strlen(BrowseInfo1.pszDisplayName);
+                        nLen = _tcslen(BrowseInfo1.pszDisplayName);
+                        if (nLen > 0) {
+                            size_t nLenExtDir;
 
-                        if (nWholeLen < EXTDIRLEN + 1) {
-                            strcat(lpExtDir, ";");
-                            strcat(lpExtDir, BrowseInfo1.pszDisplayName);
+                            nLenExtDir = GetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
+                            nWholeLen = nLenExtDir + nLen + 1;
 
-                        } else {
-                            strcpy(lpExtDir, BrowseInfo1.pszDisplayName);
+                            if (nWholeLen < EXTDIRLEN) {
+                                if (nLenExtDir > 0) {
+                                    _tcscat(lpszExtDir, TEXT(";"));
+                                    _tcscat(lpszExtDir, BrowseInfo1.pszDisplayName);
+                                } else {
+                                    _tcscpy(lpszExtDir, BrowseInfo1.pszDisplayName);
+                                }
+
+                                SetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir);
+                            }
                         }
-
-                        SetDlgItemText(hDlg, IDC_EDITDIR, lpExtDir);
                         MYFREE(lpidlist);
                     }
 
@@ -333,11 +360,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 return(TRUE);
 
                 case IDC_BROWSE2: {
-
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
-                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * 2 + 2);
-                    //BrowseInfo1.lpszTitle = "Select:";
+                    BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+                    //BrowseInfo1.lpszTitle = TEXT("Select:");
 
                     //-----------------
                     // Added by Youri in 1.8.2 ,Thanks!
@@ -346,7 +372,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     BrowseInfo1.lpfn = SelectBrowseFolder;                   // function for expand path
                     BrowseInfo1.lParam = (LPARAM)BrowseInfo1.pszDisplayName;
                     // Initilize selection path
-                    GetDlgItemText(hDlg, IDC_EDITPATH, BrowseInfo1.pszDisplayName, MAX_PATH);
+                    GetDlgItemText(hDlg, IDC_EDITPATH, BrowseInfo1.pszDisplayName, MAX_PATH);  // length incl. NULL character
                     //-----------------
 
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
@@ -366,17 +392,17 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDC_ABOUT: {
-                    LPSTR   lpAboutBox;
+                    LPTSTR   lpszAboutBox;
                     //_asm int 3;
-                    lpAboutBox = MYALLOC0(SIZEOF_ABOUTBOX);
+                    lpszAboutBox = MYALLOC0(SIZEOF_ABOUTBOX * sizeof(TCHAR));
                     // it is silly that when wsprintf encounters a NULL string, it will write the whole string to NULL!
-                    sprintf(lpAboutBox, "%s%s%s%s%s%s", str_aboutme, "[", lpszLanguage, "]", " by: ", lpCurrentTranslator);
-                    MessageBox(hDlg, lpAboutBox, asLangTexts[iszTextAbout].lpString, MB_OK);
-                    MYFREE(lpAboutBox);
+                    _sntprintf(lpszAboutBox, SIZEOF_ABOUTBOX, TEXT("%s%s%s%s%s%s\0"), lpszAboutRegshot, TEXT("["), lpszLanguage, TEXT("]"), TEXT(" by: "), lpszCurrentTranslator);
+                    lpszAboutBox[SIZEOF_ABOUTBOX - 1] = (TCHAR)'\0'; // safety NULL char
+                    MessageBox(hDlg, lpszAboutBox, asLangTexts[iszTextAbout].lpszText, MB_OK);
+                    MYFREE(lpszAboutBox);
                     return(TRUE);
                 }
             }
-
     }
     return(FALSE);
 }
@@ -408,8 +434,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }*/
 
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpszCmdLine, int nCmdShow)
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                     LPTSTR lpszCmdLine, int nCmdShow)
 {
 
     /*
