@@ -28,15 +28,49 @@
 @rem Helpful links:
 @rem http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/batch.mspx
 
-@rem *** Make all changes local to the script, switch to the script's directory and set generic variables
+@rem *** Make all changes local to the script and set generic variables
 SETLOCAL
-CD /D %~dp0
 
 SET LANG=EN
-svn status >svn_status.txt
-svn diff >svn_diff.txt
+
+
+@rem ***
+@rem *** svn status
+@rem ***
+SET FILE=svn_status.txt
+SET FILESIZE=
+svn status %* 1>"%FILE%"
+CALL :GetFileSize "%FILE%"
+IF "%FILESIZE%" == "0" DEL "%FILE%"
+
+@rem ***
+@rem *** svn diff
+@rem ***
+SET FILE=svn_diff.txt
+SET FILESIZE=
+svn diff %* 1>"%FILE%"
+CALL :GetFileSize "%FILE%"
+IF "%FILESIZE%" == "0" DEL "%FILE%"
+
 
 @rem *** Jump point (GOTO) to cleanly end script
 :End
 ENDLOCAL
 EXIT /B
+
+
+
+@rem ***************************************************************************
+@rem *** Sub Routines - Begin
+@rem *** Usage: CALL :<name> [<parameter> <parameter> ...]
+@rem ***************************************************************************
+
+@rem *** Sub routine: determine file size, return 0 if it not exists
+:GetFileSize
+SET FILESIZE=%~z1
+IF "%FILESIZE%" == "" SET FILESIZE=0
+EXIT /B
+
+@rem ***************************************************************************
+@rem *** Sub Routines - End
+@rem ***************************************************************************

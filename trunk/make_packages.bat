@@ -250,6 +250,10 @@ SET PACKAGE_DIR=temp_bin
 
 CALL :SubCreatePackDir
 
+PUSHD "%PACKAGE_DIR%\"
+CALL svn_changes.bat ..\src
+POPD
+
 @ECHO. >"%PACKAGE_DIR%\License.txt"
 @XCOPY /V /F /Y "files\license_lgpl-2.1.txt" "%PACKAGE_DIR%\License.txt"
 @XCOPY /V /F /Y "files\History.txt"          "%PACKAGE_DIR%\"
