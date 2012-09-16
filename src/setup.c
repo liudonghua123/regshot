@@ -31,6 +31,7 @@
 LPTSTR lpszIniSetup          = TEXT("Setup");
 LPTSTR lpszIniFlag           = TEXT("Flag");
 LPTSTR lpszIniExtDir         = TEXT("ExtDir");
+LPTSTR lpszIniLanguage       = TEXT("Language");
 LPTSTR lpszIniOutDir         = TEXT("OutDir");
 LPTSTR lpszIniSkipRegKey     = TEXT("SkipRegKey");
 LPTSTR lpszIniSkipdir        = TEXT("SkipDir");
@@ -163,6 +164,9 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx save settings to ini
         lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0'; // safety NULL char
         WritePrivateProfileString(lpszIniSetup, lpszIniOutDir, lpszValue, lpszRegshotIni);
     }
+
+    // 1.9.0: Write language selection to regshot ini (was in language ini before)
+    WritePrivateProfileString(lpszIniSetup, lpszIniLanguage, lpszLanguage, lpszRegshotIni);
 
     MYFREE(lpszValue);
 

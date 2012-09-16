@@ -375,6 +375,8 @@ extern LPTSTR lpszTempPath;
 extern LPTSTR lpszLanguageIni;  // For language.ini
 extern LPTSTR lpszCurrentTranslator;
 extern LPTSTR lpszRegshotIni;
+extern LPTSTR lpszIniSetup;
+extern LPTSTR lpszIniLanguage;
 
 extern LPTSTR *lprgszRegSkipStrings;
 extern LPTSTR *lprgszFileSkipStrings;
@@ -403,7 +405,7 @@ VOID    UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWOR
 LPTSTR  FindKeyInIniSection(LPTSTR lpgrszSection, LPTSTR lpszSearch, size_t cchSectionLen, size_t cchSearchLen);
 VOID    SetTextsToDefaultLanguage(VOID);
 VOID    LoadAvailableLanguagesFromIni(HWND hDlg);
-BOOL    GetSelectedLanguage(HWND hDlg);
+BOOL    LoadLanguageFromIni(HWND hDlg);
 VOID    SetTextsToSelectedLanguage(HWND hDlg);
 VOID    CreateShotPopupMenu(VOID);
 VOID    UI_BeforeShot(DWORD nID);

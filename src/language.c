@@ -116,7 +116,8 @@ VOID SetTextsToDefaultLanguage(VOID)
     asLangTexts[iszTextMenuClearShot1].lpszText    = TEXT("Clear &1st shot");
     asLangTexts[iszTextMenuClearShot2].lpszText    = TEXT("Clear &2nd shot");
 
-    // Set translator too
+    // Set language and "translator"
+    _tcscpy(lpszLanguage, lpszDefaultLanguage);
     lpszCurrentTranslator = lpszOriginal;
 }
 
@@ -135,18 +136,18 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
     // Always add default language to combo box and select it as default
     nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)lpszDefaultLanguage);  // TODO: handle CB_ERR and CB_ERRSPACE
     SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_SETCURSEL, (WPARAM)nResult, (LPARAM)0);
-    cchMaxLanguageNameLen = _tcslen(lpszDefaultLanguage);
+    cchMaxLanguageNameLen = _tcslen(lpszDefaultLanguage) + 1;  // incl. NULL character
 
     // Get sections (=language names) from language ini
     lpgrszSectionNames = MYALLOC0(MAX_INI_SECTION_CHARS * sizeof(TCHAR));
     cchSectionNames = GetPrivateProfileSectionNames(lpgrszSectionNames, MAX_INI_SECTION_CHARS, lpszLanguageIni);  // length incl. double NULL character
     if (1 < cchSectionNames) {
-        for (i = 0; i < cchSectionNames; i++) {
+        for (i = 0; i < cchSectionNames;) {
             if (0 == lpgrszSectionNames[i]) {  // reached the end of the section names buffer
                 break;
             }
 
-            nLanguageNameLen = _tcslen(&lpgrszSectionNames[i]);
+            nLanguageNameLen = _tcslen(&lpgrszSectionNames[i]) + 1;  // incl. NULL character
 
             if ((0 != _tcsicmp(&lpgrszSectionNames[i], lpszSectionCurrent)) && (0 != _tcsicmp(&lpgrszSectionNames[i], lpszDefaultLanguage))) {
                 nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)&lpgrszSectionNames[i]);  // TODO: handle CB_ERR and CB_ERRSPACE
@@ -161,23 +162,25 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
     MYFREE(lpgrszSectionNames);
 
     // Allocate memory for longest language name, and copy default language name to it
-    lpszLanguage = MYALLOC0((cchMaxLanguageNameLen + 1) * sizeof(TCHAR));
-    _tcscpy(lpszLanguage, lpszDefaultLanguage);
+    lpszLanguage = MYALLOC0((cchMaxLanguageNameLen) * sizeof(TCHAR));
 }
 
 // ----------------------------------------------------------------------
 // Get selected language name and check if it is available
 // ----------------------------------------------------------------------
-BOOL GetSelectedLanguage(HWND hDlg)
+BOOL LoadLanguageFromIni(HWND hDlg)
 {
     LPTSTR lpszSelectedLanguage;
     DWORD cchLanguageName;
     LRESULT nResult;
 
-    lpszSelectedLanguage = MYALLOC0((cchMaxLanguageNameLen + 1) * sizeof(TCHAR));
-    cchLanguageName = GetPrivateProfileString(lpszSectionCurrent, lpszSectionCurrent, NULL, lpszLanguage, (DWORD)(cchMaxLanguageNameLen + 1), lpszLanguageIni);  // length incl. NULL character
-    if (1 < cchLanguageName) {
-        nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_FINDSTRINGEXACT, (WPARAM)0, (LPARAM)lpszLanguage);
+    lpszSelectedLanguage = MYALLOC0((cchMaxLanguageNameLen) * sizeof(TCHAR));
+    cchLanguageName = GetPrivateProfileString(lpszIniSetup, lpszIniLanguage, NULL, lpszSelectedLanguage, (DWORD)(cchMaxLanguageNameLen), lpszRegshotIni);  // length incl. NULL character
+    if (0 >= cchLanguageName) {  // not found or empty in regshot ini, therefore try old (<1.9.0) setting in language ini
+        cchLanguageName = GetPrivateProfileString(lpszSectionCurrent, lpszSectionCurrent, NULL, lpszSelectedLanguage, (DWORD)(cchMaxLanguageNameLen), lpszLanguageIni);  // length incl. NULL character
+    }
+    if (0 < cchLanguageName) {
+        nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_FINDSTRINGEXACT, (WPARAM)0, (LPARAM)lpszSelectedLanguage);
         if (CB_ERR != nResult) {
             SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_SETCURSEL, (WPARAM)nResult, (LPARAM)0);
             MYFREE(lpszSelectedLanguage);
@@ -198,6 +201,7 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
     int i;
     LPTSTR lpszMatchValue;
     TCHAR  szIniKey[17];
+    BOOL fUseIni;
 
     // Get language index from combo box
     nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
@@ -207,7 +211,7 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
 
     // Get language name of language index from combo box
     nResult2 = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_GETLBTEXTLEN, (WPARAM)nResult, (LPARAM)NULL);
-    if ((CB_ERR == nResult2) || ((size_t)nResult2 > cchMaxLanguageNameLen)) {
+    if ((CB_ERR == nResult2) || ((size_t)nResult2 >= cchMaxLanguageNameLen)) {  // cchMaxLanguageNameLen incl. NULL character
         return;
     }
     nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_GETLBTEXT, (WPARAM)nResult, (LPARAM)lpszLanguage);
@@ -215,28 +219,28 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
         return;
     }
 
-    // Write new language selection to language ini
-    WritePrivateProfileString(lpszSectionCurrent, lpszSectionCurrent, lpszLanguage, lpszLanguageIni);
-
-    // Nothing more to do for default language
-    if (0 == _tcsicmp(lpszLanguage, lpszDefaultLanguage)) {
-        return;
-    }
-
     // Get ini section of language
     if (NULL == lpgrszLangSection) {
-        lpgrszLangSection = MYALLOC0(MAX_INI_SECTION_CHARS * sizeof(TCHAR));
+        lpgrszLangSection = MYALLOC0(MAX_INI_SECTION_CHARS * sizeof(TCHAR));  // holds the selected translation until the end of the program
     }
     cchSection = GetPrivateProfileSection(lpszLanguage, lpgrszLangSection, MAX_INI_SECTION_CHARS, lpszLanguageIni);  // length incl. double NULL character
 
+    // Ignore translation for default language, but continue to update GUI
+    fUseIni = TRUE;
+    if (0 == _tcsicmp(lpszLanguage, lpszDefaultLanguage)) {
+        fUseIni = FALSE;
+    }
+
     // Find language strings and assign if not empty
     for (i = 0; i < cLangStrings; i++) {
-        _sntprintf(szIniKey, 17, TEXT("%u%s\0"), (i + 1), TEXT("="));
-        szIniKey[16] = (TCHAR)'\0';  // saftey NULL char
-        lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, szIniKey, cchSection, _tcslen(szIniKey));
-        if (NULL != lpszMatchValue) {
-            // pointer returned points to char directly after equal char ("="), and is not empty
-            asLangTexts[i].lpszText = lpszMatchValue;
+        if (fUseIni) {
+            _sntprintf(szIniKey, 17, TEXT("%u%s\0"), (i + 1), TEXT("="));
+            szIniKey[16] = (TCHAR)'\0';  // saftey NULL char
+            lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, szIniKey, cchSection, _tcslen(szIniKey));
+            if (NULL != lpszMatchValue) {
+                // pointer returned points to char directly after equal char ("="), and is not empty
+                asLangTexts[i].lpszText = lpszMatchValue;
+            }
         }
 
         // Update gui text with language string if id provided
@@ -246,10 +250,12 @@ VOID SetTextsToSelectedLanguage(HWND hDlg)
     }
 
     // Get translator's name
-    lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, lpszItemTranslator, cchSection, _tcslen(lpszItemTranslator));
-    if (NULL != lpszMatchValue) {
-        lpszCurrentTranslator = lpszMatchValue;
-    } else {
-        lpszCurrentTranslator = lpszOriginal;
+    if (fUseIni) {
+        lpszMatchValue = FindKeyInIniSection(lpgrszLangSection, lpszItemTranslator, cchSection, _tcslen(lpszItemTranslator));
+        if (NULL != lpszMatchValue) {
+            lpszCurrentTranslator = lpszMatchValue;
+        } else {
+            lpszCurrentTranslator = lpszOriginal;
+        }
     }
 }
