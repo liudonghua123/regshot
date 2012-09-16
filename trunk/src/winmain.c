@@ -116,14 +116,14 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             ZeroMemory(&Shot1, sizeof(Shot1));
             ZeroMemory(&Shot2, sizeof(Shot2));
 
-            GetWindowsDirectory(lpszWindowsDirName, MAX_PATH);
+            GetWindowsDirectory(lpszWindowsDirName, MAX_PATH);  // length incl. NULL character
             lpszWindowsDirName[MAX_PATH] = (TCHAR)'\0';
 
-            GetTempPath(MAX_PATH, lpszTempPath);
+            GetTempPath(MAX_PATH, lpszTempPath);  // length incl. NULL character
             lpszTempPath[MAX_PATH] = (TCHAR)'\0';
 
             //_asm int 3;
-            GetCurrentDirectory(MAX_PATH, lpszStartDir);      // fixed in 1.8.2 former version use getcommandline()
+            GetCurrentDirectory(MAX_PATH, lpszStartDir);  // length incl. NULL character // fixed in 1.8.2 former version used getcommandline()
             lpszStartDir[MAX_PATH] = (TCHAR)'\0';
 
             _tcscpy(lpszLanguageIni, lpszStartDir);
@@ -136,17 +136,6 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             _tcscat(lpszLanguageIni, lpszLanguageFileName);
 
-            SetTextsToDefaultLanguage();
-            LoadAvailableLanguagesFromIni(hDlg);
-            if (GetSelectedLanguage(hDlg)) {
-                SetTextsToSelectedLanguage(hDlg);
-            }
-
-            SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
-
-            lpszLastSaveDir = lpszOutputPath;
-            lpszLastOpenDir = lpszOutputPath;
-
             _tcscpy(lpszRegshotIni, lpszStartDir);
             nLen = _tcslen(lpszRegshotIni);
             if (nLen > 0) {
@@ -156,6 +145,16 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
             _tcscat(lpszRegshotIni, lpszIniFileName);
+
+            LoadAvailableLanguagesFromIni(hDlg);
+            LoadLanguageFromIni(hDlg);
+            SetTextsToDefaultLanguage();
+            SetTextsToSelectedLanguage(hDlg);
+
+            SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
+
+            lpszLastSaveDir = lpszOutputPath;
+            lpszLastOpenDir = lpszOutputPath;
 
             LoadSettingsFromIni(hDlg); // tfx
 
@@ -387,9 +386,12 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 return(TRUE);
 
                 case IDC_COMBOLANGUAGE:
-                    SetTextsToDefaultLanguage();
-                    SetTextsToSelectedLanguage(hDlg);
-                    return(TRUE);
+                    if (CBN_SELCHANGE == HIWORD(wParam)) {  // Only react when user selected something
+                        SetTextsToDefaultLanguage();
+                        SetTextsToSelectedLanguage(hDlg);
+                        return(TRUE);
+                    }
+                    break;
 
                 case IDC_ABOUT: {
                     LPTSTR   lpszAboutBox;
