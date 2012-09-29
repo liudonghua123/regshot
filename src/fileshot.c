@@ -35,40 +35,41 @@ DWORD nSavingFile;
 
 
 //-------------------------------------------------------------
-// Routine to get Whole File Name[root dir] from a FILECONTENT
+// Get whole file name [root dir] from FILECONTENT
 //-------------------------------------------------------------
 LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC)
 {
     LPFILECONTENT lpFC;
-    LPTSTR   lpName;  // TODO: LPTSTR
-    LPTSTR   lpTail;  // TODO: LPTSTR
-    size_t  nLen;
+    LPTSTR lpszName;
+    LPTSTR lpszTail;
+    size_t cchName;
 
-    nLen = 0;
+    cchName = 0;
     for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpFatherFC) {
         if (NULL != lpFC->lpszFileName) {
-            nLen += _tcslen(lpFC->lpszFileName) + 1;  // +1 char for backslash or NULL char  // TODO: _tcslen
+            cchName += _tcslen(lpFC->lpszFileName) + 1;  // +1 char for backslash or NULL char
         }
     }
-    if (0 == nLen) {  // at least create an empty string with NULL char
-        nLen++;
+    if (0 == cchName) {  // at least create an empty string with NULL char
+        cchName++;
     }
-    lpName = MYALLOC(nLen * sizeof(TCHAR));
 
-    lpTail = lpName + nLen - 1;
-    *lpTail = 0;
+    lpszName = MYALLOC(cchName * sizeof(TCHAR));
+
+    lpszTail = &lpszName[cchName - 1];
+    lpszTail[0] = (TCHAR)'\0';
 
     for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpFatherFC) {
         if (NULL != lpFC->lpszFileName) {
-            nLen = _tcslen(lpFC->lpszFileName);
-            memcpy(lpTail -= nLen, lpFC->lpszFileName, nLen);  // TODO: _tcsncpy
-            if (lpTail > lpName) {
-                *--lpTail = '\\';    // 0x5c;  // TODO: check if works for Unicode
+            cchName = _tcslen(lpFC->lpszFileName);
+            _tcsncpy(lpszTail -= cchName, lpFC->lpszFileName, cchName);
+            if (lpszTail > lpszName) {
+                *--lpszTail = (TCHAR)'\\';
             }
         }
     }
 
-    return lpName;
+    return lpszName;
 }
 
 
