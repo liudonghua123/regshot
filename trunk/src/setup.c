@@ -85,31 +85,32 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
         }
     }
 
+    // Flags
     nFlag = (BYTE)GetPrivateProfileInt(lpszIniSetup, lpszIniFlag, 1, lpszRegshotIni); // default from 0 to 1 in 1.8.2 (TEXT)
-    //if (nFlag != 0)
-    {
-        SendMessage(GetDlgItem(hDlg, IDC_RADIO1), BM_SETCHECK, (WPARAM)(nFlag & 0x01), (LPARAM)0);
-        SendMessage(GetDlgItem(hDlg, IDC_RADIO2), BM_SETCHECK, (WPARAM)((nFlag & 0x01) ^ 0x01), (LPARAM)0);
-        //SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)((nFlag&0x04)>>1), (LPARAM)0); // 1.7
-        SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)((nFlag & 0x02) >> 1), (LPARAM)0);
-    }
-    /*else  delete in 1.8.1
-    {
+    /*if (nFlag != 0) {  // deleted in 1.8.1 */
+    SendMessage(GetDlgItem(hDlg, IDC_RADIO1), BM_SETCHECK, (WPARAM)(nFlag & 0x01), (LPARAM)0);  // Text output
+    SendMessage(GetDlgItem(hDlg, IDC_RADIO2), BM_SETCHECK, (WPARAM)((nFlag & 0x01) ^ 0x01), (LPARAM)0);  // HTML output
+    //SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)((nFlag&0x04)>>1), (LPARAM)0); // 1.7
+    SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)((nFlag & 0x02) >> 1), (LPARAM)0);
+    /*} else {  // deleted in 1.8.1
         SendMessage(GetDlgItem(hDlg, IDC_RADIO1), BM_SETCHECK, (WPARAM)0x01, (LPARAM)0);
         SendMessage(GetDlgItem(hDlg, IDC_RADIO2), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
         SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
     }
     */
-    // added in 1.8.1 for compatibility with undoreg1.46
+
+    // UseLongRegHead: added in 1.8.1 for compatibility with undoreg1.46
     bUseLongRegHead = GetPrivateProfileInt(lpszIniSetup, lpszIniUseLongRegHead, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
 
-    if (GetPrivateProfileString(lpszIniSetup, lpszIniExtDir, NULL, lpszExtDir, MAX_PATH, lpszRegshotIni) != 0) {  // length incl. NULL character
+    // Scan Dirs
+    if (0 != GetPrivateProfileString(lpszIniSetup, lpszIniExtDir, NULL, lpszExtDir, MAX_PATH, lpszRegshotIni)) {  // length incl. NULL character
         SetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir);
     } else {
         SetDlgItemText(hDlg, IDC_EDITDIR, lpszWindowsDirName);
     }
 
-    if (GetPrivateProfileString(lpszIniSetup, lpszIniOutDir, NULL, lpszOutputPath, MAX_PATH, lpszRegshotIni) != 0) {  // length incl. NULL character
+    // Output Dir
+    if (0 != GetPrivateProfileString(lpszIniSetup, lpszIniOutDir, NULL, lpszOutputPath, MAX_PATH, lpszRegshotIni)) {  // length incl. NULL character
         SetDlgItemText(hDlg, IDC_EDITPATH, lpszOutputPath);
     } else {
         SetDlgItemText(hDlg, IDC_EDITPATH, lpszTempPath);
