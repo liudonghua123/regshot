@@ -129,16 +129,16 @@ typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
 // Struct used for Windows File System
 struct _FILECONTENT {
     LPTSTR lpszFileName;                    // Pointer to file's name
-    DWORD  writetimelow;                    // File write time [LOW  DWORD]
-    DWORD  writetimehigh;                   // File write time [HIGH DWORD]
-    DWORD  filesizelow;                     // File size [LOW  DWORD]
-    DWORD  filesizehigh;                    // File size [HIGH DWORD]
-    DWORD  fileattr;                        // File attributes (e.g. directory)
-    DWORD  chksum;                          // File checksum (planned for the future, currently not used)
+    DWORD  nWriteDateTimeLow;               // File write time [LOW  DWORD]
+    DWORD  nWriteDateTimeHigh;              // File write time [HIGH DWORD]
+    DWORD  nFileSizeLow;                    // File size [LOW  DWORD]
+    DWORD  nFileSizeHigh;                   // File size [HIGH DWORD]
+    DWORD  nFileAttributes;                 // File attributes (e.g. directory)
+    DWORD  nChkSum;                         // File checksum (planned for the future, currently not used)
     struct _FILECONTENT FAR *lpFirstSubFC;  // Pointer to file's first sub file
     struct _FILECONTENT FAR *lpBrotherFC;   // Pointer to file's brother
     struct _FILECONTENT FAR *lpFatherFC;    // Pointer to file's father
-    DWORD  bfilematch;                      // Flags used when comparing, until 1.8.2 was byte
+    DWORD  fComparison;                     // Flags used when comparing, until 1.8.2 it was byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR *LPFILECONTENT;
 
@@ -281,16 +281,16 @@ typedef struct _SAVEVALUECONTENT SAVEVALUECONTENT, FAR *LPSAVEVALUECONTENT;
 // Struct for dirs and files, used in saving and loading
 // when accessing fields of this structure always put a version check around them, e.g. "if version >= 2 then use nFileNameLen"
 struct _SAVEFILECONTENT {
-    DWORD ofsFileName;      // Position of file name
-    DWORD writetimelow;     // File write time [LOW  DWORD]
-    DWORD writetimehigh;    // File write time [HIGH DWORD]
-    DWORD filesizelow;      // File size [LOW  DWORD]
-    DWORD filesizehigh;     // File size [HIGH DWORD]
-    DWORD fileattr;         // File attributes
-    DWORD chksum;           // File checksum (planned for the future, currently not used)
-    DWORD ofsFirstSubFile;  // Position of file's first sub file
-    DWORD ofsBrotherFile;   // Position of file's brother file
-    DWORD ofsFatherFile;    // Position of file's father file
+    DWORD ofsFileName;         // Position of file name
+    DWORD nWriteDateTimeLow;   // File write time [LOW  DWORD]
+    DWORD nWriteDateTimeHigh;  // File write time [HIGH DWORD]
+    DWORD nFileSizeLow;        // File size [LOW  DWORD]
+    DWORD nFileSizeHigh;       // File size [HIGH DWORD]
+    DWORD nFileAttributes;     // File attributes
+    DWORD nChkSum;             // File checksum (planned for the future, currently not used)
+    DWORD ofsFirstSubFile;     // Position of file's first sub file
+    DWORD ofsBrotherFile;      // Position of file's brother file
+    DWORD ofsFatherFile;       // Position of file's father file
 
     // extended values exist only since structure version 2
     // new since file content version 2
@@ -421,8 +421,8 @@ VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllFileHead(LPHEADFILE lpHeadFile);
 VOID    ClearKeyMatchTag(LPKEYCONTENT lpKC);
-VOID    GetFilesSnap(LPFILECONTENT lpFatherFC);                  // HWND hDlg, first para deleted in 1.8
-LPTSTR  GetWholeFileName(LPFILECONTENT lpFileContent);
+VOID    FileShot(LPREGSHOT lpShot);
+LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
 VOID    InitProgressBar(VOID);
 VOID    CompareFirstSubFile(LPFILECONTENT lpHead1, LPFILECONTENT lpHead2);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
