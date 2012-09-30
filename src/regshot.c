@@ -2036,7 +2036,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     lpStringBuffer = NULL;
 
     // Copy computer name from file header to shot data
-    if (FILEHEADER_VERSION_2 > fileheader.nFHVersion) {  // old SBCS/MBCS version
+    if (FILEHEADER_VERSION_1 < fileheader.nFHVersion) {  // newer Unicode/SBCS/MBCS version
         if (0 < fileheader.nComputerNameLen) {  // otherwise leave it NULL
             // Copy string to an aligned memory block
             nSourceSize = fileheader.nComputerNameLen * fileheader.nCharSize;
@@ -2055,7 +2055,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
 #endif
             }
         }
-    } else {
+    } else {  // old SBCS/MBCS version
         // Copy string to an aligned memory block
         nSourceSize = strnlen((const char *)&fileheader.computername, OLD_COMPUTERNAMELEN);
         if (0 < nSourceSize) {  // otherwise leave it NULL
@@ -2074,7 +2074,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     }
 
     // Copy user name from file header to shot data
-    if (FILEHEADER_VERSION_2 > fileheader.nFHVersion) {  // old SBCS/MBCS version
+    if (FILEHEADER_VERSION_1 < fileheader.nFHVersion) {  // newer Unicode/SBCS/MBCS version
         if (0 < fileheader.nUserNameLen) {  // otherwise leave it NULL
             // Copy string to an aligned memory block
             nSourceSize = fileheader.nUserNameLen * fileheader.nCharSize;
@@ -2093,7 +2093,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
 #endif
             }
         }
-    } else {
+    } else {  // old SBCS/MBCS version
         // Copy string to an aligned memory block
         nSourceSize = strnlen((const char *)&fileheader.username, OLD_COMPUTERNAMELEN);
         if (0 < nSourceSize) {  // otherwise leave it NULL
