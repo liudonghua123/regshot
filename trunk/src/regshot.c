@@ -194,9 +194,9 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
 
     if (NULL != lpVC->lpszValueName) {
         _tcsncpy(lpszTail -= cchValueName, lpVC->lpszValueName, cchValueName);
-        if (lpszTail > lpszName) {
-            *--lpszTail = (TCHAR)'\\'; // 0x5c = '\\'  // TODO: check if works for Unicode
-        }
+    }
+    if (lpszTail > lpszName) {
+        *--lpszTail = (TCHAR)'\\';
     }
 
     for (lpKC = lpVC->lpFatherKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
@@ -204,7 +204,7 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
             cchName = _tcslen(lpKC->lpszKeyName);
             _tcsncpy(lpszTail -= cchName, lpKC->lpszKeyName, cchName);
             if (lpszTail > lpszName) {
-                *--lpszTail = (TCHAR)'\\';    // 0x5c = '\\'  // TODO: check if works for Unicode
+                *--lpszTail = (TCHAR)'\\';
             }
         }
     }
@@ -1015,7 +1015,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
     // Extra local block to reduce stack usage due to recursive calls
     {
-        LPTSTR lpszFullRegKeyName;
+        LPTSTR lpszFullName;
         DWORD cValues;
         DWORD cchMaxValueName;
         DWORD cbMaxValueData;
@@ -1032,13 +1032,13 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
         lpKC->lpszKeyName = lpszRegKeyName;
 
         // Check if key is to be excluded
-        lpszFullRegKeyName = GetWholeKeyName(lpKC);
-        if (IsInSkipList(lpszFullRegKeyName, lprgszRegSkipStrings)) {
-            MYFREE(lpszFullRegKeyName);
+        lpszFullName = GetWholeKeyName(lpKC);
+        if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+            MYFREE(lpszFullName);
             FreeAllKeyContent(lpKC);
             return NULL;
         }
-        MYFREE(lpszFullRegKeyName);
+        MYFREE(lpszFullName);
 
         // Examine key for values and sub keys, get counts and also maximum lengths of names plus value data
         nErrNo = RegQueryInfoKey(
@@ -1122,8 +1122,27 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 #endif
 
                 // Create new value content
+                // put in a separate var for later use
                 lpVC = MYALLOC0(sizeof(VALUECONTENT));
                 ZeroMemory(lpVC, sizeof(VALUECONTENT));
+
+                // Set father key of current value to current key
+                lpVC->lpFatherKC = lpKC;
+
+                // Copy value name
+                if (0 < cchValueName) {
+                    lpVC->lpszValueName = MYALLOC((cchValueName + 1) * sizeof(TCHAR));
+                    _tcscpy(lpVC->lpszValueName, lpStringBuffer);
+                }
+
+                // Check if value is to be excluded
+                lpszFullName = GetWholeValueName(lpVC);
+                if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+                    MYFREE(lpszFullName);
+                    FreeAllValueContent(lpVC);
+                    continue;
+                }
+                MYFREE(lpszFullName);
 
                 // Increase value count
                 nGettingValue++;
@@ -1134,18 +1153,9 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 }
                 lplpVCPrev = &lpVC->lpBrotherVC;
 
-                // Set father key of current value to current key
-                lpVC->lpFatherKC = lpKC;
-
                 // Copy value meta data
                 lpVC->typecode = nValueType;
                 lpVC->datasize = cbValueData;
-
-                // Copy value name
-                if (0 < cchValueName) {
-                    lpVC->lpszValueName = MYALLOC((cchValueName + 1) * sizeof(TCHAR));
-                    _tcscpy(lpVC->lpszValueName, lpStringBuffer);
-                }
 
                 // Copy value data
                 if (0 < cbValueData) {  // otherwise leave it NULL
@@ -1308,25 +1318,13 @@ VOID Shot(LPREGSHOT lpShot)
         UI_BeforeShot(IDC_2NDSHOT);
     }
 
-    /*
-        lpShot->lpHKLM = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
-        lpShot->lpHKU = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
-
-        if (bUseLongRegHead) {  // 1.8.1
-            lpShot->lpHKLM->lpszKeyName = MYALLOC(sizeof(lpszHKLMLong));
-            lpShot->lpHKU->lpszKeyName = MYALLOC(sizeof(lpszHKULong));
-            _tcscpy(lpShot->lpHKLM->lpszKeyName, lpszHKLMLong);
-            _tcscpy(lpShot->lpHKU->lpszKeyName, lpszHKULong);
-        } else {
-            lpShot->lpHKLM->lpszKeyName = MYALLOC(sizeof(lpszHKLMShort));
-            lpShot->lpHKU->lpszKeyName = MYALLOC(sizeof(lpszHKUShort));
-            _tcscpy(lpShot->lpHKLM->lpszKeyName, lpszHKLMShort);
-            _tcscpy(lpShot->lpHKU->lpszKeyName, lpszHKUShort);
-        }
-    */
-
-    GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMLong, NULL, &lpShot->lpHKLM);
-    GetRegistrySnap(HKEY_USERS, lpszHKULong, NULL, &lpShot->lpHKU);
+    if (bUseLongRegHead) {  // since 1.8.1
+        GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMLong, NULL, &lpShot->lpHKLM);
+        GetRegistrySnap(HKEY_USERS, lpszHKULong, NULL, &lpShot->lpHKU);
+    } else {
+        GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
+        GetRegistrySnap(HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
+    }
 
     // Update counters display (reg keys/values final)
     nGettingTime = GetTickCount();
@@ -1731,11 +1729,6 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
     lpKC = MYALLOC0(sizeof(KEYCONTENT));
     ZeroMemory(lpKC, sizeof(KEYCONTENT));
 
-    // Write pointer to current key into caller's pointer
-    if (NULL != lplpCaller) {
-        *lplpCaller = lpKC;
-    }
-
     // Set father of current key
     lpKC->lpFatherKC = lpFatherKC;
 
@@ -1765,7 +1758,34 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
         }
     }
 
+    // Adopt HKLM/HKU to UseLongRegHead setting
+    if (NULL == lpKC->lpFatherKC) {
+        if (bUseLongRegHead) {
+            if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMShort)) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKLMLong;
+            } else if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort)) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKULong;
+            }
+        } else {
+            if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong)) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKLMShort;
+            } else if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong)) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKUShort;
+            }
+        }
+    }
+
+    // Increase key count
     nGettingKey++;
+
+    // Write pointer to current key into caller's pointer
+    if (NULL != lplpCaller) {
+        *lplpCaller = lpKC;
+    }
 
     // Copy the value contents of the current key
     if (0 != sKC.ofsFirstValue) {
@@ -1783,18 +1803,8 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
             lpVC = MYALLOC0(sizeof(VALUECONTENT));
             ZeroMemory(lpVC, sizeof(VALUECONTENT));
 
-            // Write pointer to current value into previous value's next value pointer
-            if (NULL != lplpVCPrev) {
-                *lplpVCPrev = lpVC;
-            }
-            lplpVCPrev = &lpVC->lpBrotherVC;
-
-            // Set father key to current key
+            // Set father key of current value to current key
             lpVC->lpFatherKC = lpKC;
-
-            // Copy values
-            lpVC->typecode = sVC.typecode;
-            lpVC->datasize = sVC.datasize;
 
             // Copy value name
             if (VALUECONTENT_VERSION_2 > fileheader.nVCVersion) {  // old SBCS/MBCS version
@@ -1822,24 +1832,36 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
                 }
             }
 
+            // Increase value count
+            nGettingValue++;
+
+            // Write pointer to current value into previous value's next value pointer
+            if (NULL != lplpVCPrev) {
+                *lplpVCPrev = lpVC;
+            }
+            lplpVCPrev = &lpVC->lpBrotherVC;
+
+            // Copy value meta data
+            lpVC->typecode = sVC.typecode;
+            lpVC->datasize = sVC.datasize;
+
             // Copy value data
             if (0 < sVC.datasize) {  // otherwise leave it NULL
                 lpVC->lpValueData = MYALLOC0(sVC.datasize);
                 CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.datasize);
             }
-
-            nGettingValue++;
         }
     }
-
-    ofsFirstSubKey = sKC.ofsFirstSubKey;
-    ofsBrotherKey = sKC.ofsBrotherKey;
 
     // Update counters display
     nGettingTime = GetTickCount();
     if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
         UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
     }
+
+    // Save offsets in local variables
+    ofsFirstSubKey = sKC.ofsFirstSubKey;
+    ofsBrotherKey = sKC.ofsBrotherKey;
 
     // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
 
@@ -1862,7 +1884,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
 BOOL LoadHive(LPREGSHOT lpShot)
 {
     OPENFILENAME opfn;
-    TCHAR filepath[MAX_PATH];
+    TCHAR filepath[MAX_PATH];  // length incl. NULL character
 
     DWORD nFileSize;
     DWORD i, j;
@@ -1973,7 +1995,8 @@ BOOL LoadHive(LPREGSHOT lpShot)
 
     CloseHandle(hFileWholeReg);
 
-    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);
+    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);  // Hide progress bar
+    ShowHideCounters(SW_SHOW);
 
     // Check size for copying file header
     nSourceSize = fileheader.nFHSize;

@@ -412,6 +412,7 @@ VOID    UI_BeforeShot(DWORD nID);
 VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);
+VOID    ShowHideCounters(int nCmdShow);
 
 VOID    Shot(LPREGSHOT lpShot);
 BOOL    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);

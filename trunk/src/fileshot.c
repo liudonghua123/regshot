@@ -148,6 +148,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
     LPFILECONTENT *lplpFCPrev;
     HANDLE hFile;
 
+    // Check if file is to be generic excluded
     if ((NULL == lpszName)
             || (0 == _tcscmp(lpszName, TEXT(".")))
             || (0 == _tcscmp(lpszName, TEXT("..")))) {
@@ -562,6 +563,9 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
     LPFILECONTENT lpFC;
     DWORD ofsFirstSubFile;
     DWORD ofsBrotherFile;
+    BOOL fIgnore;
+
+    fIgnore = FALSE;
 
     // Copy SAVEFILECONTENT to aligned memory block
     ZeroMemory(&sFC, sizeof(sFC));
@@ -572,21 +576,8 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
     lpFC = MYALLOC0(sizeof(FILECONTENT));
     ZeroMemory(lpFC, sizeof(FILECONTENT));
 
-    // Write pointer to current file into caller's pointer
-    if (NULL != lplpCaller) {
-        *lplpCaller = lpFC;
-    }
-
     // Set father of current file
     lpFC->lpFatherFC = lpFatherFC;
-
-    // Copy values
-    lpFC->nWriteDateTimeLow = sFC.nWriteDateTimeLow;
-    lpFC->nWriteDateTimeHigh = sFC.nWriteDateTimeHigh;
-    lpFC->nFileSizeLow = sFC.nFileSizeLow;
-    lpFC->nFileSizeHigh = sFC.nFileSizeHigh;
-    lpFC->nFileAttributes = sFC.nFileAttributes;
-    lpFC->nChkSum = sFC.nChkSum;
 
     // Copy file name
     if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
@@ -614,34 +605,65 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
         }
     }
 
+    // Check if file is to be generic excluded
+    if ((NULL == lpFC->lpszFileName)
+            || (0 == _tcscmp(lpFC->lpszFileName, TEXT(".")))
+            || (0 == _tcscmp(lpFC->lpszFileName, TEXT("..")))) {
+        FreeAllFileContent(lpFC);
+        fIgnore = TRUE;
+    }
+
+    if (!fIgnore) {
+        // Write pointer to current file into caller's pointer
+        if (NULL != lplpCaller) {
+            *lplpCaller = lpFC;
+        }
+
+        // Copy file data
+        lpFC->nWriteDateTimeLow = sFC.nWriteDateTimeLow;
+        lpFC->nWriteDateTimeHigh = sFC.nWriteDateTimeHigh;
+        lpFC->nFileSizeLow = sFC.nFileSizeLow;
+        lpFC->nFileSizeHigh = sFC.nFileSizeHigh;
+        lpFC->nFileAttributes = sFC.nFileAttributes;
+        lpFC->nChkSum = sFC.nChkSum;
+
+        // Increase file/dir count
+        if (ISDIR(lpFC->nFileAttributes)) {
+            nGettingDir++;
+        } else {
+            nGettingFile++;
+        }
+
+        // Update counters display
+        nGettingTime = GetTickCount();
+        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
+            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
+        }
+    }
+
+    // Save offsets in local variables
     ofsFirstSubFile = sFC.ofsFirstSubFile;
     ofsBrotherFile = sFC.ofsBrotherFile;
-
-    if (ISDIR(lpFC->nFileAttributes)) {
-        nGettingDir++;
-    } else {
-        nGettingFile++;
-    }
-
-    nGettingTime = GetTickCount();
-    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
-    }
 
     // ATTENTION!!! sFC is INVALID from this point on, due to recursive calls
 
     // If the entry has childs, then do a recursive call for the first child
     // Pass this entry as father and "lpFirstSubFC" pointer for storing the first child's pointer
-    if (0 != ofsFirstSubFile) {
+    if ((!fIgnore) && (0 != ofsFirstSubFile)) {
         LoadFile(ofsFirstSubFile, lpFC, &lpFC->lpFirstSubFC);
     }
 
     // If the entry has a following brother, then do a recursive call for the following brother
     // Pass father as father and "lpBrotherFC" pointer for storing the next brother's pointer
     if (0 != ofsBrotherFile) {
-        LoadFile(ofsBrotherFile, lpFatherFC, &lpFC->lpBrotherFC);
+        if (!fIgnore) {
+            LoadFile(ofsBrotherFile, lpFatherFC, &lpFC->lpBrotherFC);
+        } else {
+            LoadFile(ofsBrotherFile, lpFatherFC, lplpCaller);
+        }
     }
 }
+
 
 //--------------------------------------------------
 // Load head file from HIVE file
@@ -704,6 +726,8 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
     LPHEADFILE  lpHF;
     size_t      nLen;
     size_t      nWholeLen;
+    BOOL        fAddBackslash;
+    BOOL        fAddSeparator;
 
     lpszDir[0] = (TCHAR)'\0';
     nWholeLen = 0;
@@ -712,15 +736,25 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
             nLen = _tcslen(lpHF->lpFirstFC->lpszFileName);
             if (nLen > 0) {
+                fAddBackslash = FALSE;
+                if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
+                    nLen++;
+                    fAddBackslash = TRUE;
+                }
+                fAddSeparator = FALSE;
                 if (nWholeLen > 0) {
-                    nLen++;  // account for semicolon
+                    nLen++;
+                    fAddSeparator = TRUE;
                 }
                 if ((nWholeLen + nLen) < nBufferLen) {
-                    if (nWholeLen > 0) {
+                    nWholeLen += nLen;
+                    if (fAddSeparator) {
                         _tcscat(lpszDir, TEXT(";"));
                     }
-                    nWholeLen += nLen;
                     _tcscat(lpszDir, lpHF->lpFirstFC->lpszFileName);
+                    if (fAddBackslash) {
+                        _tcscat(lpszDir, TEXT("\\"));
+                    }
                 } else {
                     break;
                 }
