@@ -33,11 +33,42 @@ DWORD nGettingFile;
 DWORD nGettingDir;
 DWORD nSavingFile;
 
+WIN32_FIND_DATA FindData;
+
+
+// ----------------------------------------------------------------------
+// Free all files
+// ----------------------------------------------------------------------
+VOID FreeAllFileContent(LPFILECONTENT lpFC)
+{
+    if (NULL != lpFC) {
+        if (NULL != lpFC->lpszFileName) {
+            MYFREE(lpFC->lpszFileName);
+        }
+        FreeAllFileContent(lpFC->lpFirstSubFC);
+        FreeAllFileContent(lpFC->lpBrotherFC);
+        MYFREE(lpFC);
+    }
+}
+
+
+// ----------------------------------------------------------------------
+// Free all head files
+// ----------------------------------------------------------------------
+VOID FreeAllFileHead(LPHEADFILE lpHF)
+{
+    if (NULL != lpHF) {
+        FreeAllFileContent(lpHF->lpFirstFC);
+        FreeAllFileHead(lpHF->lpBrotherHF);
+        MYFREE(lpHF);
+    }
+}
+
 
 //-------------------------------------------------------------
 // Get whole file name [root dir] from FILECONTENT
 //-------------------------------------------------------------
-LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC)
+LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 {
     LPFILECONTENT lpFC;
     LPTSTR lpszName;
@@ -54,7 +85,7 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC)
         cchName++;
     }
 
-    lpszName = MYALLOC(cchName * sizeof(TCHAR));
+    lpszName = MYALLOC((cchName + cchExtra) * sizeof(TCHAR));
 
     lpszTail = &lpszName[cchName - 1];
     lpszTail[0] = (TCHAR)'\0';
@@ -87,8 +118,8 @@ VOID GetAllSubFile(
 {
     //LPTSTR   lpTemp;
 
-    if (ISDIR(lpFC->fileattr)) {
-        //lpTemp = lpFC->lpFileName;
+    if (ISDIR(lpFC->nFileAttributes)) {
+        //lpTemp = lpFC->lpszFileName;
         if ((NULL != lpFC->lpszFileName) && (0 != _tcscmp(lpFC->lpszFileName, TEXT("."))) && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".."))))  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
             //if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)) {     // 1.8.2
             LogToMem(typedir, lpcountdir, lpFC);
@@ -108,101 +139,165 @@ VOID GetAllSubFile(
 }
 
 
-//------------------------------------------------------------
-// File Shot Engine
-//------------------------------------------------------------
-VOID GetFilesSnap(LPFILECONTENT lpFatherFC)
+// ----------------------------------------------------------------------
+// Get file snap shot
+// ----------------------------------------------------------------------
+LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
 {
-    LPTSTR   lpFilename;
-    LPTSTR   lpTemp;
-    HANDLE  filehandle;
-    WIN32_FIND_DATA finddata;
-    LPFILECONTENT   lpFC;
-    LPFILECONTENT   lpFCTemp;
+    LPFILECONTENT lpFC;
+    LPFILECONTENT *lplpFCPrev;
+    HANDLE hFile;
 
-    lpTemp = GetWholeFileName(lpFatherFC);
-    //Not used
-    //if (bWinNTDetected)
-    //{
-    //  lpFilename = MYALLOC(_tcslen(lpTemp) + 5 + 4);
-    //  _tcscpy(lpFilename,"\\\\?\\");
-    //  _tcscat(lpFilename,lpTemp);
-    //}
-    //else
-    {
-        lpFilename = MYALLOC(_tcslen(lpTemp) + 5);
-        _tcscpy(lpFilename, lpTemp);
-    }
-    _tcscat(lpFilename, TEXT("\\*.*"));
-
-    MYFREE(lpTemp);
-    //_asm int 3;
-    filehandle = FindFirstFile(lpFilename, &finddata);
-    MYFREE(lpFilename);
-    if (filehandle == INVALID_HANDLE_VALUE) {
-        return;
+    if ((NULL == lpszName)
+            || (0 == _tcscmp(lpszName, TEXT(".")))
+            || (0 == _tcscmp(lpszName, TEXT("..")))) {
+        return NULL;
     }
 
-    //lpTemp = finddata.cFileName; // 1.8
-
+    // Create new file content
+    // put in a separate var for later use
     lpFC = MYALLOC0(sizeof(FILECONTENT));
-    lpFC->lpszFileName = MYALLOC0(_tcslen(finddata.cFileName) + 1);   // must add one!
-    _tcscpy(lpFC->lpszFileName, finddata.cFileName);
-    lpFC->writetimelow = finddata.ftLastWriteTime.dwLowDateTime;
-    lpFC->writetimehigh = finddata.ftLastWriteTime.dwHighDateTime;
-    lpFC->filesizelow = finddata.nFileSizeLow;
-    lpFC->filesizehigh = finddata.nFileSizeHigh;
-    lpFC->fileattr = finddata.dwFileAttributes;
+    ZeroMemory(lpFC, sizeof(FILECONTENT));
+
+    // Set father of current key
     lpFC->lpFatherFC = lpFatherFC;
-    lpFatherFC->lpFirstSubFC = lpFC;
-    lpFCTemp = lpFC;
 
-    if (ISDIR(lpFC->fileattr)) {
-        if ((NULL != lpFC->lpszFileName)
-                && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".")))
-                && (0 != _tcscmp(lpFC->lpszFileName, TEXT("..")))
-                && !IsInSkipList(lpFC->lpszFileName, lprgszFileSkipStrings)) {  // tfx
-            nGettingDir++;
-            GetFilesSnap(lpFC);
+    // Extra local block to reduce stack usage due to recursive calls
+    {
+        LPTSTR lpszFindFileName;
+        size_t cchName;
+
+        // Set file name
+        cchName = _tcslen(lpszName) + 1;
+        lpFC->lpszFileName = MYALLOC0(cchName * sizeof(TCHAR));
+        _tcscpy(lpFC->lpszFileName, lpszName);
+
+        // Check if file is to be excluded
+        lpszFindFileName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory
+        if (IsInSkipList(lpszFindFileName, lprgszFileSkipStrings)) {
+            MYFREE(lpszFindFileName);
+            FreeAllFileContent(lpFC);
+            return NULL;
         }
-    } else {
-        nGettingFile++;
-    }
 
-    for (; FindNextFile(filehandle, &finddata) != FALSE;) {
-        lpFC = MYALLOC0(sizeof(FILECONTENT));
-        lpFC->lpszFileName = MYALLOC0(_tcslen(finddata.cFileName) + 1);
-        _tcscpy(lpFC->lpszFileName, finddata.cFileName);
-        lpFC->writetimelow = finddata.ftLastWriteTime.dwLowDateTime;
-        lpFC->writetimehigh = finddata.ftLastWriteTime.dwHighDateTime;
-        lpFC->filesizelow = finddata.nFileSizeLow;
-        lpFC->filesizehigh = finddata.nFileSizeHigh;
-        lpFC->fileattr = finddata.dwFileAttributes;
-        lpFC->lpFatherFC = lpFatherFC;
-        lpFCTemp->lpBrotherFC = lpFC;
-        lpFCTemp = lpFC;
+        // Write pointer to current file into caller's pointer
+        if (NULL != lplpCaller) {
+            *lplpCaller = lpFC;
+        }
 
-        if (ISDIR(lpFC->fileattr)) {
-            if ((NULL != lpFC->lpszFileName)
-                    && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".")))
-                    && (0 != _tcscmp(lpFC->lpszFileName, TEXT("..")))
-                    && !IsInSkipList(lpFC->lpszFileName, lprgszFileSkipStrings)) {  // tfx
-                nGettingDir++;
-                GetFilesSnap(lpFC);
+        // Get file data if not already provide
+        if (NULL == lpFindData) {
+            lpFindData = &FindData;
+            hFile = FindFirstFile(lpszFindFileName, lpFindData);
+            if (hFile == INVALID_HANDLE_VALUE) {
+                nGettingFile++;  // count as file
+                MYFREE(lpszFindFileName);
+                return lpFC;
             }
+            FindClose(hFile);
+        }
+
+        // Set file data
+        lpFC->nWriteDateTimeLow = lpFindData->ftLastWriteTime.dwLowDateTime;
+        lpFC->nWriteDateTimeHigh = lpFindData->ftLastWriteTime.dwHighDateTime;
+        lpFC->nFileSizeLow = lpFindData->nFileSizeLow;
+        lpFC->nFileSizeHigh = lpFindData->nFileSizeHigh;
+        lpFC->nFileAttributes = lpFindData->dwFileAttributes;
+
+        // Increase file/dir count
+        if (ISDIR(lpFC->nFileAttributes)) {
+            nGettingDir++;
         } else {
             nGettingFile++;
         }
 
-    }
-    FindClose(filehandle);
+        // Update counters display
+        nGettingTime = GetTickCount();
+        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
+            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
+        }
 
+        // When file then leave
+        if (ISFILE(lpFC->nFileAttributes)) {
+            MYFREE(lpszFindFileName);
+            return lpFC;
+        }
+
+        // ATTENTION!!! Content of lpFindData is INVALID from this point on, due to recursive calls
+
+        // Find all file entries of directory
+        _tcscat(lpszFindFileName, TEXT("\\*.*"));
+        hFile = FindFirstFile(lpszFindFileName, &FindData);
+        MYFREE(lpszFindFileName);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            return lpFC;
+        }
+    }
+
+    // Process all directory entries
+    lplpFCPrev = &lpFC->lpFirstSubFC;
+    do {
+        LPFILECONTENT lpFCSub;
+
+        lpFCSub = GetFilesSnap(lpFindData->cFileName, &FindData, lpFC, lplpFCPrev);
+        if (NULL != lpFCSub) {
+            lplpFCPrev = &lpFCSub->lpBrotherFC;
+        }
+    } while (FindNextFile(hFile, &FindData) != FALSE);
+    FindClose(hFile);
+
+    return lpFC;
+}
+
+
+// ----------------------------------------------------------------------
+// File Shot Engine
+// ----------------------------------------------------------------------
+VOID FileShot(LPREGSHOT lpShot)
+{
+    UINT cchExtDir;
+
+    cchExtDir = GetDlgItemText(hWnd, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
+    if (0 < cchExtDir) {
+        LPHEADFILE *lplpHFPrev;
+        LPTSTR lpszSubExtDir;
+        size_t i;
+
+        lplpHFPrev = &lpShot->lpHF;
+        lpszSubExtDir = lpszExtDir;
+        for (i = 0; i <= cchExtDir; i++) {
+            // Split each directory in string
+            if (((TCHAR)';' == lpszExtDir[i]) || ((TCHAR)'\0' == lpszExtDir[i])) {
+                LPHEADFILE lpHF;
+                size_t j;
+
+                lpszExtDir[i] = (TCHAR)'\0';
+                j = i;
+
+                // remove all trailing backslashes
+                while ((0 < j) && ((TCHAR)'\\' == lpszExtDir[--j])) {
+                    lpszExtDir[j] = (TCHAR)'\0';
+                }
+
+                // if anything is left then process this directory
+                if ((0 < j) && ((TCHAR)'\0' != lpszExtDir[j])) {
+                    lpHF = MYALLOC0(sizeof(HEADFILE));
+                    ZeroMemory(lpHF, sizeof(HEADFILE));
+
+                    *lplpHFPrev = lpHF;
+                    lplpHFPrev = &lpHF->lpBrotherHF;
+
+                    GetFilesSnap(lpszSubExtDir, NULL, NULL, &lpHF->lpFirstFC);
+                }
+
+                lpszSubExtDir = &lpszExtDir[i + 1];
+            }
+        }
+    }
+
+    // Update counters display (dirs/files final)
     nGettingTime = GetTickCount();
-    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
-    }
-
-    return ;
+    UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
 }
 
 
@@ -216,50 +311,50 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
 
     for (lpFC1 = lpFCHead1; lpFC1 != NULL; lpFC1 = lpFC1->lpBrotherFC) {
         for (lpFC2 = lpFCHead2; lpFC2 != NULL; lpFC2 = lpFC2->lpBrotherFC) {
-            if ((lpFC2->bfilematch == NOTMATCH) && _tcscmp(lpFC1->lpszFileName, lpFC2->lpszFileName) == 0) { // 1.8.2 from lstrcmp to strcmp
+            if ((lpFC2->fComparison == NOTMATCH) && _tcscmp(lpFC1->lpszFileName, lpFC2->lpszFileName) == 0) { // 1.8.2 from lstrcmp to strcmp
                 // Two files have the same name, but we are not sure they are the same, so we compare them!
-                if (ISFILE(lpFC1->fileattr) && ISFILE(lpFC2->fileattr))
-                    //(lpFC1->fileattr&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->fileattr&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
+                if (ISFILE(lpFC1->nFileAttributes) && ISFILE(lpFC2->nFileAttributes))
+                    //(lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
                 {
                     // Lp1 is file, lpFC2 is file
-                    if (lpFC1->writetimelow == lpFC2->writetimelow && lpFC1->writetimehigh == lpFC2->writetimehigh &&
-                            lpFC1->filesizelow == lpFC2->filesizelow && lpFC1->filesizehigh == lpFC2->filesizehigh && lpFC1->fileattr == lpFC2->fileattr) {
+                    if (lpFC1->nWriteDateTimeLow == lpFC2->nWriteDateTimeLow && lpFC1->nWriteDateTimeHigh == lpFC2->nWriteDateTimeHigh &&
+                            lpFC1->nFileSizeLow == lpFC2->nFileSizeLow && lpFC1->nFileSizeHigh == lpFC2->nFileSizeHigh && lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
                         // We found a match file!
-                        lpFC2->bfilematch = ISMATCH;
+                        lpFC2->fComparison = ISMATCH;
                     } else {
                         // We found a dismatch file, they will be logged
-                        lpFC2->bfilematch = ISMODI;
+                        lpFC2->fComparison = ISMODI;
                         LogToMem(FILEMODI, &nFILEMODI, lpFC1);
                     }
 
                 } else {
                     // At least one file of the pair is directory, so we try to determine
-                    if (ISDIR(lpFC1->fileattr) && ISDIR(lpFC2->fileattr))
-                        // (lpFC1->fileattr&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY && (lpFC2->fileattr&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
+                    if (ISDIR(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes))
+                        // (lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
                     {
                         // The two 'FILE's are all dirs
-                        if (lpFC1->fileattr == lpFC2->fileattr) {
+                        if (lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
                             // Same dir attributes, we compare their subfiles
-                            lpFC2->bfilematch = ISMATCH;
+                            lpFC2->fComparison = ISMATCH;
                             CompareFirstSubFile(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
                         } else {
                             // Dir attributes changed, they will be logged
-                            lpFC2->bfilematch = ISMODI;
+                            lpFC2->fComparison = ISMODI;
                             LogToMem(DIRMODI, &nDIRMODI, lpFC1);
                         }
                         //break;
                     } else {
                         // One of the 'FILE's is dir, but which one?
-                        if (ISFILE(lpFC1->fileattr) && ISDIR(lpFC2->fileattr))
-                            //(lpFC1->fileattr&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->fileattr&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
+                        if (ISFILE(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes))
+                            //(lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
                         {
                             // lpFC1 is file, lpFC2 is dir
-                            lpFC1->bfilematch = ISDEL;
+                            lpFC1->fComparison = ISDEL;
                             LogToMem(FILEDEL, &nFILEDEL, lpFC1);
                             GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
                         } else {
                             // lpFC1 is dir, lpFC2 is file
-                            lpFC2->bfilematch = ISADD;
+                            lpFC2->fComparison = ISADD;
                             LogToMem(FILEADD, &nFILEADD, lpFC2);
                             GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
                         }
@@ -271,7 +366,7 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
 
         if (lpFC2 == NULL) {
             // lpFC2 looped to the end, that is, we can not find a lpFC2 matches lpFC1, so lpFC1 is deleted!
-            if (ISDIR(lpFC1->fileattr)) {
+            if (ISDIR(lpFC1->nFileAttributes)) {
                 GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1); // if lpFC1 is dir
             } else {
                 LogToMem(FILEDEL, &nFILEDEL, lpFC1);  // if lpFC1 is file
@@ -282,9 +377,9 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
     // We loop to the end, then we do an extra loop of lpFC2 use flag we previous made
     for (lpFC2 = lpFCHead2; lpFC2 != NULL; lpFC2 = lpFC2->lpBrotherFC) {
         nComparing++;
-        if (lpFC2->bfilematch == NOTMATCH) {
+        if (lpFC2->fComparison == NOTMATCH) {
             // We did not find a lpFC1 matches a lpFC2, so lpFC2 is added!
-            if (ISDIR(lpFC2->fileattr)) {
+            if (ISDIR(lpFC2->nFileAttributes)) {
                 GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
             } else {
                 LogToMem(FILEADD, &nFILEADD, lpFC2);
@@ -307,7 +402,7 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
 VOID ClearFileContentMatchTag(LPFILECONTENT lpFC)
 {
     if (NULL != lpFC) {
-        lpFC->bfilematch = 0;
+        lpFC->fComparison = 0;
         ClearFileContentMatchTag(lpFC->lpFirstSubFC);
         ClearFileContentMatchTag(lpFC->lpBrotherFC);
     }
@@ -322,34 +417,6 @@ VOID ClearHeadFileMatchTag(LPHEADFILE lpStartHF)
 
     for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         ClearFileContentMatchTag(lpHF->lpFirstFC);
-    }
-}
-
-
-// ----------------------------------------------------------------------
-// Free all files
-// ----------------------------------------------------------------------
-VOID FreeAllFileContent(LPFILECONTENT lpFC)
-{
-    if (NULL != lpFC) {
-        if (NULL != lpFC->lpszFileName) {
-            MYFREE(lpFC->lpszFileName);
-        }
-        FreeAllFileContent(lpFC->lpFirstSubFC);
-        FreeAllFileContent(lpFC->lpBrotherFC);
-        MYFREE(lpFC);
-    }
-}
-
-// ----------------------------------------------------------------------
-// Free all head files
-// ----------------------------------------------------------------------
-VOID FreeAllFileHead(LPHEADFILE lpHF)
-{
-    if (NULL != lpHF) {
-        FreeAllFileContent(lpHF->lpFirstFC);
-        FreeAllFileHead(lpHF->lpBrotherHF);
-        MYFREE(lpHF);
     }
 }
 
@@ -380,12 +447,12 @@ VOID SaveFileContent(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
     ZeroMemory(&sFC, sizeof(sFC));
 
     // Copy values
-    sFC.writetimelow = lpFC->writetimelow;
-    sFC.writetimehigh = lpFC->writetimehigh;
-    sFC.filesizelow = lpFC->filesizelow;
-    sFC.filesizehigh = lpFC->filesizehigh;
-    sFC.fileattr = lpFC->fileattr;
-    sFC.chksum = lpFC->chksum;
+    sFC.nWriteDateTimeLow = lpFC->nWriteDateTimeLow;
+    sFC.nWriteDateTimeHigh = lpFC->nWriteDateTimeHigh;
+    sFC.nFileSizeLow = lpFC->nFileSizeLow;
+    sFC.nFileSizeHigh = lpFC->nFileSizeHigh;
+    sFC.nFileAttributes = lpFC->nFileAttributes;
+    sFC.nChkSum = lpFC->nChkSum;
 
     // Set file positions of the relatives inside the tree
     sFC.ofsFileName = 0;      // not known yet, may be re-written in this call
@@ -514,12 +581,12 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
     lpFC->lpFatherFC = lpFatherFC;
 
     // Copy values
-    lpFC->writetimelow = sFC.writetimelow;
-    lpFC->writetimehigh = sFC.writetimehigh;
-    lpFC->filesizelow = sFC.filesizelow;
-    lpFC->filesizehigh = sFC.filesizehigh;
-    lpFC->fileattr = sFC.fileattr;
-    lpFC->chksum = sFC.chksum;
+    lpFC->nWriteDateTimeLow = sFC.nWriteDateTimeLow;
+    lpFC->nWriteDateTimeHigh = sFC.nWriteDateTimeHigh;
+    lpFC->nFileSizeLow = sFC.nFileSizeLow;
+    lpFC->nFileSizeHigh = sFC.nFileSizeHigh;
+    lpFC->nFileAttributes = sFC.nFileAttributes;
+    lpFC->nChkSum = sFC.nChkSum;
 
     // Copy file name
     if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
@@ -550,7 +617,7 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
     ofsFirstSubFile = sFC.ofsFirstSubFile;
     ofsBrotherFile = sFC.ofsBrotherFile;
 
-    if (ISDIR(lpFC->fileattr)) {
+    if (ISDIR(lpFC->nFileAttributes)) {
         nGettingDir++;
     } else {
         nGettingFile++;
@@ -674,8 +741,8 @@ BOOL DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2)
     ZeroMemory(lpszDir1, sizeof(lpszDir1));
     ZeroMemory(lpszDir2, sizeof(lpszDir2));
 
-    FindDirChain(lpHF1, lpszDir1, EXTDIRLEN);	// Length in TCHARs incl. NULL char
-    FindDirChain(lpHF2, lpszDir2, EXTDIRLEN);	// Length in TCHARs incl. NULL char
+    FindDirChain(lpHF1, lpszDir1, EXTDIRLEN);  // Length in TCHARs incl. NULL char
+    FindDirChain(lpHF2, lpszDir2, EXTDIRLEN);  // Length in TCHARs incl. NULL char
 
     if (0 != _tcsicmp(lpszDir1, lpszDir2)) {
         return FALSE;

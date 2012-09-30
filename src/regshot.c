@@ -426,7 +426,7 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
             MYFREE(lpdata);
             CreateNewResult(actiontype, lpcount, lpall);
         } else {
-            lpname = GetWholeFileName(lp);
+            lpname = GetWholeFileName(lp, 0);
             CreateNewResult(actiontype, lpcount, lpname);
         }
     }
@@ -1008,17 +1008,17 @@ VOID FreeShot(LPREGSHOT lpShot)
 LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
 {
     LPKEYCONTENT lpKC;
-    DWORD nSubKeys;
-    DWORD nMaxSubKeyNameLen;
+    DWORD cSubKeys;
+    DWORD cchMaxSubKeyName;
 
     // Process registry key itself, then key values with data, then sub keys (see msdn.microsoft.com/en-us/library/windows/desktop/ms724256.aspx)
 
     // Extra local block to reduce stack usage due to recursive calls
     {
         LPTSTR lpszFullRegKeyName;
-        DWORD nValues;
-        DWORD nMaxValueNameLen;
-        DWORD nMaxValueDataLen;
+        DWORD cValues;
+        DWORD cchMaxValueName;
+        DWORD cbMaxValueData;
 
         // Create new key content
         // put in a separate var for later use
@@ -1042,18 +1042,18 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
         // Examine key for values and sub keys, get counts and also maximum lengths of names plus value data
         nErrNo = RegQueryInfoKey(
-                     hRegKey,             // key handle
-                     NULL,                // LPTSTR lpClass
-                     NULL,                // LPDWORD lpcClass
-                     NULL,                // LPDWORD lpReserved
-                     &nSubKeys,           // LPDWORD lpcSubKeys (count)
-                     &nMaxSubKeyNameLen,  // LPDWORD lpcMaxSubKeyLen (in chars/TCHARs *not* incl. NULL char)
-                     NULL,                // LPDWORD lpcMaxClassLen (in chars *not* incl. NULL char)
-                     &nValues,            // LPDWORD lpcValues (count)
-                     &nMaxValueNameLen,   // LPDWORD lpcMaxValueNameLen (in chars/TCHARs *not* incl. NULL char)
-                     &nMaxValueDataLen,   // LPDWORD lpcMaxValueLen (count in bytes)
-                     NULL,                // LPDWORD lpcbSecurityDescriptor (count in bytes)
-                     NULL                 // PFILETIME lpftLastWriteTime
+                     hRegKey,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &cSubKeys,
+                     &cchMaxSubKeyName,  // in TCHARs *not* incl. NULL char
+                     NULL,
+                     &cValues,
+                     &cchMaxValueName,   // in TCHARs *not* incl. NULL char
+                     &cbMaxValueData,
+                     NULL,
+                     NULL
                  );
         if (ERROR_SUCCESS != nErrNo) {
             // TODO: process/protocol issue in some way, do not silently ignore it
@@ -1070,43 +1070,43 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
         }
 
         // Copy the registry values of the current key
-        if (0 < nValues) {
+        if (0 < cValues) {
             LPVALUECONTENT lpVC;
             LPVALUECONTENT *lplpVCPrev;
             DWORD i;
-            DWORD nValueNameLen;
+            DWORD cchValueName;
             DWORD nValueType;
-            DWORD nValueDataLen;
+            DWORD cbValueData;
 #ifdef DEBUGLOG
             LPTSTR lpszDebugMsg;
 #endif
 
             // Account for NULL char
-            if (0 < nMaxValueNameLen) {
-                nMaxValueNameLen++;
+            if (0 < cchMaxValueName) {
+                cchMaxValueName++;
             }
 
             // Get buffer for maximum value name length
-            nSourceSize = nMaxValueNameLen * sizeof(TCHAR);
+            nSourceSize = cchMaxValueName * sizeof(TCHAR);
             nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
 
             // Get buffer for maximum value data length
-            nSourceSize = nMaxValueDataLen;
+            nSourceSize = cbMaxValueData;
             nDataBufferSize = AdjustBuffer(&lpDataBuffer, nDataBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
 
             // Get registry key values
             lplpVCPrev = &lpKC->lpFirstVC;
             for (i = 0; ; i++) {
                 // Enumerate value
-                nValueNameLen = (DWORD)nStringBufferSize;
-                nValueDataLen = (DWORD)nDataBufferSize;
+                cchValueName = (DWORD)nStringBufferSize;
+                cbValueData = (DWORD)nDataBufferSize;
                 nErrNo = RegEnumValue(hRegKey, i,
                                       lpStringBuffer,
-                                      &nValueNameLen,   // in TCHARs; in *with* and out *withnot* incl. NULL char
-                                      NULL,             // LPDWORD lpReserved
+                                      &cchValueName,   // in TCHARs; in *with* and out *without* incl. NULL char
+                                      NULL,
                                       &nValueType,
                                       lpDataBuffer,
-                                      &nValueDataLen);  // in bytes
+                                      &cbValueData);
                 if (ERROR_NO_MORE_ITEMS == nErrNo) {
                     break;
                 }
@@ -1114,7 +1114,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     // TODO: process/protocol issue in some way, do not silently ignore it
                     continue;
                 }
-                lpStringBuffer[nValueNameLen] = (TCHAR)'\0';  // safety NULL char
+                lpStringBuffer[cchValueName] = (TCHAR)'\0';  // safety NULL char
 
 #ifdef DEBUGLOG
                 DebugLog(lpszDebugTryToGetValueLog, TEXT("trying: "), FALSE);
@@ -1139,23 +1139,23 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
                 // Copy value meta data
                 lpVC->typecode = nValueType;
-                lpVC->datasize = nValueDataLen;
+                lpVC->datasize = cbValueData;
 
                 // Copy value name
-                if (0 < nValueNameLen) {
-                    lpVC->lpszValueName = MYALLOC((nValueNameLen + 1) * sizeof(TCHAR));
+                if (0 < cchValueName) {
+                    lpVC->lpszValueName = MYALLOC((cchValueName + 1) * sizeof(TCHAR));
                     _tcscpy(lpVC->lpszValueName, lpStringBuffer);
                 }
 
                 // Copy value data
-                if (0 < nValueDataLen) {  // otherwise leave it NULL
-                    lpVC->lpValueData = MYALLOC0(nValueDataLen);
-                    CopyMemory(lpVC->lpValueData, lpDataBuffer, nValueDataLen);
+                if (0 < cbValueData) {  // otherwise leave it NULL
+                    lpVC->lpValueData = MYALLOC0(cbValueData);
+                    CopyMemory(lpVC->lpValueData, lpDataBuffer, cbValueData);
                 }
 
 #ifdef DEBUGLOG
                 lpszDebugMsg = MYALLOC0(REGSHOT_DEBUG_MESSAGE_LENGTH * sizeof(TCHAR));
-                _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGVN:%08d LGVD:%08d VN:%08d VD:%08d\0"), nMaxValueNameLen, nMaxValueDataLen, nValueNameLen, nValueDataLen);
+                _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGVN:%08d LGVD:%08d VN:%08d VD:%08d\0"), cchMaxValueName, cbMaxValueData, cchValueName, cbValueData);
                 lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0'; // safety NULL char
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
@@ -1179,7 +1179,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
     }
 
     // Process sub keys
-    if (0 < nSubKeys) {
+    if (0 < cSubKeys) {
         LPKEYCONTENT lpKCSub;
         LPKEYCONTENT *lplpKCPrev;
         DWORD i;
@@ -1187,12 +1187,12 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
         HKEY hRegSubKey;
 
         // Account for NULL char
-        if (0 < nMaxSubKeyNameLen) {
-            nMaxSubKeyNameLen++;
+        if (0 < cchMaxSubKeyName) {
+            cchMaxSubKeyName++;
         }
 
         // Get buffer for maximum sub key name length
-        nSourceSize = nMaxSubKeyNameLen * sizeof(TCHAR);
+        nSourceSize = cchMaxSubKeyName * sizeof(TCHAR);
         nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
 
         // Get registry sub keys
@@ -1200,20 +1200,20 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
         for (i = 0; ; i++) {
             // Extra local block to reduce stack usage due to recursive calls
             {
-                DWORD nSubKeyNameLen;
+                DWORD cchSubKeyName;
 #ifdef DEBUGLOG
                 LPTSTR lpszDebugMsg;
 #endif
 
                 // Enumerate sub key
-                nSubKeyNameLen = (DWORD)nStringBufferSize;
+                cchSubKeyName = (DWORD)nStringBufferSize;
                 nErrNo = RegEnumKeyEx(hRegKey, i,
                                       lpStringBuffer,
-                                      &nSubKeyNameLen,  // in TCHARs; in *with* and out *withnot* incl. NULL char
-                                      NULL,             // LPDWORD lpReserved
-                                      NULL,             // LPTSTR lpClass
-                                      NULL,             // LPDWORD lpcClass
-                                      NULL);            // PFILETIME lpftLastWriteTime
+                                      &cchSubKeyName,  // in TCHARs; in *with* and out *without* incl. NULL char
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL);
                 if (ERROR_NO_MORE_ITEMS == nErrNo) {
                     break;
                 }
@@ -1221,18 +1221,18 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     // TODO: process/protocol issue in some way, do not silently ignore it
                     continue;
                 }
-                lpStringBuffer[nSubKeyNameLen] = (TCHAR)'\0';  // safety NULL char
+                lpStringBuffer[cchSubKeyName] = (TCHAR)'\0';  // safety NULL char
 
                 // Copy sub key name
                 lpszRegSubKeyName = NULL;
-                if (0 < nSubKeyNameLen) {
-                    lpszRegSubKeyName = MYALLOC((nSubKeyNameLen + 1) * sizeof(TCHAR));
+                if (0 < cchSubKeyName) {
+                    lpszRegSubKeyName = MYALLOC((cchSubKeyName + 1) * sizeof(TCHAR));
                     _tcscpy(lpszRegSubKeyName, lpStringBuffer);
                 }
 
 #ifdef DEBUGLOG
                 lpszDebugMsg = MYALLOC0(REGSHOT_DEBUG_MESSAGE_LENGTH * sizeof(TCHAR));
-                _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGKN:%08d KN:%08d\0"), nMaxSubKeyNameLen, nSubKeyNameLen);
+                _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGKN:%08d KN:%08d\0"), cchMaxSubKeyName, cchSubKeyName);
                 lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0'; // safety NULL char
                 DebugLog(lpszDebugKeyLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
@@ -1267,12 +1267,46 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 }
 
 
+// ----------------------------------------------------------------------
+// Shot Engine
+// ----------------------------------------------------------------------
 VOID Shot(LPREGSHOT lpShot)
 {
+    DWORD cchString;
+
     FreeShot(lpShot);
 
     lpStringBuffer = NULL;
     lpDataBuffer = NULL;
+
+    // Set computer name
+    lpShot->lpszComputerName = MYALLOC0((MAX_COMPUTERNAME_LENGTH + 1) * sizeof(TCHAR));
+    ZeroMemory(lpShot->lpszComputerName, (MAX_COMPUTERNAME_LENGTH + 1) * sizeof(TCHAR));
+    cchString = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerName(lpShot->lpszComputerName, &cchString);   // in TCHARs; in *with* and out *without* incl. NULL char
+
+    // Set user name
+    lpShot->lpszUserName = MYALLOC0((UNLEN + 1) * sizeof(TCHAR));
+    ZeroMemory(lpShot->lpszUserName, (UNLEN + 1) * sizeof(TCHAR));
+    cchString = UNLEN + 1;
+    GetUserName(lpShot->lpszUserName, &cchString);   // in TCHARs; in and out *with* incl. NULL char
+
+    // Set current system time
+    GetSystemTime(&lpShot->systemtime);
+
+    // Initialize counters
+    nGettingKey   = 0;
+    nGettingValue = 0;
+    nGettingTime  = 0;
+    nGettingFile  = 0;
+    nGettingDir   = 0;
+    nBASETIME  = GetTickCount();
+    nBASETIME1 = nBASETIME;
+    if (&Shot1 == lpShot) {
+        UI_BeforeShot(IDC_1STSHOT);
+    } else {
+        UI_BeforeShot(IDC_2NDSHOT);
+    }
 
     /*
         lpShot->lpHKLM = (LPKEYCONTENT)MYALLOC0(sizeof(KEYCONTENT));
@@ -1291,19 +1325,6 @@ VOID Shot(LPREGSHOT lpShot)
         }
     */
 
-    nGettingKey   = 0;
-    nGettingValue = 0;
-    nGettingTime  = 0;
-    nGettingFile  = 0;
-    nGettingDir   = 0;
-    nBASETIME  = GetTickCount();
-    nBASETIME1 = nBASETIME;
-    if (is1) {
-        UI_BeforeShot(IDC_1STSHOT);
-    } else {
-        UI_BeforeShot(IDC_2NDSHOT);
-    }
-
     GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMLong, NULL, &lpShot->lpHKLM);
     GetRegistrySnap(HKEY_USERS, lpszHKULong, NULL, &lpShot->lpHKU);
 
@@ -1311,76 +1332,9 @@ VOID Shot(LPREGSHOT lpShot)
     nGettingTime = GetTickCount();
     UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
 
-    if (SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
-        size_t  nLengthofStr;
-        DWORD   i;
-        LPTSTR   lpSubExtDir;
-        LPHEADFILE lpHF;
-        LPHEADFILE lpHFTemp;
-
-        GetDlgItemText(hWnd, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
-        nLengthofStr = _tcslen(lpszExtDir);
-
-        lpHF = lpHFTemp = lpShot->lpHF;  // changed in 1.8
-        lpSubExtDir = lpszExtDir;
-
-        if (nLengthofStr > 0) {
-            for (i = 0; i <= nLengthofStr; i++) {
-                // This is the stupid filename detection routine, [separate with ";"]
-                if (*(lpszExtDir + i) == 0x3b || *(lpszExtDir + i) == 0x00) {
-                    *(lpszExtDir + i) = 0x00;
-
-                    if (*(lpszExtDir + i - 1) == '\\' && i > 0) {
-                        *(lpszExtDir + i - 1) = 0x00;
-                    }
-
-                    if (*lpSubExtDir != 0x00) {
-                        size_t  nSubExtDirLen;
-
-                        lpHF = (LPHEADFILE)MYALLOC0(sizeof(HEADFILE));
-                        if (lpShot->lpHF == NULL) {
-                            lpShot->lpHF = lpHF;
-                        } else {
-                            lpHFTemp->lpBrotherHF = lpHF;
-                        }
-
-                        lpHFTemp = lpHF;
-                        lpHF->lpFirstFC = (LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
-                        //lpHF->lpfilecontent2 = (LPFILECONTENT)MYALLOC0(sizeof(FILECONTENT));
-
-                        nSubExtDirLen = _tcslen(lpSubExtDir) + 1;
-                        lpHF->lpFirstFC->lpszFileName = MYALLOC(nSubExtDirLen * sizeof(TCHAR));
-                        //lpHF->lpfilecontent2->lpszFileName = MYALLOC(nSubExtDirLen * sizeof(TCHAR));
-
-                        _tcscpy(lpHF->lpFirstFC->lpszFileName, lpSubExtDir);
-                        //_tcscpy(lpHF->lpfilecontent2->lpszFileName,lpSubExtDir);
-
-                        lpHF->lpFirstFC->fileattr = FILE_ATTRIBUTE_DIRECTORY;
-                        //lpHF->lpfilecontent2->fileattr = FILE_ATTRIBUTE_DIRECTORY;
-
-                        GetFilesSnap(lpHF->lpFirstFC);
-
-                        // Update counters display
-                        nGettingTime = GetTickCount();
-                        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
-                    }
-                    lpSubExtDir = lpszExtDir + i + 1;
-                }
-            }
-        }
+    if (1 == SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
+        FileShot(lpShot);
     }
-
-    lpShot->lpszComputerName = MYALLOC0((MAX_COMPUTERNAME_LENGTH + 2) * sizeof(TCHAR));
-    ZeroMemory(lpShot->lpszComputerName, (MAX_COMPUTERNAME_LENGTH + 2) * sizeof(TCHAR));
-    NBW = MAX_COMPUTERNAME_LENGTH + 1;
-    GetComputerName(lpShot->lpszComputerName, &NBW);
-
-    lpShot->lpszUserName = MYALLOC0((UNLEN + 2) * sizeof(TCHAR));
-    ZeroMemory(lpShot->lpszUserName, (UNLEN + 2) * sizeof(TCHAR));
-    NBW = UNLEN + 1;
-    GetUserName(lpShot->lpszUserName, &NBW);
-
-    GetSystemTime(&lpShot->systemtime);
 
     UI_AfterShot();
 
@@ -1701,12 +1655,12 @@ VOID SaveHive(LPREGSHOT lpShot)
     }
 
     // Save HKLM
-    if (NULL != lpShot->lpHKLM) {  // should always be present
+    if (NULL != lpShot->lpHKLM) {
         SaveRegKey(lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
     }
 
     // Save HKU
-    if (NULL != lpShot->lpHKU) {  // should always be present
+    if (NULL != lpShot->lpHKU) {
         SaveRegKey(lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
     }
 
@@ -1972,7 +1926,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
     nGettingDir   = 0;
     nBASETIME  = GetTickCount();
     nBASETIME1 = nBASETIME;
-    if (is1) {
+    if (&Shot1 == lpShot) {
         UI_BeforeShot(IDC_1STSHOT);
     } else {
         UI_BeforeShot(IDC_2NDSHOT);
