@@ -25,7 +25,12 @@
 
 LPTSTR lpszDefResPre = REGSHOT_RESULT_FILE;
 
-LPTSTR lpszFilter = TEXT("Regshot hive files (*.hiv;*.hiv2)\0*.hiv;*.hiv2\0All files\0*.*\0\0");
+LPTSTR lpszFilter =
+#ifdef _UNICODE
+    TEXT("Regshot hive files (*.hiv2;*.hiv)\0*.hiv2;*.hiv\0All files\0*.*\0\0");
+#else
+    TEXT("Regshot hive files (*.hiv;*.hiv2)\0*.hiv;*.hiv2\0All files\0*.*\0\0");
+#endif
 
 // SBCS/MBCS signature (even in Unicode builds for backwards compatibility)
 char szRegshotFileSignatureSBCS[] = "REGSHOTHIVE";
@@ -1541,7 +1546,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     opfn.nMaxFile = MAX_PATH;  // incl. NULL character
     opfn.lpstrInitialDir = lpszLastSaveDir;
     opfn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-    opfn.lpstrDefExt = TEXT("hiv");
+    opfn.lpstrDefExt = lpszRegshotFileDefExt;
 
     // Display Save File Name dialog
     if (!GetSaveFileName(&opfn)) {
