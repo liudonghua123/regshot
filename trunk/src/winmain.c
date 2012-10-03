@@ -77,7 +77,7 @@ HANDLE hHeap;  // 1.8.2
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
     UNREFERENCED_PARAMETER(lParam);
-    if (uMsg == BFFM_INITIALIZED) {
+    if (BFFM_INITIALIZED == uMsg) {
         SendMessage(hWnd, BFFM_SETSELECTION, 1, lpData);
     }
     return 0;
@@ -95,8 +95,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
 
     switch (message) {
-        case WM_INITDIALOG:
-
+        case WM_INITDIALOG:  // Window creation (="program start")
             SendDlgItemMessage(hDlg, IDC_EDITCOMMENT, EM_SETLIMITTEXT, (WPARAM)(COMMENTLENGTH - 1), (LPARAM)0);
             SendDlgItemMessage(hDlg, IDC_EDITPATH, EM_SETLIMITTEXT, (WPARAM)(MAX_PATH - 1), (LPARAM)0);
             SendDlgItemMessage(hDlg, IDC_EDITDIR, EM_SETLIMITTEXT, (WPARAM)(EXTDIRLEN - 1), (LPARAM)0);
@@ -128,7 +127,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             _tcscpy(lpszLanguageIni, lpszStartDir);
             nLen = _tcslen(lpszLanguageIni);
-            if (nLen > 0) {
+            if (0 < nLen) {
                 nLen--;
                 if (lpszLanguageIni[nLen] != (TCHAR)'\\') {
                     _tcscat(lpszLanguageIni, TEXT("\\"));
@@ -138,7 +137,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             _tcscpy(lpszRegshotIni, lpszStartDir);
             nLen = _tcslen(lpszRegshotIni);
-            if (nLen > 0) {
+            if (0 < nLen) {
                 nLen--;
                 if (lpszRegshotIni[nLen] != (TCHAR)'\\') {
                     _tcscat(lpszRegshotIni, TEXT("\\"));
@@ -162,33 +161,31 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_1STSHOT:
+                case IDC_1STSHOT:  // Button: 1st Shot
+                    is1 = TRUE;  // Popup window messages are for 1st Shot
                     CreateShotPopupMenu();
-                    is1 = TRUE;
                     GetWindowRect(GetDlgItem(hDlg, IDC_1STSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
-
                     return(TRUE);
 
-                case IDC_2NDSHOT:
+                case IDC_2NDSHOT:  // Button: 2nd Shot
+                    is1 = FALSE;  // Popup window messages are for 2nd Shot
                     CreateShotPopupMenu();
-                    is1 = FALSE;
                     GetWindowRect(GetDlgItem(hDlg, IDC_2NDSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
                     return(TRUE);
 
-                case IDM_SHOTONLY:
+                case IDM_SHOTONLY:  // Shot Popup Menu: "Shot"
                     if (is1) {
                         Shot(&Shot1);
                     } else {
                         Shot(&Shot2);
                     }
-
                     return(TRUE);
 
-                case IDM_SHOTSAVE:
+                case IDM_SHOTSAVE:  // Shot Popup Menu: "Shot and Save..."
                     if (is1) {
                         Shot(&Shot1);
                         SaveHive(&Shot1);
@@ -196,26 +193,23 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         Shot(&Shot2);
                         SaveHive(&Shot2);
                     }
-
                     return(TRUE);
 
-                case IDM_LOAD:
+                case IDM_LOAD:  // Shot Popup Menu: "Load..."
                     if (is1) {
                         LoadHive(&Shot1);
                     } else {
                         LoadHive(&Shot2);
                     }
-
                     //if (is1LoadFromHive || is2LoadFromHive)
                     //  SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
-
                     return(TRUE);
 
                     /*case IDC_SAVEREG:
                         SaveRegistry(Shot1.lpHKLM, Shot1.lpHKU);
                         return(TRUE);*/
 
-                case IDC_COMPARE:
+                case IDC_COMPARE:  // Button: Compare
                     EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
                     UI_BeforeClear();
                     CompareShots(&Shot1, &Shot2);
@@ -227,7 +221,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     MessageBeep(0xffffffff);
                     return(TRUE);
 
-                case IDC_CLEAR1:
+                case IDC_CLEAR1:  // Button: Clear
                     hMenuClear = CreatePopupMenu();
                     AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpszText);
                     AppendMenu(hMenuClear, MF_MENUBARBREAK, IDM_BREAK, NULL);
@@ -311,14 +305,13 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     return(TRUE);
 
-                case IDC_CANCEL1:
-                case IDCANCEL:
-
+                case IDC_CANCEL1:  // Button: Quit
+                case IDCANCEL:  // Button: Window Close
                     SaveSettingsToIni(hDlg);  // tfx
                     PostQuitMessage(0);
                     return(TRUE);
 
-                case IDC_BROWSE1: {
+                case IDC_BROWSE1: {  // Button: Scan dirs
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
                     BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
@@ -329,12 +322,12 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
 
-                    if (lpidlist != NULL) {
+                    if (NULL != lpidlist) {
                         size_t nWholeLen;
 
                         SHGetPathFromIDList(lpidlist, BrowseInfo1.pszDisplayName);
                         nLen = _tcslen(BrowseInfo1.pszDisplayName);
-                        if (nLen > 0) {
+                        if (0 < nLen) {
                             size_t nLenExtDir;
 
                             nLenExtDir = GetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
@@ -358,7 +351,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 return(TRUE);
 
-                case IDC_BROWSE2: {
+                case IDC_BROWSE2: {  // Button: Output path
                     LPITEMIDLIST lpidlist;
                     BrowseInfo1.hwndOwner = hDlg;
                     BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
@@ -375,7 +368,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     //-----------------
 
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
-                    if (lpidlist != NULL) {
+                    if (NULL != lpidlist) {
                         SHGetPathFromIDList(lpidlist, BrowseInfo1.pszDisplayName);
                         SetDlgItemText(hDlg, IDC_EDITPATH, BrowseInfo1.pszDisplayName);
                         MYFREE(lpidlist);
@@ -385,7 +378,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 return(TRUE);
 
-                case IDC_COMBOLANGUAGE:
+                case IDC_COMBOLANGUAGE:  // Combo Box: Language
                     if (CBN_SELCHANGE == HIWORD(wParam)) {  // Only react when user selected something
                         SetTextsToDefaultLanguage();
                         SetTextsToSelectedLanguage(hDlg);
@@ -393,7 +386,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
 
-                case IDC_ABOUT: {
+                case IDC_ABOUT: {  // Button: About
                     LPTSTR   lpszAboutBox;
                     //_asm int 3;
                     lpszAboutBox = MYALLOC0(SIZEOF_ABOUTBOX * sizeof(TCHAR));
