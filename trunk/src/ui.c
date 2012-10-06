@@ -97,9 +97,9 @@ VOID UI_AfterShot(VOID)
 {
     DWORD nIDDef;
 
-    if (NULL == Shot1.lpHKLM) {
+    if (!Shot1.fFilled) {
         nIDDef = IDC_1STSHOT;
-    } else if (NULL == Shot2.lpHKLM) {
+    } else if (!Shot2.fFilled) {
         nIDDef = IDC_2NDSHOT;
     } else {
         nIDDef = IDC_COMPARE;
@@ -135,16 +135,16 @@ VOID UI_AfterClear(VOID)
     //BOOL fChk;  // used for file scan disable
 
     nIDDef = 0;
-    if (NULL == Shot1.lpHKLM) {
+    if (!Shot1.fFilled) {
         nIDDef = IDC_1STSHOT;
-    } else if (NULL == Shot2.lpHKLM) {
+    } else if (!Shot2.fFilled) {
         nIDDef = IDC_2NDSHOT;
     }
     EnableWindow(GetDlgItem(hWnd, nIDDef), TRUE);
     EnableWindow(GetDlgItem(hWnd, IDC_COMPARE), FALSE);
 
     //fChk = FALSE;
-    if ((NULL == Shot1.lpHKLM) && (NULL == Shot2.lpHKLM)) {
+    if ((!Shot1.fFilled) && (!Shot2.fFilled)) {
         EnableWindow(GetDlgItem(hWnd, IDC_2NDSHOT), FALSE);
         EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
         //fChk = TRUE;

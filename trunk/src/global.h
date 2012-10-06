@@ -166,6 +166,8 @@ struct _REGSHOT {
     LPTSTR        lpszComputerName;  // Pointer to Shot's computer name
     LPTSTR        lpszUserName;      // Pointer to Shot's user name
     SYSTEMTIME    systemtime;
+    BOOL          fFilled;           // Flag if Shot was done/loaded (even if result is empty)
+    BOOL          fLoaded;           // Flag if Shot was loaded from a file
 };
 typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
 
@@ -383,19 +385,17 @@ extern LPTSTR *lprgszFileSkipStrings;
 extern LPTSTR lpgrszLangSection;
 
 
-// Former definations used at Dynamic Monitor Engine. Not Used NOW
+// Former definitions used at Dynamic Monitor Engine. Not Used NOW
 //extern BOOL  bWinNTDetected;
 
-extern MSG     msg;                // Windows MSG struct
-extern HWND    hWnd;               // The handle of REGSHOT
-extern HMENU   hMenu;              // The handles of shortcut menus
-extern HANDLE  hFile;              // Handle of file regshot use
-extern HANDLE  hFileWholeReg;      // Handle of file regshot use
-extern HCURSOR hSaveCursor;        // Handle of cursor
-extern BOOL    is1;                // Flag to determine is the 1st shot
-//extern BOOL    is1LoadFromHive;  // Flag to determine if shot was loaded from hive file
-//extern BOOL    is2LoadFromHive;  // Flag to determine if shot was loaded from hive file
-extern BOOL    bUseLongRegHead;    // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
+extern MSG       msg;              // Windows MSG struct
+extern HWND      hWnd;             // The handle of REGSHOT
+extern HMENU     hMenu;            // The handles of shortcut menus
+extern HANDLE    hFile;            // Handle of file regshot use
+extern HANDLE    hFileWholeReg;    // Handle of file regshot use
+extern HCURSOR   hSaveCursor;      // Handle of cursor
+extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
+extern BOOL      bUseLongRegHead;  // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
 
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    LoadSettingsFromIni(HWND hDlg);

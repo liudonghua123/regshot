@@ -1339,6 +1339,9 @@ VOID Shot(LPREGSHOT lpShot)
         FileShot(lpShot);
     }
 
+    // Set flag
+    lpShot->fFilled = TRUE;
+
     UI_AfterShot();
 
     if (NULL != lpStringBuffer) {
@@ -2180,6 +2183,10 @@ BOOL LoadHive(LPREGSHOT lpShot)
         MYFREE(lpFileBuffer);
         lpFileBuffer = NULL;
     }
+
+    // Set flag
+    lpShot->fFilled = TRUE;
+    lpShot->fLoaded = TRUE;
 
     UI_AfterShot();
 

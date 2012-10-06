@@ -62,9 +62,9 @@ LPTSTR lpszRegshotIni;
 
 MSG        msg;          // Windows MSG struct
 HWND       hWnd;         // The handle of REGSHOT
-HMENU      hMenu;        // The handles of shortcut menus
+HMENU      hMenu;        // Handle of popup menu
 HMENU      hMenuClear;   // The handles of shortcut menus
-BOOL       is1;          // Flag to determine is the 1st shot
+LPREGSHOT  lpMenuShot;   // Pointer to current Shot for popup menus and alike
 RECT       rect;         // Window RECT
 BROWSEINFO BrowseInfo1;  // BrowseINFO struct
 
@@ -162,7 +162,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_1STSHOT:  // Button: 1st Shot
-                    is1 = TRUE;  // Popup window messages are for 1st Shot
+                    lpMenuShot = &Shot1;  // Popup window messages are for 1st Shot
                     CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_1STSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
@@ -170,7 +170,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDC_2NDSHOT:  // Button: 2nd Shot
-                    is1 = FALSE;  // Popup window messages are for 2nd Shot
+                    lpMenuShot = &Shot2;  // Popup window messages are for 2nd Shot
                     CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_2NDSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
@@ -178,31 +178,16 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDM_SHOTONLY:  // Shot Popup Menu: "Shot"
-                    if (is1) {
-                        Shot(&Shot1);
-                    } else {
-                        Shot(&Shot2);
-                    }
+                    Shot(lpMenuShot);
                     return(TRUE);
 
                 case IDM_SHOTSAVE:  // Shot Popup Menu: "Shot and Save..."
-                    if (is1) {
-                        Shot(&Shot1);
-                        SaveHive(&Shot1);
-                    } else {
-                        Shot(&Shot2);
-                        SaveHive(&Shot2);
-                    }
+                    Shot(lpMenuShot);
+                    SaveHive(lpMenuShot);
                     return(TRUE);
 
                 case IDM_LOAD:  // Shot Popup Menu: "Load..."
-                    if (is1) {
-                        LoadHive(&Shot1);
-                    } else {
-                        LoadHive(&Shot2);
-                    }
-                    //if (is1LoadFromHive || is2LoadFromHive)
-                    //  SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
+                    LoadHive(lpMenuShot);
                     return(TRUE);
 
                     /*case IDC_SAVEREG:
@@ -222,6 +207,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDC_CLEAR1:  // Button: Clear
+                    lpMenuShot = NULL;
                     hMenuClear = CreatePopupMenu();
                     AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpszText);
                     AppendMenu(hMenuClear, MF_MENUBARBREAK, IDM_BREAK, NULL);
@@ -237,13 +223,13 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     //}
                     //else
                     {
-                        if (Shot1.lpHKLM != NULL) {
+                        if (Shot1.fFilled) {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_ENABLED);
                         } else {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_GRAYED);
                         }
 
-                        if (Shot2.lpHKLM != NULL) {
+                        if (Shot2.fFilled) {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_ENABLED);
                         } else {
                             EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_GRAYED);
