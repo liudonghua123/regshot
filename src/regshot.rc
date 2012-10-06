@@ -53,7 +53,7 @@ BEGIN
     GROUPBOX        TEXT(""),IDC_STATIC,6,37,125,40
     GROUPBOX        TEXT("Output path:"),IDC_STATICOUTPUTPATH,6,82,125,31
     GROUPBOX        TEXT("Add comment into the log:"),IDC_STATICADDCOMMENT,6,117,125,31
-    CONTROL         TEXT("Progress1"),IDC_PBCOMPARE,TEXT("msctls_progress32"),NOT WS_VISIBLE | WS_BORDER,7,153,180,9
+    CONTROL         TEXT("Progress1"),IDC_PROGBAR,TEXT("msctls_progress32"),NOT WS_VISIBLE | WS_BORDER,7,153,180,9
 END
 
 

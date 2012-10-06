@@ -63,7 +63,6 @@ LPTSTR lpszRegshotIni;
 MSG        msg;          // Windows MSG struct
 HWND       hWnd;         // The handle of REGSHOT
 HMENU      hMenu;        // Handle of popup menu
-HMENU      hMenuClear;   // The handles of shortcut menus
 LPREGSHOT  lpMenuShot;   // Pointer to current Shot for popup menus and alike
 RECT       rect;         // Window RECT
 BROWSEINFO BrowseInfo1;  // BrowseINFO struct
@@ -198,7 +197,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
                     UI_BeforeClear();
                     CompareShots(&Shot1, &Shot2);
-                    ShowWindow(GetDlgItem(hDlg, IDC_PBCOMPARE), SW_HIDE);
+                    ShowWindow(GetDlgItem(hDlg, IDC_PROGBAR), SW_HIDE);
                     EnableWindow(GetDlgItem(hDlg, IDC_CLEAR1), TRUE);
                     SetFocus(GetDlgItem(hDlg, IDC_CLEAR1));
                     SendMessage(hDlg, DM_SETDEFID, (WPARAM)IDC_CLEAR1, (LPARAM)0);
@@ -208,39 +207,13 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_CLEAR1:  // Button: Clear
                     lpMenuShot = NULL;
-                    hMenuClear = CreatePopupMenu();
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARALLSHOTS, asLangTexts[iszTextMenuClearAllShots].lpszText);
-                    AppendMenu(hMenuClear, MF_MENUBARBREAK, IDM_BREAK, NULL);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpszText);
-                    AppendMenu(hMenuClear, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpszText);
-                    //AppendMenu(hMenuClear, MF_STRING, IDM_CLEARRESULT, TEXT("Clear comparison result"));
-                    SetMenuDefaultItem(hMenuClear, IDM_CLEARALLSHOTS, FALSE);
-
-                    //if (lpHeadFile != NULL)
-                    //{
-                    //  EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND|MF_GRAYED);
-                    //  EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND|MF_GRAYED);
-                    //}
-                    //else
-                    {
-                        if (Shot1.fFilled) {
-                            EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_ENABLED);
-                        } else {
-                            EnableMenuItem(hMenuClear, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_GRAYED);
-                        }
-
-                        if (Shot2.fFilled) {
-                            EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_ENABLED);
-                        } else {
-                            EnableMenuItem(hMenuClear, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_GRAYED);
-                        }
-                    }
+                    CreateClearPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_CLEAR1), &rect);
-                    TrackPopupMenu(hMenuClear, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
-                    DestroyMenu(hMenuClear);
+                    TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
+                    DestroyMenu(hMenu);
                     return(TRUE);
 
-                case IDM_CLEARALLSHOTS:
+                case IDM_CLEARALL:  // Clear Popup Menu: "Clear All"
                     UI_BeforeClear();
                     FreeShot(&Shot1);
                     FreeShot(&Shot2);
@@ -249,7 +222,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
                     return(TRUE);
 
-                case IDM_CLEARSHOT1:
+                case IDM_CLEARSHOT1:  // Clear Popup Menu: "Clear 1st Shot"
                     UI_BeforeClear();
                     FreeShot(&Shot1);
                     FreeAllCompareResults();
@@ -259,7 +232,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_AfterClear();
                     return(TRUE);
 
-                case IDM_CLEARSHOT2:
+                case IDM_CLEARSHOT2:  // Clear Popup Menu: "Clear 2nd Shot"
                     UI_BeforeClear();
                     FreeShot(&Shot2);
                     FreeAllCompareResults();

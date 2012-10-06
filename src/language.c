@@ -111,8 +111,8 @@ VOID SetTextsToDefaultLanguage(VOID)
 
     asLangTexts[iszTextMenuShot].lpszText          = TEXT("&Shot");
     asLangTexts[iszTextMenuShotSave].lpszText      = TEXT("Shot and Sa&ve...");
-    asLangTexts[iszTextMenuShotLoad].lpszText      = TEXT("Loa&d...");
-    asLangTexts[iszTextMenuClearAllShots].lpszText = TEXT("&Clear All");
+    asLangTexts[iszTextMenuLoad].lpszText          = TEXT("Loa&d...");
+    asLangTexts[iszTextMenuClearAll].lpszText      = TEXT("&Clear All");
     asLangTexts[iszTextMenuClearShot1].lpszText    = TEXT("Clear &1st shot");
     asLangTexts[iszTextMenuClearShot2].lpszText    = TEXT("Clear &2nd shot");
 

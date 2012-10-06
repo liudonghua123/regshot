@@ -656,7 +656,7 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
     if (nGettingKey != 0)
         if (nComparing % nGettingKey > nRegStep) {
             nComparing = 0;
-            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
         }
 
     return NULL;
@@ -702,7 +702,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         CompareFirstSubKey(lpShot2->lpHKU, lpShot1->lpHKU);
     }
 
-    SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
 
     // Dir comparison v1.8.1
     // determine newer
@@ -742,7 +742,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         }
     }
 
-    SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_SETPOS, (WPARAM)MAXPBPOSITION, (LPARAM)0);
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)MAXPBPOSITION, (LPARAM)0);
 
     if (SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
         fAsHTML = FALSE;
@@ -1516,7 +1516,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
     if (0 != nGettingKey) {
         if (nSavingKey % nGettingKey > nRegStep) {
             nSavingKey = 0;
-            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
             UpdateWindow(hWnd);
             PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
         }
@@ -1685,7 +1685,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     // Close file
     CloseHandle(hFileWholeReg);
 
-    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);
+    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_HIDE);
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 
@@ -2002,7 +2002,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
         // Handle progress bar
         if (j % (nFileSize / REGSHOT_READ_BLOCK_SIZE) > nFileStep) {  // TODO: does look wrong!?!
             j = 0;
-            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
             UpdateWindow(hWnd);
             PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
         }
@@ -2010,7 +2010,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
 
     CloseHandle(hFileWholeReg);
 
-    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_HIDE);  // Hide progress bar
+    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_HIDE);  // Hide progress bar
     ShowHideCounters(SW_SHOW);
 
     // Check size for copying file header

@@ -408,6 +408,7 @@ VOID    LoadAvailableLanguagesFromIni(HWND hDlg);
 BOOL    LoadLanguageFromIni(HWND hDlg);
 VOID    SetTextsToSelectedLanguage(HWND hDlg);
 VOID    CreateShotPopupMenu(VOID);
+VOID    CreateClearPopupMenu(VOID);
 VOID    UI_BeforeShot(DWORD nID);
 VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
@@ -489,8 +490,8 @@ enum eLangTexts {
     //
     iszTextMenuShot,
     iszTextMenuShotSave,
-    iszTextMenuShotLoad,
-    iszTextMenuClearAllShots,
+    iszTextMenuLoad,
+    iszTextMenuClearAll,
     iszTextMenuClearShot1,
     iszTextMenuClearShot2,
     // ATTENTION: add new language strings before this line, the last line is used to determine the count

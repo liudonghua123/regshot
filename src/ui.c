@@ -43,10 +43,10 @@ VOID InitProgressBar(VOID)
     nRegStep = nGettingKey / MAXPBPOSITION;
     nFileStep = nGettingFile / MAXPBPOSITION;
     ShowHideCounters(SW_HIDE);  // 1.8.2
-    SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_SETRANGE, (WPARAM)0, MAKELPARAM(0, MAXPBPOSITION));
-    SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
-    SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_SETSTEP, (WPARAM)1, (LPARAM)0);
-    ShowWindow(GetDlgItem(hWnd, IDC_PBCOMPARE), SW_SHOW);
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETRANGE, (WPARAM)0, MAKELPARAM(0, MAXPBPOSITION));
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETSTEP, (WPARAM)1, (LPARAM)0);
+    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_SHOW);
 }
 
 
@@ -161,14 +161,45 @@ VOID UI_AfterClear(VOID)
 
 
 //--------------------------------------------------
-// Show popup shortcut menu
+// Show popup menu for Shot buttons
 //--------------------------------------------------
 VOID CreateShotPopupMenu(VOID)
 {
     hMenu = CreatePopupMenu();
+
     AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, asLangTexts[iszTextMenuShot].lpszText);
     AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, asLangTexts[iszTextMenuShotSave].lpszText);
     AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
-    AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuShotLoad].lpszText);
+    AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuLoad].lpszText);
+
     SetMenuDefaultItem(hMenu, IDM_SHOTONLY, FALSE);
+}
+
+
+//--------------------------------------------------
+// Show popup menu for Clear button
+//--------------------------------------------------
+VOID CreateClearPopupMenu(VOID)
+{
+    hMenu = CreatePopupMenu();
+
+    AppendMenu(hMenu, MF_STRING, IDM_CLEARALL, asLangTexts[iszTextMenuClearAll].lpszText);
+    AppendMenu(hMenu, MF_MENUBARBREAK, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpszText);
+    AppendMenu(hMenu, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpszText);
+    //AppendMenu(hMenu, MF_STRING, IDM_CLEARRESULT, TEXT("Clear comparison result"));
+
+    if (!Shot1.fFilled) {
+        EnableMenuItem(hMenu, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_GRAYED);
+    }
+    if (!Shot2.fFilled) {
+        EnableMenuItem(hMenu, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_GRAYED);
+    }
+    /*
+    if (!Comparison.fFilled) {
+        EnableMenuItem(hMenu, IDM_CLEARRESULT, MF_BYCOMMAND | MF_GRAYED);
+    }
+    */
+
+    SetMenuDefaultItem(hMenu, IDM_CLEARALL, FALSE);
 }
