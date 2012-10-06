@@ -1037,13 +1037,15 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
         lpKC->lpszKeyName = lpszRegKeyName;
 
         // Check if key is to be excluded
-        lpszFullName = GetWholeKeyName(lpKC);
-        if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+        if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
+            lpszFullName = GetWholeKeyName(lpKC);
+            if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+                MYFREE(lpszFullName);
+                FreeAllKeyContent(lpKC);
+                return NULL;
+            }
             MYFREE(lpszFullName);
-            FreeAllKeyContent(lpKC);
-            return NULL;
         }
-        MYFREE(lpszFullName);
 
         // Examine key for values and sub keys, get counts and also maximum lengths of names plus value data
         nErrNo = RegQueryInfoKey(
@@ -1141,13 +1143,15 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 }
 
                 // Check if value is to be excluded
-                lpszFullName = GetWholeValueName(lpVC);
-                if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+                if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
+                    lpszFullName = GetWholeValueName(lpVC);
+                    if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
+                        MYFREE(lpszFullName);
+                        FreeAllValueContent(lpVC);
+                        continue;
+                    }
                     MYFREE(lpszFullName);
-                    FreeAllValueContent(lpVC);
-                    continue;
                 }
-                MYFREE(lpszFullName);
 
                 // Increase value count
                 nGettingValue++;
