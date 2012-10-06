@@ -1576,13 +1576,20 @@ VOID SaveHive(LPREGSHOT lpShot)
     fileheader.ofsHF = 0;  // not known yet, may be empty
 
     // Copy SBCS/MBCS strings to header (even in Unicode builds for backwards compatibility)
+    if (NULL != lpShot->lpszComputerName) {
 #ifdef _UNICODE
-    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, lpShot->lpszComputerName, -1, fileheader.computername, OLD_COMPUTERNAMELEN, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, lpShot->lpszUserName, -1, fileheader.username, OLD_COMPUTERNAMELEN, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, lpShot->lpszComputerName, -1, fileheader.computername, OLD_COMPUTERNAMELEN, NULL, NULL);
 #else
-    strncpy(fileheader.computername, lpShot->lpszComputerName, OLD_COMPUTERNAMELEN);
-    strncpy(fileheader.username, lpShot->lpszUserName, OLD_COMPUTERNAMELEN);
+        strncpy(fileheader.computername, lpShot->lpszComputerName, OLD_COMPUTERNAMELEN);
 #endif
+    }
+    if (NULL != lpShot->lpszUserName) {
+#ifdef _UNICODE
+        WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, lpShot->lpszUserName, -1, fileheader.username, OLD_COMPUTERNAMELEN, NULL, NULL);
+#else
+        strncpy(fileheader.username, lpShot->lpszUserName, OLD_COMPUTERNAMELEN);
+#endif
+    }
 
     // Copy system time to header
     CopyMemory(&fileheader.systemtime, &lpShot->systemtime, sizeof(SYSTEMTIME));
