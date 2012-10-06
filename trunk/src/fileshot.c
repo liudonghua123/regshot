@@ -392,7 +392,7 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
     if (nGettingFile != 0)
         if (nComparing % nGettingFile > nFileStep) {
             nComparing = 0;
-            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
         }
 }
 
@@ -510,7 +510,7 @@ VOID SaveFileContent(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
     if (0 != nGettingFile) {
         if (nSavingFile % nGettingFile > nFileStep) {
             nSavingFile = 0;
-            SendDlgItemMessage(hWnd, IDC_PBCOMPARE, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
             UpdateWindow(hWnd);
             PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
         }

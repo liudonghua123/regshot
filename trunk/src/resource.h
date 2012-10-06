@@ -33,7 +33,7 @@
 #define IDC_CLEAR2                      1021
 #define IDC_SAVE                        1022
 #define IDC_CANCEL2                     1023
-#define IDC_PBCOMPARE                   1024
+#define IDC_PROGBAR                     1024
 #define IDC_EDITCOMMENT                 1025
 #define IDC_EDITPATH                    1026
 #define IDC_EDITDIR                     1027
@@ -61,7 +61,7 @@
 #define IDM_SHOTSAVE                    1049
 #define IDM_LOAD                        1050
 #define IDM_BREAK                       1051
-#define IDM_CLEARALLSHOTS               1052
+#define IDM_CLEARALL                    1052
 #define IDM_CLEARSHOT1                  1053
 #define IDM_CLEARSHOT2                  1054
 
