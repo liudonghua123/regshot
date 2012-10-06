@@ -313,6 +313,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_BROWSE1: {  // Button: Scan dirs
                     LPITEMIDLIST lpidlist;
+                    size_t nLenExtDir;
+
                     BrowseInfo1.hwndOwner = hDlg;
                     BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
                     //BrowseInfo1.lpszTitle = TEXT("Select:");
@@ -320,50 +322,57 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     BrowseInfo1.lpfn = NULL;
                     BrowseInfo1.lParam = 0;
 
+                    // remove trailing semicolons
+                    nLenExtDir = GetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
+                    while ((0 < nLenExtDir) && ((TCHAR)';' == lpszExtDir[nLenExtDir - 1])) {
+                        nLenExtDir--;
+                    }
+                    lpszExtDir[nLenExtDir] = (TCHAR)'\0';
+
                     lpidlist = SHBrowseForFolder(&BrowseInfo1);
-
                     if (NULL != lpidlist) {
-                        size_t nWholeLen;
-
                         SHGetPathFromIDList(lpidlist, BrowseInfo1.pszDisplayName);
                         nLen = _tcslen(BrowseInfo1.pszDisplayName);
                         if (0 < nLen) {
-                            size_t nLenExtDir;
+                            size_t nWholeLen;
+                            BOOL fSemicolon;
 
-                            nLenExtDir = GetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
-                            nWholeLen = nLenExtDir + nLen + 1;
+                            fSemicolon = FALSE;
+                            nWholeLen = nLenExtDir + nLen;
+                            if (0 < nLenExtDir) {
+                                fSemicolon = TRUE;
+                                nWholeLen++;
+                            }
 
-                            if (nWholeLen < EXTDIRLEN) {
-                                if (nLenExtDir > 0) {
+                            if (EXTDIRLEN > nWholeLen) {
+                                if (fSemicolon) {
                                     _tcscat(lpszExtDir, TEXT(";"));
-                                    _tcscat(lpszExtDir, BrowseInfo1.pszDisplayName);
-                                } else {
-                                    _tcscpy(lpszExtDir, BrowseInfo1.pszDisplayName);
                                 }
-
-                                SetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir);
+                                _tcscat(lpszExtDir, BrowseInfo1.pszDisplayName);
                             }
                         }
                         MYFREE(lpidlist);
                     }
-
                     MYFREE(BrowseInfo1.pszDisplayName);
+
+                    SetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir);
                 }
                 return(TRUE);
 
                 case IDC_BROWSE2: {  // Button: Output path
                     LPITEMIDLIST lpidlist;
+
                     BrowseInfo1.hwndOwner = hDlg;
                     BrowseInfo1.pszDisplayName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
                     //BrowseInfo1.lpszTitle = TEXT("Select:");
-
                     //-----------------
                     // Added by Youri in 1.8.2 ,Thanks!
                     // if you add this code, the browse dialog will be expand path and have button "Create Folder"
                     BrowseInfo1.ulFlags |= 0x0040; // BIF_NEWDIALOGSTYLE;    // button "Create Folder" and resizable
                     BrowseInfo1.lpfn = SelectBrowseFolder;                   // function for expand path
                     BrowseInfo1.lParam = (LPARAM)BrowseInfo1.pszDisplayName;
-                    // Initilize selection path
+
+                    // Initialize selection path
                     GetDlgItemText(hDlg, IDC_EDITPATH, BrowseInfo1.pszDisplayName, MAX_PATH);  // length incl. NULL character
                     //-----------------
 
