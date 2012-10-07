@@ -66,7 +66,7 @@ extern HANDLE hHeap;
 
 
 // Some definitions
-#define NOTMATCH        0             // Define modification type in comparison results
+#define NOMATCH         0             // Define modification type in comparison results
 #define ISMATCH         1
 #define ISDEL           2
 #define ISADD           3
@@ -108,7 +108,7 @@ struct _KEYCONTENT {
     struct _KEYCONTENT FAR *lpFirstSubKC;   // Pointer to key's first sub key
     struct _KEYCONTENT FAR *lpBrotherKC;    // Pointer to key's brother
     struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to key's father
-    DWORD  bkeymatch;                       // Flags used when comparing, until 1.8.2 was byte
+    DWORD  fKeyMatch;                       // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
 
@@ -121,7 +121,7 @@ struct _VALUECONTENT {
     LPBYTE lpValueData;                     // Pointer to value's data
     struct _VALUECONTENT FAR *lpBrotherVC;  // Pointer to value's brother
     struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to value's father key
-    DWORD  bvaluematch;                     // Flags used when comparing, until 1.8.2 was byte
+    DWORD  fValueMatch;                     // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
 
@@ -138,7 +138,7 @@ struct _FILECONTENT {
     struct _FILECONTENT FAR *lpFirstSubFC;  // Pointer to file's first sub file
     struct _FILECONTENT FAR *lpBrotherFC;   // Pointer to file's brother
     struct _FILECONTENT FAR *lpFatherFC;    // Pointer to file's father
-    DWORD  fComparison;                     // Flags used when comparing, until 1.8.2 it was byte
+    DWORD  fFileMatch;                      // Flags used when comparing, until 1.8.2 it was byte
 };
 typedef struct _FILECONTENT FILECONTENT, FAR *LPFILECONTENT;
 
@@ -236,7 +236,7 @@ struct _SAVEKEYCONTENT {
 
     // extended values exist only since structure version 2
     // new since key content version 2
-    DWORD nKeyNameLen;  // (v2) Length of key's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal bkeymatch field that was always zero)
+    DWORD nKeyNameLen;  // (v2) Length of key's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal fKeyMatch field that was always zero)
 
     // ^^^ here the key content structure can be extended
     // * increase the version number for the new key content format
@@ -264,7 +264,7 @@ struct _SAVEVALUECONTENT {
 
     // extended values exist only since structure version 2
     // new since value content version 2
-    DWORD nValueNameLen;  // (v2) Length of value's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal bkeymatch field that was always zero)
+    DWORD nValueNameLen;  // (v2) Length of value's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal fValueMatch field that was always zero)
 
     // ^^^ here the value content structure can be extended
     // * increase the version number for the new value content format
@@ -296,7 +296,7 @@ struct _SAVEFILECONTENT {
 
     // extended values exist only since structure version 2
     // new since file content version 2
-    DWORD nFileNameLen;  // (v2) Length of file's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal bkeymatch field that was always zero)
+    DWORD nFileNameLen;  // (v2) Length of file's name in chars incl. NULL char (up to 1.8.2 there a was single byte for internal fFileMatch field that was always zero)
 
     // ^^^ here the file content structure can be extended
     // * increase the version number for the new file content format
