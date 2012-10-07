@@ -1327,13 +1327,8 @@ VOID Shot(LPREGSHOT lpShot)
         UI_BeforeShot(IDC_2NDSHOT);
     }
 
-    if (bUseLongRegHead) {  // since 1.8.1
-        GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMLong, NULL, &lpShot->lpHKLM);
-        GetRegistrySnap(HKEY_USERS, lpszHKULong, NULL, &lpShot->lpHKU);
-    } else {
-        GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
-        GetRegistrySnap(HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
-    }
+    GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
+    GetRegistrySnap(HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
 
     // Update counters display (reg keys/values final)
     nGettingTime = GetTickCount();
@@ -1382,10 +1377,15 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
     }
 
     // Initialize key content
-    ZeroMemory(&sKC, sizeof(sKC));
 
     // Set file positions of the relatives inside the tree
-    sKC.ofsKeyName = 0;      // not known yet, may be re-written in this call
+#ifdef _UNICODE
+    sKC.ofsKeyName = 0;      // not known yet, may be defined in this call
+#endif
+#ifndef _UNICODE
+    // Key name will always be stored behind the structure, so its position is already known
+    sKC.ofsKeyName = nFPKey + sizeof(sKC);
+#endif
     sKC.ofsFirstValue = 0;   // not known yet, may be re-written in this call
     sKC.ofsFirstSubKey = 0;  // not known yet, may be re-written by another recursive call
     sKC.ofsBrotherKey = 0;   // not known yet, may be re-written by another recursive call
@@ -1393,33 +1393,51 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
 
     // New since key content version 2
     sKC.nKeyNameLen = 0;
-    if (NULL != lpKC->lpszKeyName) {
-        sKC.nKeyNameLen = (DWORD)_tcslen(lpKC->lpszKeyName);
+
+    // Extra local block to reduce stack usage due to recursive calls
+    {
+        LPTSTR lpszKeyName;
+
+        // Determine correct key name
+        if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
+            // Adopt to long HKLM/HKU
+            if (lpszHKLMShort == lpKC->lpszKeyName) {
+                lpszKeyName = lpszHKLMLong;
+            } else if (lpszHKUShort == lpKC->lpszKeyName) {
+                lpszKeyName = lpszHKULong;
+            } else {
+                lpszKeyName = lpKC->lpszKeyName;
+            }
+        } else {
+            lpszKeyName = lpKC->lpszKeyName;
+        }
+
+        // Determine key name length
+        if (NULL != lpszKeyName) {
+            sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);
+            if (0 < sKC.nKeyNameLen) {  // otherwise leave it all 0
+                sKC.nKeyNameLen++;  // account for NULL char
 #ifdef _UNICODE
-        sKC.nKeyNameLen++;  // account for NULL char
-        // Key name will always be stored behind the structure, so its position is already known
-        sKC.ofsKeyName = nFPKey + sizeof(sKC);
+                // Key name will always be stored behind the structure, so its position is already known
+                sKC.ofsKeyName = nFPKey + sizeof(sKC);
 #endif
-    }
-#ifndef _UNICODE
-    sKC.nKeyNameLen++;  // account for NULL char
-    // Key name will always be stored behind the structure, so its position is already known
-    sKC.ofsKeyName = nFPKey + sizeof(sKC);
-#endif
+            }
+        }
 
-    // Write key content to file
-    // Make sure that ALL fields have been initialized/set
-    WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
+        // Write key content to file
+        // Make sure that ALL fields have been initialized/set
+        WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
 
-    // Write key name to file
-    if (NULL != lpKC->lpszKeyName) {
-        WriteFile(hFileWholeReg, lpKC->lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
+        // Write key name to file
+        if (0 < sKC.nKeyNameLen) {
+            WriteFile(hFileWholeReg, lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
-    } else {
-        // Write empty string for backward compatibility
-        WriteFile(hFileWholeReg, lpszEmpty, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
+        } else {
+            // Write empty string for backward compatibility
+            WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
 #endif
-    }
+        }
+    }  // End of extra local block
 
     // Save the values of current key
     if (NULL != lpKC->lpFirstVC) {
@@ -1441,45 +1459,50 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             }
             nFPValueCaller = nFPValue + offsetof(SAVEVALUECONTENT, ofsBrotherValue);
 
-            // Initialize key content
-            ZeroMemory(&sVC, sizeof(sVC));
+            // Initialize value content
 
             // Copy values
             sVC.typecode = lpVC->typecode;
             sVC.datasize = lpVC->datasize;
 
             // Set file positions of the relatives inside the tree
+#ifdef _UNICODE
+            sVC.ofsValueName = 0;       // not known yet, may be defined in this iteration
+#endif
+#ifndef _UNICODE
+            // Value name will always be stored behind the structure, so its position is already known
+            sVC.ofsValueName = nFPValue + sizeof(sVC);
+#endif
             sVC.ofsValueData = 0;       // not known yet, may be re-written in this iteration
             sVC.ofsBrotherValue = 0;    // not known yet, may be re-written in next iteration
             sVC.ofsFatherKey = nFPKey;
 
             // New since value content version 2
             sVC.nValueNameLen = 0;
+
+            // Determine value name length
             if (NULL != lpVC->lpszValueName) {
                 sVC.nValueNameLen = (DWORD)_tcslen(lpVC->lpszValueName);
+                if (0 < sVC.nValueNameLen) {  // otherwise leave it all 0
+                    sVC.nValueNameLen++;  // account for NULL char
 #ifdef _UNICODE
-                sVC.nValueNameLen++;  // account for NULL char
-                // Value name will always be stored behind the structure, so its position is already known
-                sVC.ofsValueName = nFPValue + sizeof(sVC);
+                    // Value name will always be stored behind the structure, so its position is already known
+                    sVC.ofsValueName = nFPValue + sizeof(sVC);
 #endif
+                }
             }
-#ifndef _UNICODE
-            sVC.nValueNameLen++;  // account for NULL char
-            // Value name will always be stored behind the structure, so its position is already known
-            sVC.ofsValueName = nFPValue + sizeof(sVC);
-#endif
 
             // Write value content to file
             // Make sure that ALL fields have been initialized/set
             WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
 
             // Write value name to file
-            if (NULL != lpVC->lpszValueName) {
+            if (0 < sVC.nValueNameLen) {
                 WriteFile(hFileWholeReg, lpVC->lpszValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
             } else {
                 // Write empty string for backward compatibility
-                WriteFile(hFileWholeReg, lpszEmpty, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
+                WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
 #endif
             }
 
@@ -1777,24 +1800,16 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
         }
     }
 
-    // Adopt HKLM/HKU to UseLongRegHead setting
+    // Adopt to short HKLM/HKU
     if (NULL == lpKC->lpFatherKC) {
-        if (bUseLongRegHead) {
-            if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMShort)) {
-                MYFREE(lpKC->lpszKeyName);
-                lpKC->lpszKeyName = lpszHKLMLong;
-            } else if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort)) {
-                MYFREE(lpKC->lpszKeyName);
-                lpKC->lpszKeyName = lpszHKULong;
-            }
-        } else {
-            if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong)) {
-                MYFREE(lpKC->lpszKeyName);
-                lpKC->lpszKeyName = lpszHKLMShort;
-            } else if (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong)) {
-                MYFREE(lpKC->lpszKeyName);
-                lpKC->lpszKeyName = lpszHKUShort;
-            }
+        if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMShort))
+                || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong))) {
+            MYFREE(lpKC->lpszKeyName);
+            lpKC->lpszKeyName = lpszHKLMShort;
+        } else if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort))
+                   || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong))) {
+            MYFREE(lpKC->lpszKeyName);
+            lpKC->lpszKeyName = lpszHKUShort;
         }
     }
 

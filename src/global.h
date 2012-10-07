@@ -395,7 +395,7 @@ extern HANDLE    hFile;            // Handle of file regshot use
 extern HANDLE    hFileWholeReg;    // Handle of file regshot use
 extern HCURSOR   hSaveCursor;      // Handle of cursor
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
-extern BOOL      bUseLongRegHead;  // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
+extern BOOL      bUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
 VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
 BOOL    LoadSettingsFromIni(HWND hDlg);
