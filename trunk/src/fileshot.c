@@ -445,7 +445,6 @@ VOID SaveFileContent(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
     }
 
     // Initialize file content
-    ZeroMemory(&sFC, sizeof(sFC));
 
     // Copy values
     sFC.nWriteDateTimeLow = lpFC->nWriteDateTimeLow;
@@ -456,38 +455,43 @@ VOID SaveFileContent(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
     sFC.nChkSum = lpFC->nChkSum;
 
     // Set file positions of the relatives inside the tree
-    sFC.ofsFileName = 0;      // not known yet, may be re-written in this call
+#ifdef _UNICODE
+    sFC.ofsFileName = 0;      // not known yet, may be defined in this call
+#endif
+#ifndef _UNICODE
+    // File name will always be stored behind the structure, so its position is already known
+    sFC.ofsFileName = nFPFile + sizeof(sFC);
+#endif
     sFC.ofsFirstSubFile = 0;  // not known yet, may be re-written by another recursive call
     sFC.ofsBrotherFile = 0;   // not known yet, may be re-written by another recursive call
     sFC.ofsFatherFile = nFPFatherFile;
 
     // New since file content version 2
     sFC.nFileNameLen = 0;
+
+    // Determine file name length
     if (NULL != lpFC->lpszFileName) {
         sFC.nFileNameLen = (DWORD)_tcslen(lpFC->lpszFileName);
+        if (0 < sFC.nFileNameLen) {  // otherwise leave it all 0
+            sFC.nFileNameLen++;  // account for NULL char
 #ifdef _UNICODE
-        sFC.nFileNameLen++;  // account for NULL char
-        // File name will always be stored behind the structure, so its position is already known
-        sFC.ofsFileName = nFPFile + sizeof(sFC);
+            // File name will always be stored behind the structure, so its position is already known
+            sFC.ofsFileName = nFPFile + sizeof(sFC);
 #endif
+        }
     }
-#ifndef _UNICODE
-    sFC.nFileNameLen++;  // account for NULL char
-    // File name will always be stored behind the structure, so its position is already known
-    sFC.ofsFileName = nFPFile + sizeof(sFC);
-#endif
 
     // Write file content to file
     // Make sure that ALL fields have been initialized/set
     WriteFile(hFileWholeReg, &sFC, sizeof(sFC), &NBW, NULL);
 
     // Write file name to file
-    if (NULL != lpFC->lpszFileName) {
+    if (0 < sFC.nFileNameLen) {
         WriteFile(hFileWholeReg, lpFC->lpszFileName, sFC.nFileNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
     } else {
         // Write empty string for backward compatibility
-        WriteFile(hFileWholeReg, lpszEmpty, sFC.nFileNameLen * sizeof(TCHAR), &NBW, NULL);
+        WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
 #endif
     }
 
@@ -541,7 +545,10 @@ VOID SaveHeadFile(LPHEADFILE lpStartHF, DWORD nFPCaller)
         nFPHFCaller = nFPHF + offsetof(SAVEHEADFILE, ofsBrotherHeadFile);
 
         // Initialize head file
-        ZeroMemory(&sHF, sizeof(sHF));
+
+        // Set file positions of the relatives inside the tree
+        sHF.ofsBrotherHeadFile = 0;   // not known yet, may be re-written in next iteration
+        sHF.ofsFirstFileContent = 0;  // not known yet, may be re-written by SaveFileContent call
 
         // Write head file to file
         // Make sure that ALL fields have been initialized/set

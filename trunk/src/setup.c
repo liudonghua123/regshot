@@ -35,7 +35,7 @@ LPTSTR lpszIniLanguage       = TEXT("Language");
 LPTSTR lpszIniOutDir         = TEXT("OutDir");
 LPTSTR lpszIniSkipRegKey     = TEXT("SkipRegKey");
 LPTSTR lpszIniSkipdir        = TEXT("SkipDir");
-LPTSTR lpszIniUseLongRegHead = TEXT("UseLongRegHead");  // 1.8.1 tianwei for compatible to undoreg 1.46 again
+LPTSTR lpszIniUseLongRegHead = TEXT("UseLongRegHead");
 
 LPTSTR lpgrszRegSkipStrings;
 LPTSTR lpgrszFileSkipStrings;
@@ -43,7 +43,7 @@ LPTSTR lpgrszFileSkipStrings;
 LPTSTR *lprgszRegSkipStrings;
 LPTSTR *lprgszFileSkipStrings;
 
-BOOL bUseLongRegHead;  // 1.8.1 for compatibility with 1.61e5 and undoreg1.46
+BOOL bUseLongRegHead;  // since 1.8.1 tianwei: Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
 
 BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
@@ -99,7 +99,7 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
     }
     */
 
-    // UseLongRegHead: added in 1.8.1 for compatibility with undoreg1.46
+    // UseLongRegHead
     bUseLongRegHead = GetPrivateProfileInt(lpszIniSetup, lpszIniUseLongRegHead, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
 
     // Scan Dirs
