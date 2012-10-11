@@ -439,45 +439,44 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
 
 
 //-------------------------------------------------------------
-// Routine to walk through sub keytree of current Key
+// Log all values of registry key
 //-------------------------------------------------------------
-VOID GetAllSubName(
-    BOOL    needbrother,
-    DWORD   typekey,
-    DWORD   typevalue,
-    LPDWORD lpcountkey,
-    LPDWORD lpcountvalue,
-    LPKEYCONTENT lpKC
-)
+VOID LogAllRegValues(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKC)
 {
     LPVALUECONTENT lpVC;
 
-    LogToMem(typekey, lpcountkey, lpKC);
-
-    if (lpKC->lpFirstSubKC != NULL) {
-        GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpFirstSubKC);
-    }
-
-    if (needbrother == TRUE)
-        if (lpKC->lpBrotherKC != NULL) {
-            GetAllSubName(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpBrotherKC);
-        }
-
-    for (lpVC = lpKC->lpFirstVC; lpVC != NULL; lpVC = lpVC->lpBrotherVC) {
+    for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
         LogToMem(typevalue, lpcountvalue, lpVC);
     }
 }
 
 
 //-------------------------------------------------------------
-// Routine to walk through all values of current key
+// Log registry key plus sub keys with all values
+// Optionally log all brother keys too
 //-------------------------------------------------------------
-VOID GetAllValue(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKC)
+VOID LogRegKeys(
+    BOOL    fIncludeBrothers,
+    DWORD   typekey,
+    DWORD   typevalue,
+    LPDWORD lpcountkey,
+    LPDWORD lpcountvalue,
+    LPKEYCONTENT lpStartKC
+)
 {
-    LPVALUECONTENT lpVC;
+    LPKEYCONTENT lpKC;
 
-    for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
-        LogToMem(typevalue, lpcountvalue, lpVC);
+    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
+        LogToMem(typekey, lpcountkey, lpKC);
+        LogAllRegValues(typevalue, lpcountvalue, lpKC);
+
+        if (NULL != lpKC->lpFirstSubKC) {
+            LogRegKeys(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpFirstSubKC);
+        }
+
+        if (!fIncludeBrothers) {  // do not include brother keys
+            break;  // exit after processing start key
+        }
     }
 }
 
@@ -547,7 +546,7 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 // Registry comparison engine
 //-------------------------------------------------------------
-VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
+VOID *CompareRegKeys(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
 {
     LPKEYCONTENT    lpKC1;
     LPKEYCONTENT    lpKC2;
@@ -574,10 +573,10 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
 
             if ((NULL == lpKC1->lpFirstVC) && (NULL != lpKC2->lpFirstVC)) {
                 // KC1 has *no* values but KC2, so KC2 values are added! We find all values that belong to KC2!
-                GetAllValue(VALADD, &nVALADD, lpKC2);
+                LogAllRegValues(VALADD, &nVALADD, lpKC2);
             } else if ((NULL != lpKC1->lpFirstVC) && (NULL == lpKC2->lpFirstVC)) {
                 // KC1 *has* values but KC2 none, so KC1 values are deleted! We find all values that belong to KC1!
-                GetAllValue(VALDEL, &nVALDEL, lpKC1);
+                LogAllRegValues(VALDEL, &nVALDEL, lpKC1);
             } else {
                 // Two keys, both have values, so we loop them
                 for (lpVC1 = lpKC1->lpFirstVC; lpVC1 != NULL; lpVC1 = lpVC1->lpBrotherVC) {
@@ -631,20 +630,20 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
             // After we walk through the values above, we now try to loop the sub keys of current key
             if ((NULL == lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
                 // lpKC2's firstsubkey added!
-                GetAllSubName(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2->lpFirstSubKC);
+                LogRegKeys(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2->lpFirstSubKC);
             }
             if ((NULL != lpKC1->lpFirstSubKC) && (NULL == lpKC2->lpFirstSubKC)) {
                 // lpKC1's firstsubkey deleted!
-                GetAllSubName(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1->lpFirstSubKC);
+                LogRegKeys(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1->lpFirstSubKC);
             }
             if ((NULL != lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
-                CompareFirstSubKey(lpKC1->lpFirstSubKC, lpKC2->lpFirstSubKC);
+                CompareRegKeys(lpKC1->lpFirstSubKC, lpKC2->lpFirstSubKC);
             }
             break;
         }
         if (NULL == lpKC2) {
             // We did not find a lpKC2 matches a lpKC1, so lpKC1 is deleted!
-            GetAllSubName(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1);
+            LogRegKeys(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1);
         }
     }
 
@@ -653,7 +652,7 @@ VOID *CompareFirstSubKey(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
         nComparing++;
         if (NOMATCH == lpKC2->fKeyMatch) {
             // We did not find a lpKC1 matches a lpKC2,so lpKC2 is added!
-            GetAllSubName(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2);
+            LogRegKeys(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2);
         }
     }
 
@@ -701,11 +700,11 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     bshot2isnewer = (CompareFileTime(&ftime1, &ftime2) <= 0) ? TRUE : FALSE;
     if (bshot2isnewer) {
-        CompareFirstSubKey(lpShot1->lpHKLM, lpShot2->lpHKLM);
-        CompareFirstSubKey(lpShot1->lpHKU, lpShot2->lpHKU);
+        CompareRegKeys(lpShot1->lpHKLM, lpShot2->lpHKLM);
+        CompareRegKeys(lpShot1->lpHKU, lpShot2->lpHKU);
     } else {
-        CompareFirstSubKey(lpShot2->lpHKLM, lpShot1->lpHKLM);
-        CompareFirstSubKey(lpShot2->lpHKU, lpShot1->lpHKU);
+        CompareRegKeys(lpShot2->lpHKLM, lpShot1->lpHKLM);
+        CompareRegKeys(lpShot2->lpHKU, lpShot1->lpHKU);
     }
 
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
