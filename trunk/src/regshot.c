@@ -546,119 +546,120 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 // Registry comparison engine
 //-------------------------------------------------------------
-VOID *CompareRegKeys(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
+VOID *CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 {
-    LPKEYCONTENT    lpKC1;
-    LPKEYCONTENT    lpKC2;
-    LPVALUECONTENT  lpVC1;
-    LPVALUECONTENT  lpVC2;
-    //DWORD           i;
+    LPKEYCONTENT lpKC1;
+    LPKEYCONTENT lpKC2;
 
-    for (lpKC1 = lpHeadKC1; NULL != lpKC1; lpKC1 = lpKC1->lpBrotherKC) {
-        for (lpKC2 = lpHeadKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
-            // ignore KC2 if already compared
+    // Compare keys
+    for (lpKC1 = lpStartKC1; NULL != lpKC1; lpKC1 = lpKC1->lpBrotherKC) {
+        // Find a matching key for KC1
+        for (lpKC2 = lpStartKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
+            // skip KC2 if already matched
             if (NOMATCH != lpKC2->fKeyMatch) {
                 continue;
             }
-            // ignore KC2 if names do *not* match (test for match, then negate)
+            // skip KC2 if names do *not* match (ATTENTION: test for match, THEN negate)
             if (!(
                         (lpKC1->lpszKeyName == lpKC2->lpszKeyName)
-                        || ((NULL != lpKC1->lpszKeyName) && (NULL != lpKC2->lpszKeyName) && (0 == _tcscmp(lpKC1->lpszKeyName, lpKC2->lpszKeyName)))  // 1.8.2 from lstrcmp to strcmp
+                        || ((NULL != lpKC1->lpszKeyName) && (NULL != lpKC2->lpszKeyName) && (0 == _tcscmp(lpKC1->lpszKeyName, lpKC2->lpszKeyName)))
                     )) {
                 continue;
             }
 
-            // Same key of KC1 found in KC2! Mark KC2 to skip it for the next KC1, then compare their values and sub keys!
+            // Same key name of KC1 found in KC2! Mark KC2 as matched to skip it for the next KC1, then compare their values and sub keys!
             lpKC2->fKeyMatch = ISMATCH;
 
+            // Compare values
             if ((NULL == lpKC1->lpFirstVC) && (NULL != lpKC2->lpFirstVC)) {
-                // KC1 has *no* values but KC2, so KC2 values are added! We find all values that belong to KC2!
+                // KC1 has *no* values but KC2, so KC2 values are added! Log all values that belong to KC2!
                 LogAllRegValues(VALADD, &nVALADD, lpKC2);
             } else if ((NULL != lpKC1->lpFirstVC) && (NULL == lpKC2->lpFirstVC)) {
-                // KC1 *has* values but KC2 none, so KC1 values are deleted! We find all values that belong to KC1!
+                // KC1 *has* values but KC2 none, so KC1 values are deleted! Log all values that belong to KC1!
                 LogAllRegValues(VALDEL, &nVALDEL, lpKC1);
             } else {
-                // Two keys, both have values, so we loop them
-                for (lpVC1 = lpKC1->lpFirstVC; lpVC1 != NULL; lpVC1 = lpVC1->lpBrotherVC) {
-                    for (lpVC2 = lpKC2->lpFirstVC; lpVC2 != NULL; lpVC2 = lpVC2->lpBrotherVC) {
-                        // Loop lpKC2 to find a value matchs lpKC1's
-                        if ((NOMATCH == lpVC2->fValueMatch) && (lpVC1->nTypeCode == lpVC2->nTypeCode)) {
-                            // Same valuedata type
-                            if ((lpVC1->lpszValueName == lpVC2->lpszValueName)
-                                    || ((NULL != lpVC1->lpszValueName) && (NULL != lpVC2->lpszValueName) && (0 == _tcscmp(lpVC1->lpszValueName, lpVC2->lpszValueName)))) { // 1.8.2 from lstrcmp to strcmp
-                                // Same valuename
-                                if ((lpVC1->cbData == lpVC2->cbData)) {
-                                    // Same size of valuedata
-                                    if (0 == memcmp(lpVC1->lpValueData, lpVC2->lpValueData, lpVC1->cbData)) { // 1.8.2
-                                        // Same valuedata, keys are the same!
-                                        lpVC2->fValueMatch = ISMATCH;
-                                        break;  // Be sure not to do lpKC2 == NULL
-                                    } else {
-                                        // Valuedata not match due to data mismatch, we found a modified valuedata!*****
-                                        lpVC2->fValueMatch = ISMODI;
-                                        LogToMem(VALMODI, &nVALMODI, lpVC1);
-                                        LogToMem(VALMODI, &nVALMODI, lpVC2);
-                                        nVALMODI--;
-                                        break;
-                                    }
-                                } else {
-                                    // Valuedata does not match due to size, we found a modified valuedata!******
-                                    lpVC2->fValueMatch = ISMODI;
-                                    LogToMem(VALMODI, &nVALMODI, lpVC1);
-                                    LogToMem(VALMODI, &nVALMODI, lpVC2);
-                                    nVALMODI--;
-                                    break;
-                                }
-                            }
+                LPVALUECONTENT lpVC1;
+                LPVALUECONTENT lpVC2;
+
+                // Both keys have values, so compare these
+                for (lpVC1 = lpKC1->lpFirstVC; NULL != lpVC1; lpVC1 = lpVC1->lpBrotherVC) {
+                    // Find a matching value for VC1
+                    for (lpVC2 = lpKC2->lpFirstVC; NULL != lpVC2; lpVC2 = lpVC2->lpBrotherVC) {
+                        // skip VC2 if already matched
+                        if (NOMATCH != lpVC2->fValueMatch) {
+                            continue;
                         }
+                        // skip VC2 if types do *not* match (even if same name then interpret as deleted+added)
+                        if (lpVC1->nTypeCode != lpVC2->nTypeCode) {
+                            continue;
+                        }
+                        // skip VC2 if names do *not* match (ATTENTION: test for match, THEN negate)
+                        if (!(
+                                    (lpVC1->lpszValueName == lpVC2->lpszValueName)
+                                    || ((NULL != lpVC1->lpszValueName) && (NULL != lpVC2->lpszValueName) && (0 == _tcscmp(lpVC1->lpszValueName, lpVC2->lpszValueName)))
+                                )) {
+                            continue;
+                        }
+                        // Same value type and name of VC1 found in VC2, so compare their size and data
+                        if ((lpVC1->cbData == lpVC2->cbData)
+                                && ((lpVC1->lpValueData == lpVC2->lpValueData)
+                                    || ((NULL != lpVC1->lpValueData) && (NULL != lpVC2->lpValueData) && (0 == memcmp(lpVC1->lpValueData, lpVC2->lpValueData, lpVC1->cbData)))
+                                   )) {
+                            // Same value data of VC1 found in VC2
+                            lpVC2->fValueMatch = ISMATCH;
+                        } else {
+                            // Value data differ, so value is modified
+                            lpVC2->fValueMatch = ISMODI;
+                            LogToMem(VALMODI, &nVALMODI, lpVC1);
+                            LogToMem(VALMODI, &nVALMODI, lpVC2);
+                            nVALMODI--;  // TODO: better solution to avoid duplicate count
+                        }
+                        break;
                     }
                     if (NULL == lpVC2) {
-                        // We found a value in lpKC1 but not in lpKC2, we found a deleted value*****
+                        // VC1 has no match in KC2, so VC1 is a deleted value
                         LogToMem(VALDEL, &nVALDEL, lpVC1);
                     }
                 }
-                // After we loop to end, we do extra loop use flag we previously made to get added values
-                for (lpVC2 = lpKC2->lpFirstVC; lpVC2 != NULL; lpVC2 = lpVC2->lpBrotherVC) {
-                    if (lpVC2->fValueMatch != ISMATCH && lpVC2->fValueMatch != ISMODI) {
-                        // We found a value in lpKC2's but not in lpKC1's, we found a added value****
+                // After looping all values of KC1, do an extra loop over all KC2 values and check previously set match flags to determine added values
+                for (lpVC2 = lpKC2->lpFirstVC; NULL != lpVC2; lpVC2 = lpVC2->lpBrotherVC) {
+                    if (NOMATCH == lpVC2->fValueMatch) {
+                        // VC2 has no match in KC1, so VC2 is an added value
                         LogToMem(VALADD, &nVALADD, lpVC2);
                     }
                 }
             }
 
-            //////////////////////////////////////////////////////////////
-            // After we walk through the values above, we now try to loop the sub keys of current key
+            // Compare sub keys
             if ((NULL == lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
-                // lpKC2's firstsubkey added!
+                // KC1 has *no* sub keys but KC2, so KC2 sub keys are added! Log all sub keys that belong to KC2!
                 LogRegKeys(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2->lpFirstSubKC);
-            }
-            if ((NULL != lpKC1->lpFirstSubKC) && (NULL == lpKC2->lpFirstSubKC)) {
-                // lpKC1's firstsubkey deleted!
+            } else if ((NULL != lpKC1->lpFirstSubKC) && (NULL == lpKC2->lpFirstSubKC)) {
+                // KC1 *has* sub keys but KC2 none, so KC1 sub keys are deleted! Log all sub keys that belong to KC1!
                 LogRegKeys(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1->lpFirstSubKC);
-            }
-            if ((NULL != lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
+            } else {
+                // Both keys have sub keys, so compare these
                 CompareRegKeys(lpKC1->lpFirstSubKC, lpKC2->lpFirstSubKC);
             }
             break;
         }
         if (NULL == lpKC2) {
-            // We did not find a lpKC2 matches a lpKC1, so lpKC1 is deleted!
+            // KC1 has no matching KC2, so KC1 is a deleted key
             LogRegKeys(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1);
         }
     }
-
-    // After we loop to end, we do extra loop use flag we previously made to get added keys
-    for (lpKC2 = lpHeadKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
+    // After looping all KC1 keys, do an extra loop over all KC2 keys and check previously set match flags to determine added keys
+    for (lpKC2 = lpStartKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
         nComparing++;
         if (NOMATCH == lpKC2->fKeyMatch) {
-            // We did not find a lpKC1 matches a lpKC2,so lpKC2 is added!
+            // KC2 has no matching KC1, so KC2 is an added key
             LogRegKeys(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2);
         }
     }
 
-    // Progress bar update
+    // Progress bar update (TODO)
     if (0 != nGettingKey) {
-        if (nComparing % nGettingKey > nRegStep) {
+        if ((nComparing % nGettingKey) > nRegStep) {
             nComparing = 0;
             SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
         }
