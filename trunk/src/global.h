@@ -115,8 +115,8 @@ typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
 
 // Struct used for Windows Registry Value
 struct _VALUECONTENT {
-    DWORD  typecode;                        // Type of value [DWORD,STRING...]
-    DWORD  datasize;                        // Value data size in bytes
+    DWORD  nTypeCode;                       // Type of value [DWORD,STRING...]
+    DWORD  cbData;                          // Value data size in bytes
     LPTSTR lpszValueName;                   // Pointer to value's name
     LPBYTE lpValueData;                     // Pointer to value's data
     struct _VALUECONTENT FAR *lpBrotherVC;  // Pointer to value's brother
@@ -255,8 +255,8 @@ typedef struct _SAVEKEYCONTENT SAVEKEYCONTENT, FAR *LPSAVEKEYCONTENT;
 // Struct for reg value, used in saving and loading
 // when accessing fields of this structure always put a version check around them, e.g. "if version >= 2 then use nValueNameLen"
 struct _SAVEVALUECONTENT {
-    DWORD typecode;         // Type of value [DWORD,STRING...]
-    DWORD datasize;         // Value data size in bytes
+    DWORD nTypeCode;        // Type of value [DWORD,STRING...]
+    DWORD cbData;           // Value data size in bytes
     DWORD ofsValueName;     // Position of value's name
     DWORD ofsValueData;     // Position of value's data
     DWORD ofsBrotherValue;  // Position of value's brother value

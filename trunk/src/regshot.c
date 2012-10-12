@@ -229,7 +229,7 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
     DWORD nSize;
 
     lpszValueData = NULL;
-    nSize = lpVC->datasize;
+    nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
         lpszValueData = MYALLOC0(sizeof(lpszValueDataIsNULL));
@@ -298,13 +298,13 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
     DWORD nSize;
 
     lpszValueData = NULL;
-    nSize = lpVC->datasize;
+    nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
         lpszValueData = MYALLOC0(sizeof(lpszValueDataIsNULL));
         _tcscpy(lpszValueData, lpszValueDataIsNULL);
     } else {
-        switch (lpVC->typecode) {
+        switch (lpVC->nTypeCode) {
             case REG_SZ:
             case REG_EXPAND_SZ:
                 if ((DWORD)((_tcslen((LPTSTR)lpVC->lpValueData) + 1) * sizeof(TCHAR)) == nSize) {
@@ -582,14 +582,14 @@ VOID *CompareRegKeys(LPKEYCONTENT lpHeadKC1, LPKEYCONTENT lpHeadKC2)
                 for (lpVC1 = lpKC1->lpFirstVC; lpVC1 != NULL; lpVC1 = lpVC1->lpBrotherVC) {
                     for (lpVC2 = lpKC2->lpFirstVC; lpVC2 != NULL; lpVC2 = lpVC2->lpBrotherVC) {
                         // Loop lpKC2 to find a value matchs lpKC1's
-                        if ((NOMATCH == lpVC2->fValueMatch) && (lpVC1->typecode == lpVC2->typecode)) {
+                        if ((NOMATCH == lpVC2->fValueMatch) && (lpVC1->nTypeCode == lpVC2->nTypeCode)) {
                             // Same valuedata type
                             if ((lpVC1->lpszValueName == lpVC2->lpszValueName)
                                     || ((NULL != lpVC1->lpszValueName) && (NULL != lpVC2->lpszValueName) && (0 == _tcscmp(lpVC1->lpszValueName, lpVC2->lpszValueName)))) { // 1.8.2 from lstrcmp to strcmp
                                 // Same valuename
-                                if ((lpVC1->datasize == lpVC2->datasize)) {
+                                if ((lpVC1->cbData == lpVC2->cbData)) {
                                     // Same size of valuedata
-                                    if (0 == memcmp(lpVC1->lpValueData, lpVC2->lpValueData, lpVC1->datasize)) { // 1.8.2
+                                    if (0 == memcmp(lpVC1->lpValueData, lpVC2->lpValueData, lpVC1->cbData)) { // 1.8.2
                                         // Same valuedata, keys are the same!
                                         lpVC2->fValueMatch = ISMATCH;
                                         break;  // Be sure not to do lpKC2 == NULL
@@ -1168,8 +1168,8 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 lplpVCPrev = &lpVC->lpBrotherVC;
 
                 // Copy value meta data
-                lpVC->typecode = nValueType;
-                lpVC->datasize = cbValueData;
+                lpVC->nTypeCode = nValueType;
+                lpVC->cbData = cbValueData;
 
                 // Copy value data
                 if (0 < cbValueData) {  // otherwise leave it NULL
@@ -1467,8 +1467,8 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             // Initialize value content
 
             // Copy values
-            sVC.typecode = lpVC->typecode;
-            sVC.datasize = lpVC->datasize;
+            sVC.nTypeCode = lpVC->nTypeCode;
+            sVC.cbData = lpVC->cbData;
 
             // Set file positions of the relatives inside the tree
 #ifdef _UNICODE
@@ -1512,7 +1512,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             }
 
             // Write value data to file
-            if (0 < lpVC->datasize) {
+            if (0 < sVC.cbData) {
                 DWORD nFPValueData;
 
                 // Write position of value data in value content field ofsValueData
@@ -1524,7 +1524,7 @@ VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
                 SetFilePointer(hFileWholeReg, nFPValueData, NULL, FILE_BEGIN);
 
                 // Write value data
-                WriteFile(hFileWholeReg, lpVC->lpValueData, lpVC->datasize, &NBW, NULL);
+                WriteFile(hFileWholeReg, lpVC->lpValueData, sVC.cbData, &NBW, NULL);
             }
         }
     }
@@ -1881,13 +1881,13 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
             lplpVCPrev = &lpVC->lpBrotherVC;
 
             // Copy value meta data
-            lpVC->typecode = sVC.typecode;
-            lpVC->datasize = sVC.datasize;
+            lpVC->nTypeCode = sVC.nTypeCode;
+            lpVC->cbData = sVC.cbData;
 
             // Copy value data
-            if (0 < sVC.datasize) {  // otherwise leave it NULL
-                lpVC->lpValueData = MYALLOC0(sVC.datasize);
-                CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.datasize);
+            if (0 < sVC.cbData) {  // otherwise leave it NULL
+                lpVC->lpValueData = MYALLOC0(sVC.cbData);
+                CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
             }
         }
     }
