@@ -27,9 +27,9 @@ LPTSTR lpszDefResPre = REGSHOT_RESULT_FILE;
 
 LPTSTR lpszFilter =
 #ifdef _UNICODE
-    TEXT("Regshot hive files (*.hiv2;*.hiv)\0*.hiv2;*.hiv\0All files\0*.*\0\0");
+    TEXT("Regshot Unicode hive files (*.hiv2)\0*.hiv2\0All files\0*.*\0\0");
 #else
-    TEXT("Regshot hive files (*.hiv;*.hiv2)\0*.hiv;*.hiv2\0All files\0*.*\0\0");
+    TEXT("Regshot ANSI hive files (*.hiv)\0*.hiv\0All files\0*.*\0\0");
 #endif
 
 // SBCS/MBCS signature (even in Unicode builds for backwards compatibility)
@@ -244,7 +244,7 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
                     _tcscat(lpszValueData, (LPTSTR)lpVC->lpValueData);
                 }
                 _tcscat(lpszValueData, TEXT("\""));
-                // wsprintf has a bug that can not print string too long one time!);
+                // wsprintf has a bug that cannot print string too long one time!);
                 //wsprintf(lpszValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
                 break;
             case REG_MULTI_SZ:
@@ -1666,6 +1666,8 @@ VOID SaveHive(LPREGSHOT lpShot)
     fileheader.nFCVersion = FILECONTENT_VERSION_CURRENT;
     fileheader.nFCSize = sizeof(SAVEFILECONTENT);
 
+    fileheader.nEndianness = FILEHEADER_ENDIANNESS_VALUE;
+
     // Write header to file
     WriteFile(hFileWholeReg, &fileheader, sizeof(fileheader), &NBW, NULL);
 
@@ -1889,7 +1891,6 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
             if (0 < sVC.cbData) {  // otherwise leave it NULL
                 lpVC->lpValueData = MYALLOC0(sVC.cbData);
                 CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
-                // TODO: convert text data from/to WideChar (recognize by nTypeCode; possible multi string data, due to '\0' either string by string and/or char by char )
             }
         }
     }
@@ -1971,12 +1972,24 @@ BOOL LoadHive(LPREGSHOT lpShot)
     // Read first part of file header from file (signature, nHeaderSize)
     ReadFile(hFileWholeReg, &fileheader, offsetof(FILEHEADER, ofsHKLM), &NBW, NULL);
 
-    // Check file signature (SBCS/MBCS signature even in Unicode builds for backwards compatibility)
+    // Check for valid file signatures (SBCS/MBCS and UTF-16 signature)
     if ((0 != strncmp(szRegshotFileSignatureSBCS, fileheader.signature, MAX_SIGNATURE_LENGTH)) && (0 != strncmp(szRegshotFileSignatureUTF16, fileheader.signature, MAX_SIGNATURE_LENGTH))) {
         CloseHandle(hFileWholeReg);
-        ErrMsg(TEXT("It is not a valid Regshot hive file!"));
+        ErrMsg(TEXT("It is not a Regshot hive file!"));
         return FALSE;
     }
+
+    // Check file signature for correct type (SBCS/MBCS or UTF-16)
+    if (0 != strncmp(szRegshotFileSignature, fileheader.signature, MAX_SIGNATURE_LENGTH)) {
+        CloseHandle(hFileWholeReg);
+#ifdef _UNICODE
+        ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));
+#else
+        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));
+#endif
+        return FALSE;
+    }
+
 
     // Clear shot
     FreeShot(lpShot);
@@ -2070,12 +2083,12 @@ BOOL LoadHive(LPREGSHOT lpShot)
         fileheader.nFCVersion = FILECONTENT_VERSION_1;
         fileheader.nFCSize = offsetof(SAVEFILECONTENT, nFileNameLen);
     }
-
-    // Check for compatible char size
-    if (sizeof(TCHAR) != fileheader.nCharSize) {
-        if (2 < fileheader.nCharSize) {  // known: 1 = SBCS/MBCS, 2 = UTF-16
-            ErrMsg(TEXT("Unsupported character size!"));
-            return FALSE;
+    if (FILEHEADER_VERSION_2 >= fileheader.nFHVersion) {
+        if (0 == fileheader.nEndianness) {
+            *((unsigned char *)&fileheader.nEndianness)     = 0x78;  // old existing versions were all little endian
+            *((unsigned char *)&fileheader.nEndianness + 1) = 0x56;
+            *((unsigned char *)&fileheader.nEndianness + 2) = 0x34;
+            *((unsigned char *)&fileheader.nEndianness + 3) = 0x12;
         }
     }
 
@@ -2091,6 +2104,42 @@ BOOL LoadHive(LPREGSHOT lpShot)
     }
     if (sizeof(SAVEFILECONTENT) < fileheader.nFCSize) {
         fileheader.nFCSize = sizeof(SAVEFILECONTENT);
+    }
+
+    // Check for incompatible char size (known: 1 = SBCS/MBCS, 2 = UTF-16)
+    if (sizeof(TCHAR) != fileheader.nCharSize) {
+#ifdef _UNICODE
+        if (1 == fileheader.nCharSize) {
+            ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));
+        } else if (2 != fileheader.nCharSize) {
+            ErrMsg(TEXT("Unknown character size! Maybe created by a newer Regshot version."));
+        } else {
+            ErrMsg(TEXT("Unsupported character size!"));
+        }
+#else
+        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));
+#endif
+        if (NULL != lpFileBuffer) {
+            MYFREE(lpFileBuffer);
+            lpFileBuffer = NULL;
+        }
+        UI_AfterShot();
+        return FALSE;
+    }
+
+    // Check for incompatible endianness (known: Intel = Little Endian)
+    if (fileheader.nEndianness != FILEHEADER_ENDIANNESS_VALUE) {
+#ifdef __LITTLE_ENDIAN__
+        ErrMsg(TEXT("It is not a Little Endian Regshot hive file!"));
+#else
+        ErrMsg(TEXT("It is not a Big Endian Regshot hive file!"));
+#endif
+        if (NULL != lpFileBuffer) {
+            MYFREE(lpFileBuffer);
+            lpFileBuffer = NULL;
+        }
+        UI_AfterShot();
+        return FALSE;
     }
 
     // ^^^ here the file header can be checked for additional extended content
