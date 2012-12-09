@@ -122,10 +122,15 @@ DWORD NBW;                // that is: NumberOfBytesWritten;
 HANDLE   hFileWholeReg;  // Handle of file regshot use
 FILETIME ftLastWrite;    // Filetime struct
 
+// in regshot.ini, "UseLongRegHead" to control this
+// 1.6 using long name, so in 1.8.1 add an option
 LPTSTR lpszHKLMShort = TEXT("HKLM");
 LPTSTR lpszHKLMLong  = TEXT("HKEY_LOCAL_MACHINE");
-LPTSTR lpszHKUShort  = TEXT("HKU");          // in regshot.ini, "UseLongRegHead" to control this
-LPTSTR lpszHKULong   = TEXT("HKEY_USERS");   // 1.6 using long name, so in 1.8.1 add an option
+#define CCH_HKLM_LONG  18
+
+LPTSTR lpszHKUShort  = TEXT("HKU");
+LPTSTR lpszHKULong   = TEXT("HKEY_USERS");
+#define CCH_HKU_LONG  10
 
 LONG nErrNo;
 
@@ -133,17 +138,25 @@ LONG nErrNo;
 // ----------------------------------------------------------------------
 // Get whole registry key name from KEYCONTENT
 // ----------------------------------------------------------------------
-LPTSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
+LPTSTR GetWholeKeyName(LPKEYCONTENT lpStartKC, BOOL fUseLongNames)
 {
     LPKEYCONTENT lpKC;
     LPTSTR lpszName;
     LPTSTR lpszTail;
     size_t cchName;
+    LPTSTR lpszKeyName;
 
     cchName = 0;
     for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpszKeyName) {
-            cchName += _tcslen(lpKC->lpszKeyName) + 1;  // +1 char for backslash or NULL char
+            if ((fUseLongNames) && (lpszHKLMShort == lpKC->lpszKeyName)) {
+                cchName += CCH_HKLM_LONG;
+            } else if ((fUseLongNames) && (lpszHKUShort == lpKC->lpszKeyName)) {
+                cchName += CCH_HKU_LONG;
+            } else {
+                cchName += lpKC->cchKeyName;
+            }
+            cchName++;  // +1 char for backslash or NULL char
         }
     }
     if (0 == cchName) {  // at least create an empty string with NULL char
@@ -157,8 +170,17 @@ LPTSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
 
     for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpszKeyName) {
-            cchName = _tcslen(lpKC->lpszKeyName);
-            _tcsncpy(lpszTail -= cchName, lpKC->lpszKeyName, cchName);
+            if ((fUseLongNames) && (lpszHKLMShort == lpKC->lpszKeyName)) {
+                cchName = CCH_HKLM_LONG;
+                lpszKeyName = lpszHKLMLong;
+            } else if ((fUseLongNames) && (lpszHKUShort == lpKC->lpszKeyName)) {
+                cchName = CCH_HKU_LONG;
+                lpszKeyName = lpszHKULong;
+            } else {
+                cchName = lpKC->cchKeyName;
+                lpszKeyName = lpKC->lpszKeyName;
+            }
+            _tcsncpy(lpszTail -= cchName, lpszKeyName, cchName);
             if (lpszTail > lpszName) {
                 *--lpszTail = (TCHAR)'\\';
             }
@@ -172,23 +194,31 @@ LPTSTR GetWholeKeyName(LPKEYCONTENT lpStartKC)
 // ----------------------------------------------------------------------
 // Get whole value name from VALUECONTENT
 // ----------------------------------------------------------------------
-LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
+LPTSTR GetWholeValueName(LPVALUECONTENT lpVC, BOOL fUseLongNames)
 {
     LPKEYCONTENT lpKC;
     LPTSTR lpszName;
     LPTSTR lpszTail;
     size_t cchName;
     size_t cchValueName;
+    LPTSTR lpszKeyName;
 
     cchValueName = 0;
     if (NULL != lpVC->lpszValueName) {
-        cchValueName = _tcslen(lpVC->lpszValueName);
+        cchValueName = lpVC->cchValueName;
     }
     cchName = cchValueName + 1;  // +1 char for NULL char
 
     for (lpKC = lpVC->lpFatherKC; lpKC != NULL; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpszKeyName) {
-            cchName += _tcslen(lpKC->lpszKeyName) + 1;  // +1 char for backslash
+            if ((fUseLongNames) && (lpszHKLMShort == lpKC->lpszKeyName)) {
+                cchName += CCH_HKLM_LONG;
+            } else if ((fUseLongNames) && (lpszHKUShort == lpKC->lpszKeyName)) {
+                cchName += CCH_HKU_LONG;
+            } else {
+                cchName += lpKC->cchKeyName;
+            }
+            cchName++;  // +1 char for backslash
         }
     }
 
@@ -206,8 +236,17 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC)
 
     for (lpKC = lpVC->lpFatherKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpszKeyName) {
-            cchName = _tcslen(lpKC->lpszKeyName);
-            _tcsncpy(lpszTail -= cchName, lpKC->lpszKeyName, cchName);
+            if ((fUseLongNames) && (lpszHKLMShort == lpKC->lpszKeyName)) {
+                cchName = CCH_HKLM_LONG;
+                lpszKeyName = lpszHKLMLong;
+            } else if ((fUseLongNames) && (lpszHKUShort == lpKC->lpszKeyName)) {
+                cchName = CCH_HKU_LONG;
+                lpszKeyName = lpszHKULong;
+            } else {
+                cchName = lpKC->cchKeyName;
+                lpszKeyName = lpKC->lpszKeyName;
+            }
+            _tcsncpy(lpszTail -= cchName, lpszKeyName, cchName);
             if (lpszTail > lpszName) {
                 *--lpszTail = (TCHAR)'\\';
             }
@@ -416,12 +455,11 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
     LPTSTR   lpall;
 
     if (actiontype == KEYADD || actiontype == KEYDEL) {
-        lpname = GetWholeKeyName(lp);
+        lpname = GetWholeKeyName(lp, bUseLongRegHead);
         CreateNewResult(actiontype, lpcount, lpname);
     } else {
         if (actiontype == VALADD || actiontype == VALDEL || actiontype == VALMODI) {
-
-            lpname = GetWholeValueName(lp);
+            lpname = GetWholeValueName(lp, bUseLongRegHead);
             lpdata = GetWholeValueData(lp);
             lpall = MYALLOC((_tcslen(lpname) + _tcslen(lpdata) + 1) * sizeof(TCHAR));
             // do not use:wsprintf(lpall,"%s%s",lpname,lpdata); !!! strlen limit!
@@ -1041,10 +1079,11 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
         // Set key name
         lpKC->lpszKeyName = lpszRegKeyName;
+        lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
 
         // Check if key is to be excluded
         if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
-            lpszFullName = GetWholeKeyName(lpKC);
+            lpszFullName = GetWholeKeyName(lpKC, FALSE);
             if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
                 MYFREE(lpszFullName);
                 FreeAllKeyContent(lpKC);
@@ -1115,7 +1154,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 cbValueData = (DWORD)nDataBufferSize;
                 nErrNo = RegEnumValue(hRegKey, i,
                                       lpStringBuffer,
-                                      &cchValueName,   // in TCHARs; in *with* and out *without* incl. NULL char
+                                      &cchValueName,   // in TCHARs; in *including* and out *excluding* NULL char
                                       NULL,
                                       &nValueType,
                                       lpDataBuffer,
@@ -1146,11 +1185,12 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 if (0 < cchValueName) {
                     lpVC->lpszValueName = MYALLOC((cchValueName + 1) * sizeof(TCHAR));
                     _tcscpy(lpVC->lpszValueName, lpStringBuffer);
+                    lpVC->cchValueName = _tcslen(lpVC->lpszValueName);
                 }
 
                 // Check if value is to be excluded
                 if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
-                    lpszFullName = GetWholeValueName(lpVC);
+                    lpszFullName = GetWholeValueName(lpVC, FALSE);
                     if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
                         MYFREE(lpszFullName);
                         FreeAllValueContent(lpVC);
@@ -1181,11 +1221,11 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 #ifdef DEBUGLOG
                 lpszDebugMsg = MYALLOC0(REGSHOT_DEBUG_MESSAGE_LENGTH * sizeof(TCHAR));
                 _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGVN:%08d LGVD:%08d VN:%08d VD:%08d\0"), cchMaxValueName, cbMaxValueData, cchValueName, cbValueData);
-                lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0'; // safety NULL char
+                lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
 
-                lpszDebugMsg = GetWholeValueName(lpVC);
+                lpszDebugMsg = GetWholeValueName(lpVC, FALSE);
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, FALSE);
                 MYFREE(lpszDebugMsg);
 
@@ -1234,7 +1274,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 cchSubKeyName = (DWORD)nStringBufferSize;
                 nErrNo = RegEnumKeyEx(hRegKey, i,
                                       lpStringBuffer,
-                                      &cchSubKeyName,  // in TCHARs; in *with* and out *without* incl. NULL char
+                                      &cchSubKeyName,  // in TCHARs; in *including* and out *excluding* NULL char
                                       NULL,
                                       NULL,
                                       NULL,
@@ -1258,11 +1298,11 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 #ifdef DEBUGLOG
                 lpszDebugMsg = MYALLOC0(REGSHOT_DEBUG_MESSAGE_LENGTH * sizeof(TCHAR));
                 _sntprintf(lpszDebugMsg, REGSHOT_DEBUG_MESSAGE_LENGTH, TEXT("LGKN:%08d KN:%08d\0"), cchMaxSubKeyName, cchSubKeyName);
-                lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0'; // safety NULL char
+                lpszDebugMsg[REGSHOT_DEBUG_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
                 DebugLog(lpszDebugKeyLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
 
-                lpszDebugMsg = GetWholeKeyName(lpKC);
+                lpszDebugMsg = GetWholeKeyName(lpKC, FALSE);
                 DebugLog(lpszDebugKeyLog, lpszDebugMsg, FALSE);
                 MYFREE(lpszDebugMsg);
 
@@ -1308,13 +1348,13 @@ VOID Shot(LPREGSHOT lpShot)
     lpShot->lpszComputerName = MYALLOC0((MAX_COMPUTERNAME_LENGTH + 1) * sizeof(TCHAR));
     ZeroMemory(lpShot->lpszComputerName, (MAX_COMPUTERNAME_LENGTH + 1) * sizeof(TCHAR));
     cchString = MAX_COMPUTERNAME_LENGTH + 1;
-    GetComputerName(lpShot->lpszComputerName, &cchString);   // in TCHARs; in *with* and out *without* incl. NULL char
+    GetComputerName(lpShot->lpszComputerName, &cchString);   // in TCHARs; in *including* and out *excluding* NULL char
 
     // Set user name
     lpShot->lpszUserName = MYALLOC0((UNLEN + 1) * sizeof(TCHAR));
     ZeroMemory(lpShot->lpszUserName, (UNLEN + 1) * sizeof(TCHAR));
     cchString = UNLEN + 1;
-    GetUserName(lpShot->lpszUserName, &cchString);   // in TCHARs; in and out *with* incl. NULL char
+    GetUserName(lpShot->lpszUserName, &cchString);   // in TCHARs; in and out including NULL char
 
     // Set current system time
     GetSystemTime(&lpShot->systemtime);
@@ -1406,23 +1446,24 @@ VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
         {
             LPTSTR lpszKeyName;
 
-            // Determine correct key name
-            if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
-                // Adopt to long HKLM/HKU
-                if (lpszHKLMShort == lpKC->lpszKeyName) {
-                    lpszKeyName = lpszHKLMLong;
-                } else if (lpszHKUShort == lpKC->lpszKeyName) {
-                    lpszKeyName = lpszHKULong;
-                } else {
-                    lpszKeyName = lpKC->lpszKeyName;
-                }
-            } else {
-                lpszKeyName = lpKC->lpszKeyName;
-            }
+            lpszKeyName = lpKC->lpszKeyName;
 
-            // Determine key name length
+            // Determine correct key name and length plus file offset
             if (NULL != lpszKeyName) {
-                sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);
+                sKC.nKeyNameLen = (DWORD)lpKC->cchKeyName;
+
+                if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
+                    // Adopt to long HKLM/HKU
+                    if (lpszHKLMShort == lpszKeyName) {
+                        lpszKeyName = lpszHKLMLong;
+                        sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);;
+                    } else if (lpszHKUShort == lpszKeyName) {
+                        lpszKeyName = lpszHKULong;
+                        sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);;
+                    }
+                }
+
+                // Determine key name length and file offset
                 if (0 < sKC.nKeyNameLen) {  // otherwise leave it all 0
                     sKC.nKeyNameLen++;  // account for NULL char
 #ifdef _UNICODE
@@ -1490,7 +1531,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
 
                 // Determine value name length
                 if (NULL != lpVC->lpszValueName) {
-                    sVC.nValueNameLen = (DWORD)_tcslen(lpVC->lpszValueName);
+                    sVC.nValueNameLen = (DWORD)lpVC->cchValueName;
                     if (0 < sVC.nValueNameLen) {  // otherwise leave it all 0
                         sVC.nValueNameLen++;  // account for NULL char
 #ifdef _UNICODE
@@ -1798,7 +1839,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
 
         lpKC->lpszKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
         if (sizeof(TCHAR) == fileheader.nCharSize) {
-            _tcscpy(lpKC->lpszKeyName, lpStringBuffer);
+            _tcsncpy(lpKC->lpszKeyName, lpStringBuffer, sKC.nKeyNameLen);
         } else {
 #ifdef _UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen);
@@ -1806,6 +1847,10 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
             WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen, NULL, NULL);
 #endif
         }
+
+        // Set key name length in chars
+        lpKC->lpszKeyName[sKC.nKeyNameLen - 1] = (TCHAR)'\0';  // safety NULL char
+        lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
     }
 
     // Adopt to short HKLM/HKU
@@ -1814,10 +1859,12 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
                 || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong))) {
             MYFREE(lpKC->lpszKeyName);
             lpKC->lpszKeyName = lpszHKLMShort;
+            lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
         } else if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort))
                    || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong))) {
             MYFREE(lpKC->lpszKeyName);
             lpKC->lpszKeyName = lpszHKUShort;
+            lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
         }
     }
 
@@ -1864,7 +1911,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
 
                 lpVC->lpszValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
                 if (sizeof(TCHAR) == fileheader.nCharSize) {
-                    _tcscpy(lpVC->lpszValueName, lpStringBuffer);
+                    _tcsncpy(lpVC->lpszValueName, lpStringBuffer, sVC.nValueNameLen);
                 } else {
 #ifdef _UNICODE
                     MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen);
@@ -1872,6 +1919,10 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen, NULL, NULL);
 #endif
                 }
+
+                // Set value name length in chars
+                lpVC->lpszValueName[sVC.nValueNameLen - 1] = (TCHAR)'\0';  // safety NULL char
+                lpVC->cchValueName = _tcslen(lpVC->lpszValueName);
             }
 
             // Increase value count
