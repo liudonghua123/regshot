@@ -108,7 +108,7 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 // Routine to walk through all sub tree of current directory [File system]
 //-------------------------------------------------------------
 VOID GetAllSubFile(
-    BOOL    needbrother,
+    BOOL    fIncludeBrothers,
     DWORD   typedir,
     DWORD   typefile,
     LPDWORD lpcountdir,
@@ -131,7 +131,7 @@ VOID GetAllSubFile(
     if (NULL != lpFC->lpFirstSubFC)    {
         GetAllSubFile(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
     }
-    if (TRUE == needbrother) {
+    if (fIncludeBrothers) {
         if (NULL != lpFC->lpBrotherFC) {
             GetAllSubFile(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpBrotherFC);
         }
