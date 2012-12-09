@@ -44,6 +44,14 @@ typedef long LONG_PTR;
 #endif
 #endif  // _MSC_VER && (_MSC_VER < 1300)
 
+#if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
+#   if (defined(_M_IA64) || defined(__ia64__) || defined(_M_AMD64) || defined(_M_X64) || defined(__amd64__) || defined(_M_IX86) || defined(_X86_) || defined(__i386__) || defined(__i486__) || defined(__i586__) || defined(__i686__))
+#       define __LITTLE_ENDIAN__ 1
+#   else
+#       error "Cannot determine Endianness"
+#   endif
+#endif
+
 // added in 1.8.2 to gain a slightly faster speed but it is danger!
 #define USEHEAPALLOC_DANGER
 
@@ -212,11 +220,13 @@ struct _FILEHEADER {
     DWORD ofsUserName;       // (v2) ofs 224 len 4
     DWORD nUserNameLen;      // (v2) ofs 228 len 4: length in chars incl. NULL char
 
+    DWORD nEndianness;       // (v2) ofs 232 len 4: 0x12345678
+
     // ^^^ here the file header structure can be extended
     // * increase the version number for the new file header format
     // * place a comment with a reference to the new version before the new fields
     // * check all usages and version checks
-    // * remember that older versions can not use these additional data
+    // * remember that older versions cannot use these additional data
 };
 typedef struct _FILEHEADER FILEHEADER, FAR *LPFILEHEADER;
 
@@ -224,6 +234,8 @@ typedef struct _FILEHEADER FILEHEADER, FAR *LPFILEHEADER;
 #define FILEHEADER_VERSION_1 1
 #define FILEHEADER_VERSION_2 2
 #define FILEHEADER_VERSION_CURRENT FILEHEADER_VERSION_2
+
+#define FILEHEADER_ENDIANNESS_VALUE 0x12345678
 
 // Struct for reg key, used in saving and loading
 // when accessing fields of this structure always put a version check around them, e.g. "if version >= 2 then use nKeyNameLen"
@@ -242,7 +254,7 @@ struct _SAVEKEYCONTENT {
     // * increase the version number for the new key content format
     // * place a comment with a reference to the new version before the new fields
     // * check all usages and version checks
-    // * remember that older versions can not use these additional data
+    // * remember that older versions cannot use these additional data
 };
 typedef struct _SAVEKEYCONTENT SAVEKEYCONTENT, FAR *LPSAVEKEYCONTENT;
 
@@ -270,7 +282,7 @@ struct _SAVEVALUECONTENT {
     // * increase the version number for the new value content format
     // * place a comment with a reference to the new version before the new fields
     // * check all usages and version checks
-    // * remember that older versions can not use these additional data
+    // * remember that older versions cannot use these additional data
 };
 typedef struct _SAVEVALUECONTENT SAVEVALUECONTENT, FAR *LPSAVEVALUECONTENT;
 
@@ -302,7 +314,7 @@ struct _SAVEFILECONTENT {
     // * increase the version number for the new file content format
     // * place a comment with a reference to the new version before the new fields
     // * check all usages and version checks
-    // * remember that older versions can not use these additional data
+    // * remember that older versions cannot use these additional data
 };
 typedef struct _SAVEFILECONTENT SAVEFILECONTENT, FAR *LPSAVEFILECONTENT;
 
@@ -323,7 +335,7 @@ struct _SAVEHEADFILE {
     // * increase the version number for the new head file format
     // * place a comment with a reference to the new version before the new fields
     // * check all usages and version checks
-    // * remember that older versions can not use these additional data
+    // * remember that older versions cannot use these additional data
 };
 typedef struct  _SAVEHEADFILE SAVEHEADFILE, FAR *LPSAVEHEADFILE;
 
