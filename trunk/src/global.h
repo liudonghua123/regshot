@@ -112,6 +112,7 @@ extern HANDLE hHeap;
 // Struct used for Windows Registry Key
 struct _KEYCONTENT {
     LPTSTR lpszKeyName;                     // Pointer to key's name
+    size_t cchKeyName;                      // Length of key's name in chars
     struct _VALUECONTENT FAR *lpFirstVC;    // Pointer to key's first value
     struct _KEYCONTENT FAR *lpFirstSubKC;   // Pointer to key's first sub key
     struct _KEYCONTENT FAR *lpBrotherKC;    // Pointer to key's brother
@@ -126,6 +127,7 @@ struct _VALUECONTENT {
     DWORD  nTypeCode;                       // Type of value [DWORD,STRING...]
     DWORD  cbData;                          // Value data size in bytes
     LPTSTR lpszValueName;                   // Pointer to value's name
+    size_t cchValueName;                    // Length of value's name in chars
     LPBYTE lpValueData;                     // Pointer to value's data
     struct _VALUECONTENT FAR *lpBrotherVC;  // Pointer to value's brother
     struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to value's father key
