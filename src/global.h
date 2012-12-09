@@ -438,7 +438,7 @@ VOID    WriteHTML_BR(void);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
 VOID    FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nMaxLen);
 BOOL    DirChainMatch(LPHEADFILE lphf1, LPHEADFILE lphf2);
-VOID    GetAllSubFile(BOOL needbrother, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
+VOID    GetAllSubFile(BOOL fIncludeBrothers, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
 LPFILECONTENT SearchDirChain(LPTSTR lpname, LPHEADFILE lpHF);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
