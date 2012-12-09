@@ -226,8 +226,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_BeforeClear();
                     FreeShot(&Shot1);
                     FreeAllCompareResults();
-                    ClearKeyMatchTag(Shot2.lpHKLM);  // we clear Shot2's tag
-                    ClearKeyMatchTag(Shot2.lpHKU);
+                    ClearRegKeyMatchFlags(Shot2.lpHKLM);  // we clear Shot2's tag
+                    ClearRegKeyMatchFlags(Shot2.lpHKU);
                     ClearHeadFileMatchTag(Shot2.lpHF);
                     UI_AfterClear();
                     return(TRUE);
@@ -236,8 +236,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_BeforeClear();
                     FreeShot(&Shot2);
                     FreeAllCompareResults();
-                    ClearKeyMatchTag(Shot1.lpHKLM);  // we clear Shot1's tag
-                    ClearKeyMatchTag(Shot1.lpHKU);
+                    ClearRegKeyMatchFlags(Shot1.lpHKLM);  // we clear Shot1's tag
+                    ClearRegKeyMatchFlags(Shot1.lpHKU);
                     ClearHeadFileMatchTag(Shot1.lpHF);
                     UI_AfterClear();
                     return(TRUE);
@@ -245,10 +245,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     /*case IDM_CLEARRESULT:
                         UI_BeforeClear();
                         FreeAllCompareResults();
-                        ClearKeyMatchTag(Shot1.lpHKLM);
-                        ClearKeyMatchTag(Shot2.lpHKLM);
-                        ClearKeyMatchTag(Shot1.lpHKU);
-                        ClearKeyMatchTag(Shot2.lpHKU);
+                        ClearRegKeyMatchFlags(Shot1.lpHKLM);
+                        ClearRegKeyMatchFlags(Shot2.lpHKLM);
+                        ClearRegKeyMatchFlags(Shot1.lpHKU);
+                        ClearRegKeyMatchFlags(Shot2.lpHKU);
                         ClearHeadFileMatchTag(Shot1.lpHF);
                         ClearHeadFileMatchTag(Shot2.lpHF);
                         UI_AfterClear();

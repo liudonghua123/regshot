@@ -422,7 +422,7 @@ BOOL    LoadHive(LPREGSHOT lpShot);
 VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllFileHead(LPHEADFILE lpHeadFile);
-VOID    ClearKeyMatchTag(LPKEYCONTENT lpKC);
+VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
 VOID    InitProgressBar(VOID);

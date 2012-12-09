@@ -937,19 +937,19 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
 
 // ----------------------------------------------------------------------
-// Clear comparison match flags in all registry keys
+// Clear comparison match flags in registry keys
 // ----------------------------------------------------------------------
-VOID ClearKeyMatchTag(LPKEYCONTENT lpKC)
+VOID ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC)
 {
+    LPKEYCONTENT lpKC;
     LPVALUECONTENT lpVC;
 
-    if (NULL != lpKC) {
-        lpKC->fKeyMatch = 0;
+    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
+        lpKC->fKeyMatch = NOMATCH;
         for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
-            lpVC->fValueMatch = 0;
+            lpVC->fValueMatch = NOMATCH;
         }
-        ClearKeyMatchTag(lpKC->lpFirstSubKC);
-        ClearKeyMatchTag(lpKC->lpBrotherKC);
+        ClearRegKeyMatchFlags(lpKC->lpFirstSubKC);
     }
 }
 
@@ -1366,192 +1366,192 @@ VOID Shot(LPREGSHOT lpShot)
 // This routine is called recursively to store the keys of the Registry tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveRegKey(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
+VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
 {
+    LPKEYCONTENT lpKC;
     DWORD nFPKey;
 
-    // Get current file position
-    // put in a separate var for later use
-    nFPKey = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
+        // Get current file position
+        // put in a separate var for later use
+        nFPKey = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
 
-    // Write position of current key in caller's field
-    if (0 < nFPCaller) {
-        SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-        WriteFile(hFileWholeReg, &nFPKey, sizeof(nFPKey), &NBW, NULL);
+        // Write position of current key in caller's field
+        if (0 < nFPCaller) {
+            SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
+            WriteFile(hFileWholeReg, &nFPKey, sizeof(nFPKey), &NBW, NULL);
 
-        SetFilePointer(hFileWholeReg, nFPKey, NULL, FILE_BEGIN);
-    }
+            SetFilePointer(hFileWholeReg, nFPKey, NULL, FILE_BEGIN);
+        }
 
-    // Initialize key content
+        // Initialize key content
 
-    // Set file positions of the relatives inside the tree
+        // Set file positions of the relatives inside the tree
 #ifdef _UNICODE
-    sKC.ofsKeyName = 0;      // not known yet, may be defined in this call
+        sKC.ofsKeyName = 0;      // not known yet, may be defined in this call
 #endif
 #ifndef _UNICODE
-    // Key name will always be stored behind the structure, so its position is already known
-    sKC.ofsKeyName = nFPKey + sizeof(sKC);
+        // Key name will always be stored behind the structure, so its position is already known
+        sKC.ofsKeyName = nFPKey + sizeof(sKC);
 #endif
-    sKC.ofsFirstValue = 0;   // not known yet, may be re-written in this call
-    sKC.ofsFirstSubKey = 0;  // not known yet, may be re-written by another recursive call
-    sKC.ofsBrotherKey = 0;   // not known yet, may be re-written by another recursive call
-    sKC.ofsFatherKey = nFPFatherKey;
+        sKC.ofsFirstValue = 0;   // not known yet, may be re-written in this call
+        sKC.ofsFirstSubKey = 0;  // not known yet, may be re-written by another recursive call
+        sKC.ofsBrotherKey = 0;   // not known yet, may be re-written by another recursive call
+        sKC.ofsFatherKey = nFPFatherKey;
 
-    // New since key content version 2
-    sKC.nKeyNameLen = 0;
+        // New since key content version 2
+        sKC.nKeyNameLen = 0;
 
-    // Extra local block to reduce stack usage due to recursive calls
-    {
-        LPTSTR lpszKeyName;
+        // Extra local block to reduce stack usage due to recursive calls
+        {
+            LPTSTR lpszKeyName;
 
-        // Determine correct key name
-        if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
-            // Adopt to long HKLM/HKU
-            if (lpszHKLMShort == lpKC->lpszKeyName) {
-                lpszKeyName = lpszHKLMLong;
-            } else if (lpszHKUShort == lpKC->lpszKeyName) {
-                lpszKeyName = lpszHKULong;
+            // Determine correct key name
+            if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
+                // Adopt to long HKLM/HKU
+                if (lpszHKLMShort == lpKC->lpszKeyName) {
+                    lpszKeyName = lpszHKLMLong;
+                } else if (lpszHKUShort == lpKC->lpszKeyName) {
+                    lpszKeyName = lpszHKULong;
+                } else {
+                    lpszKeyName = lpKC->lpszKeyName;
+                }
             } else {
                 lpszKeyName = lpKC->lpszKeyName;
             }
-        } else {
-            lpszKeyName = lpKC->lpszKeyName;
-        }
 
-        // Determine key name length
-        if (NULL != lpszKeyName) {
-            sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);
-            if (0 < sKC.nKeyNameLen) {  // otherwise leave it all 0
-                sKC.nKeyNameLen++;  // account for NULL char
+            // Determine key name length
+            if (NULL != lpszKeyName) {
+                sKC.nKeyNameLen = (DWORD)_tcslen(lpszKeyName);
+                if (0 < sKC.nKeyNameLen) {  // otherwise leave it all 0
+                    sKC.nKeyNameLen++;  // account for NULL char
 #ifdef _UNICODE
-                // Key name will always be stored behind the structure, so its position is already known
-                sKC.ofsKeyName = nFPKey + sizeof(sKC);
-#endif
-            }
-        }
-
-        // Write key content to file
-        // Make sure that ALL fields have been initialized/set
-        WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
-
-        // Write key name to file
-        if (0 < sKC.nKeyNameLen) {
-            WriteFile(hFileWholeReg, lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
-#ifndef _UNICODE
-        } else {
-            // Write empty string for backward compatibility
-            WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
-#endif
-        }
-    }  // End of extra local block
-
-    // Save the values of current key
-    if (NULL != lpKC->lpFirstVC) {
-        LPVALUECONTENT lpVC;
-        DWORD nFPValueCaller;
-        DWORD nFPValue;
-
-        // Write all values of key
-        nFPValueCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstValue);  // Write position of first value into key
-        for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
-            nFPValue = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
-
-            // Write position of previous value content in value content field ofsBrotherValue
-            if (0 < nFPValueCaller) {
-                SetFilePointer(hFileWholeReg, nFPValueCaller, NULL, FILE_BEGIN);
-                WriteFile(hFileWholeReg, &nFPValue, sizeof(nFPValue), &NBW, NULL);
-
-                SetFilePointer(hFileWholeReg, nFPValue, NULL, FILE_BEGIN);
-            }
-            nFPValueCaller = nFPValue + offsetof(SAVEVALUECONTENT, ofsBrotherValue);
-
-            // Initialize value content
-
-            // Copy values
-            sVC.nTypeCode = lpVC->nTypeCode;
-            sVC.cbData = lpVC->cbData;
-
-            // Set file positions of the relatives inside the tree
-#ifdef _UNICODE
-            sVC.ofsValueName = 0;       // not known yet, may be defined in this iteration
-#endif
-#ifndef _UNICODE
-            // Value name will always be stored behind the structure, so its position is already known
-            sVC.ofsValueName = nFPValue + sizeof(sVC);
-#endif
-            sVC.ofsValueData = 0;       // not known yet, may be re-written in this iteration
-            sVC.ofsBrotherValue = 0;    // not known yet, may be re-written in next iteration
-            sVC.ofsFatherKey = nFPKey;
-
-            // New since value content version 2
-            sVC.nValueNameLen = 0;
-
-            // Determine value name length
-            if (NULL != lpVC->lpszValueName) {
-                sVC.nValueNameLen = (DWORD)_tcslen(lpVC->lpszValueName);
-                if (0 < sVC.nValueNameLen) {  // otherwise leave it all 0
-                    sVC.nValueNameLen++;  // account for NULL char
-#ifdef _UNICODE
-                    // Value name will always be stored behind the structure, so its position is already known
-                    sVC.ofsValueName = nFPValue + sizeof(sVC);
+                    // Key name will always be stored behind the structure, so its position is already known
+                    sKC.ofsKeyName = nFPKey + sizeof(sKC);
 #endif
                 }
             }
 
-            // Write value content to file
+            // Write key content to file
             // Make sure that ALL fields have been initialized/set
-            WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
+            WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
 
-            // Write value name to file
-            if (0 < sVC.nValueNameLen) {
-                WriteFile(hFileWholeReg, lpVC->lpszValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
+            // Write key name to file
+            if (0 < sKC.nKeyNameLen) {
+                WriteFile(hFileWholeReg, lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
 #ifndef _UNICODE
             } else {
                 // Write empty string for backward compatibility
                 WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
 #endif
             }
+        }  // End of extra local block
 
-            // Write value data to file
-            if (0 < sVC.cbData) {
-                DWORD nFPValueData;
+        // Save the values of current key
+        if (NULL != lpKC->lpFirstVC) {
+            LPVALUECONTENT lpVC;
+            DWORD nFPValueCaller;
+            DWORD nFPValue;
 
-                // Write position of value data in value content field ofsValueData
-                nFPValueData = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+            // Write all values of key
+            nFPValueCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstValue);  // Write position of first value into key
+            for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
+                nFPValue = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
 
-                SetFilePointer(hFileWholeReg, nFPValue + offsetof(SAVEVALUECONTENT, ofsValueData), NULL, FILE_BEGIN);
-                WriteFile(hFileWholeReg, &nFPValueData, sizeof(nFPValueData), &NBW, NULL);
+                // Write position of previous value content in value content field ofsBrotherValue
+                if (0 < nFPValueCaller) {
+                    SetFilePointer(hFileWholeReg, nFPValueCaller, NULL, FILE_BEGIN);
+                    WriteFile(hFileWholeReg, &nFPValue, sizeof(nFPValue), &NBW, NULL);
 
-                SetFilePointer(hFileWholeReg, nFPValueData, NULL, FILE_BEGIN);
+                    SetFilePointer(hFileWholeReg, nFPValue, NULL, FILE_BEGIN);
+                }
+                nFPValueCaller = nFPValue + offsetof(SAVEVALUECONTENT, ofsBrotherValue);
 
-                // Write value data
-                WriteFile(hFileWholeReg, lpVC->lpValueData, sVC.cbData, &NBW, NULL);
+                // Initialize value content
+
+                // Copy values
+                sVC.nTypeCode = lpVC->nTypeCode;
+                sVC.cbData = lpVC->cbData;
+
+                // Set file positions of the relatives inside the tree
+#ifdef _UNICODE
+                sVC.ofsValueName = 0;       // not known yet, may be defined in this iteration
+#endif
+#ifndef _UNICODE
+                // Value name will always be stored behind the structure, so its position is already known
+                sVC.ofsValueName = nFPValue + sizeof(sVC);
+#endif
+                sVC.ofsValueData = 0;       // not known yet, may be re-written in this iteration
+                sVC.ofsBrotherValue = 0;    // not known yet, may be re-written in next iteration
+                sVC.ofsFatherKey = nFPKey;
+
+                // New since value content version 2
+                sVC.nValueNameLen = 0;
+
+                // Determine value name length
+                if (NULL != lpVC->lpszValueName) {
+                    sVC.nValueNameLen = (DWORD)_tcslen(lpVC->lpszValueName);
+                    if (0 < sVC.nValueNameLen) {  // otherwise leave it all 0
+                        sVC.nValueNameLen++;  // account for NULL char
+#ifdef _UNICODE
+                        // Value name will always be stored behind the structure, so its position is already known
+                        sVC.ofsValueName = nFPValue + sizeof(sVC);
+#endif
+                    }
+                }
+
+                // Write value content to file
+                // Make sure that ALL fields have been initialized/set
+                WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
+
+                // Write value name to file
+                if (0 < sVC.nValueNameLen) {
+                    WriteFile(hFileWholeReg, lpVC->lpszValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
+#ifndef _UNICODE
+                } else {
+                    // Write empty string for backward compatibility
+                    WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
+#endif
+                }
+
+                // Write value data to file
+                if (0 < sVC.cbData) {
+                    DWORD nFPValueData;
+
+                    // Write position of value data in value content field ofsValueData
+                    nFPValueData = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+
+                    SetFilePointer(hFileWholeReg, nFPValue + offsetof(SAVEVALUECONTENT, ofsValueData), NULL, FILE_BEGIN);
+                    WriteFile(hFileWholeReg, &nFPValueData, sizeof(nFPValueData), &NBW, NULL);
+
+                    SetFilePointer(hFileWholeReg, nFPValueData, NULL, FILE_BEGIN);
+
+                    // Write value data
+                    WriteFile(hFileWholeReg, lpVC->lpValueData, sVC.cbData, &NBW, NULL);
+                }
             }
         }
-    }
 
-    // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
+        // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
 
-    // If the entry has childs, then do a recursive call for the first child
-    // Pass this entry as father and "ofsFirstSubKey" position for storing the first child's position
-    if (NULL != lpKC->lpFirstSubKC) {
-        SaveRegKey(lpKC->lpFirstSubKC, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
-    }
+        // If the entry has childs, then do a recursive call for the first child
+        // Pass this entry as father and "ofsFirstSubKey" position for storing the first child's position
+        if (NULL != lpKC->lpFirstSubKC) {
+            SaveRegKeys(lpKC->lpFirstSubKC, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
+        }
 
-    // If the entry has a following brother, then do a recursive call for the following brother
-    // Pass father as father and "ofsBrotherKey" position for storing the next brother's position
-    if (NULL != lpKC->lpBrotherKC) {
-        SaveRegKey(lpKC->lpBrotherKC, nFPFatherKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsBrotherKey));
-    }
+        // Set "ofsBrotherKey" position for storing the following brother's position
+        nFPCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsBrotherKey);
 
-    // TODO: Need to adjust progress bar para!!
-    nSavingKey++;
-    if (0 != nGettingKey) {
-        if (nSavingKey % nGettingKey > nRegStep) {
-            nSavingKey = 0;
-            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-            UpdateWindow(hWnd);
-            PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+        // TODO: Need to adjust progress bar para!!
+        nSavingKey++;
+        if (0 != nGettingKey) {
+            if (nSavingKey % nGettingKey > nRegStep) {
+                nSavingKey = 0;
+                SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
+                UpdateWindow(hWnd);
+                PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+            }
         }
     }
 }
@@ -1702,12 +1702,12 @@ VOID SaveHive(LPREGSHOT lpShot)
 
     // Save HKLM
     if (NULL != lpShot->lpHKLM) {
-        SaveRegKey(lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
+        SaveRegKeys(lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
     }
 
     // Save HKU
     if (NULL != lpShot->lpHKU) {
-        SaveRegKey(lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
+        SaveRegKeys(lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
     }
 
     // Save HEADFILEs
@@ -1889,6 +1889,7 @@ VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplp
             if (0 < sVC.cbData) {  // otherwise leave it NULL
                 lpVC->lpValueData = MYALLOC0(sVC.cbData);
                 CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
+                // TODO: convert text data from/to WideChar (recognize by nTypeCode; possible multi string data, due to '\0' either string by string and/or char by char )
             }
         }
     }
