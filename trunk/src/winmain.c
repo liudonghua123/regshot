@@ -360,7 +360,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     lpszAboutBox = MYALLOC0(SIZEOF_ABOUTBOX * sizeof(TCHAR));
                     // it is silly that when wsprintf encounters a NULL string, it will write the whole string to NULL!
                     _sntprintf(lpszAboutBox, SIZEOF_ABOUTBOX, TEXT("%s%s%s%s%s%s\0"), lpszAboutRegshot, TEXT("["), lpszLanguage, TEXT("]"), TEXT(" by: "), lpszCurrentTranslator);
-                    lpszAboutBox[SIZEOF_ABOUTBOX - 1] = (TCHAR)'\0'; // safety NULL char
+                    lpszAboutBox[SIZEOF_ABOUTBOX - 1] = (TCHAR)'\0';  // safety NULL char
                     MessageBox(hDlg, lpszAboutBox, asLangTexts[iszTextAbout].lpszText, MB_OK);
                     MYFREE(lpszAboutBox);
                     return(TRUE);
