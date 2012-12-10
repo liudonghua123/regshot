@@ -366,7 +366,7 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
         }
 
         if (lpFC2 == NULL) {
-            // lpFC2 looped to the end, that is, we can not find a lpFC2 matches lpFC1, so lpFC1 is deleted!
+            // lpFC2 looped to the end, that is, we cannot find a lpFC2 matches lpFC1, so lpFC1 is deleted!
             if (ISDIR(lpFC1->nFileAttributes)) {
                 GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1); // if lpFC1 is dir
             } else {

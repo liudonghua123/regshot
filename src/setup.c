@@ -149,20 +149,20 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx save settings to ini
 
     // 1.8.1
     _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), nFlag);
-    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0'; // safety NULL char
+    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
     WritePrivateProfileString(lpszIniSetup, lpszIniFlag, lpszValue, lpszRegshotIni);
 
     _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), bUseLongRegHead);
-    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0'; // safety NULL char
+    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
     WritePrivateProfileString(lpszIniSetup, lpszIniUseLongRegHead, lpszValue, lpszRegshotIni);
 
     if (GetDlgItemText(hDlg, IDC_EDITDIR, lpszValue, EXTDIRLEN) != 0) {  // length incl. NULL character
-        lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0'; // safety NULL char
+        lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
         WritePrivateProfileString(lpszIniSetup, lpszIniExtDir, lpszValue, lpszRegshotIni);
     }
 
     if (GetDlgItemText(hDlg, IDC_EDITPATH, lpszValue, EXTDIRLEN) != 0) {  // length incl. NULL character
-        lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0'; // safety NULL char
+        lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
         WritePrivateProfileString(lpszIniSetup, lpszIniOutDir, lpszValue, lpszRegshotIni);
     }
 
