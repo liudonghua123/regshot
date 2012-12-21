@@ -975,7 +975,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
 
 // ----------------------------------------------------------------------
-// Clear comparison match flags in registry keys
+// Clear comparison match flags of registry keys and values
 // ----------------------------------------------------------------------
 VOID ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC)
 {
@@ -1416,7 +1416,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
         // put in a separate var for later use
         nFPKey = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
 
-        // Write position of current key in caller's field
+        // Write position of current reg key in caller's field
         if (0 < nFPCaller) {
             SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
             WriteFile(hFileWholeReg, &nFPKey, sizeof(nFPKey), &NBW, NULL);
@@ -1434,9 +1434,9 @@ VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
         // Key name will always be stored behind the structure, so its position is already known
         sKC.ofsKeyName = nFPKey + sizeof(sKC);
 #endif
-        sKC.ofsFirstValue = 0;   // not known yet, may be re-written in this call
+        sKC.ofsFirstValue = 0;   // not known yet, may be re-written in this iteration
         sKC.ofsFirstSubKey = 0;  // not known yet, may be re-written by another recursive call
-        sKC.ofsBrotherKey = 0;   // not known yet, may be re-written by another recursive call
+        sKC.ofsBrotherKey = 0;   // not known yet, may be re-written in another iteration
         sKC.ofsFatherKey = nFPFatherKey;
 
         // New since key content version 2
