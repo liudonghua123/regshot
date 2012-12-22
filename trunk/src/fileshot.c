@@ -398,14 +398,15 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
 
 
 // ----------------------------------------------------------------------
-// Clear comparison match flags in all files
+// Clear comparison match flags of directories and files
 // ----------------------------------------------------------------------
-VOID ClearFileContentMatchTag(LPFILECONTENT lpFC)
+VOID ClearFileMatchFlags(LPFILECONTENT lpStartFC)
 {
-    if (NULL != lpFC) {
-        lpFC->fFileMatch = 0;
-        ClearFileContentMatchTag(lpFC->lpFirstSubFC);
-        ClearFileContentMatchTag(lpFC->lpBrotherFC);
+    LPFILECONTENT lpFC;
+
+    for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
+        lpFC->fFileMatch = NOMATCH;
+        ClearFileMatchFlags(lpFC->lpFirstSubFC);
     }
 }
 
@@ -417,7 +418,7 @@ VOID ClearHeadFileMatchTag(LPHEADFILE lpStartHF)
     LPHEADFILE lpHF;
 
     for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
-        ClearFileContentMatchTag(lpHF->lpFirstFC);
+        ClearFileMatchFlags(lpHF->lpFirstFC);
     }
 }
 
