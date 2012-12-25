@@ -35,12 +35,15 @@
 
 @rem *** Make all changes local to the script, switch to the script's directory and set generic variables
 SETLOCAL
-CD /D %~dp0
+CD /D "%~dp0"
 
-PATH %~dp0;%PATH%
+@rem *** Configurable important settings
 SET COMPRESSION_EXE=7z
 SET COMPRESSION_TYPE=7z
 SET SOURCE_DEFAULT=VS2008
+
+@rem *** Generic variables
+PATH "%~dp0";%PATH%
 SET LEAVE_SCRIPT=
 
 
