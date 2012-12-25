@@ -107,7 +107,7 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 //-------------------------------------------------------------
 // Routine to walk through all sub tree of current directory [File system]
 //-------------------------------------------------------------
-VOID GetAllSubFile(
+VOID LogAllFiles(
     BOOL    fIncludeBrothers,
     DWORD   typedir,
     DWORD   typefile,
@@ -129,11 +129,11 @@ VOID GetAllSubFile(
     }
 
     if (NULL != lpFC->lpFirstSubFC)    {
-        GetAllSubFile(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
+        LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
     }
     if (fIncludeBrothers) {
         if (NULL != lpFC->lpBrotherFC) {
-            GetAllSubFile(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpBrotherFC);
+            LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpBrotherFC);
         }
     }
 }
@@ -304,13 +304,13 @@ VOID FileShot(LPREGSHOT lpShot)
 //-------------------------------------------------------------
 // File comparison engine (lp1 and lp2 run parallel)
 //-------------------------------------------------------------
-VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
+VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
 {
     LPFILECONTENT lpFC1;
     LPFILECONTENT lpFC2;
 
-    for (lpFC1 = lpFCHead1; lpFC1 != NULL; lpFC1 = lpFC1->lpBrotherFC) {
-        for (lpFC2 = lpFCHead2; lpFC2 != NULL; lpFC2 = lpFC2->lpBrotherFC) {
+    for (lpFC1 = lpStartFC1; NULL != lpFC1; lpFC1 = lpFC1->lpBrotherFC) {
+        for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
             if ((lpFC2->fFileMatch == NOMATCH) && _tcscmp(lpFC1->lpszFileName, lpFC2->lpszFileName) == 0) { // 1.8.2 from lstrcmp to strcmp
                 // Two files have the same name, but we are not sure they are the same, so we compare them!
                 if (ISFILE(lpFC1->nFileAttributes) && ISFILE(lpFC2->nFileAttributes))
@@ -336,7 +336,7 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
                         if (lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
                             // Same dir attributes, we compare their subfiles
                             lpFC2->fFileMatch = ISMATCH;
-                            CompareFirstSubFile(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
+                            CompareFiles(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
                         } else {
                             // Dir attributes changed, they will be logged
                             lpFC2->fFileMatch = ISMODI;
@@ -351,12 +351,12 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
                             // lpFC1 is file, lpFC2 is dir
                             lpFC1->fFileMatch = ISDEL;
                             LogToMem(FILEDEL, &nFILEDEL, lpFC1);
-                            GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
+                            LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
                         } else {
                             // lpFC1 is dir, lpFC2 is file
                             lpFC2->fFileMatch = ISADD;
                             LogToMem(FILEADD, &nFILEADD, lpFC2);
-                            GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
+                            LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
                         }
                     }
                 }
@@ -364,10 +364,10 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
             }
         }
 
-        if (lpFC2 == NULL) {
+        if (NULL == lpFC2) {
             // lpFC2 looped to the end, that is, we cannot find a lpFC2 matches lpFC1, so lpFC1 is deleted!
             if (ISDIR(lpFC1->nFileAttributes)) {
-                GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1); // if lpFC1 is dir
+                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1); // if lpFC1 is dir
             } else {
                 LogToMem(FILEDEL, &nFILEDEL, lpFC1);  // if lpFC1 is file
             }
@@ -375,12 +375,12 @@ VOID CompareFirstSubFile(LPFILECONTENT lpFCHead1, LPFILECONTENT lpFCHead2)
     }
 
     // We loop to the end, then we do an extra loop of lpFC2 use flag we previous made
-    for (lpFC2 = lpFCHead2; lpFC2 != NULL; lpFC2 = lpFC2->lpBrotherFC) {
+    for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
         nComparing++;
         if (lpFC2->fFileMatch == NOMATCH) {
             // We did not find a lpFC1 matches a lpFC2, so lpFC2 is added!
             if (ISDIR(lpFC2->nFileAttributes)) {
-                GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
+                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
             } else {
                 LogToMem(FILEADD, &nFILEADD, lpFC2);
             }

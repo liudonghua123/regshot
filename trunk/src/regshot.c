@@ -209,7 +209,7 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC, BOOL fUseLongNames)
     }
     cchName = cchValueName + 1;  // +1 char for NULL char
 
-    for (lpKC = lpVC->lpFatherKC; lpKC != NULL; lpKC = lpKC->lpFatherKC) {
+    for (lpKC = lpVC->lpFatherKC; NULL != lpKC; lpKC = lpKC->lpFatherKC) {
         if (NULL != lpKC->lpszKeyName) {
             if ((fUseLongNames) && (lpszHKLMShort == lpKC->lpszKeyName)) {
                 cchName += CCH_HKLM_LONG;
@@ -527,8 +527,8 @@ VOID FreeAllCom(LPCOMRESULT lpComResult)
     LPCOMRESULT lp;
     LPCOMRESULT lpold;
 
-    for (lp = lpComResult; lp != NULL;) {
-        if (lp->lpszResult != NULL) {
+    for (lp = lpComResult; NULL != lp;) {
+        if (NULL != lp->lpszResult) {
             MYFREE(lp->lpszResult);
         }
         lpold = lp;
@@ -723,8 +723,8 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     size_t  nLengthofStr;
     LPHEADFILE  lpHF1;
     LPHEADFILE  lpHF2;
-    LPFILECONTENT lpfc1;
-    LPFILECONTENT lpfc2;
+    LPFILECONTENT lpFC1;
+    LPFILECONTENT lpFC2;
     FILETIME ftime1;
     FILETIME ftime2;
 
@@ -758,13 +758,13 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         lpHF2 = lpShot1->lpHF;
     }
     // first loop
-    for (; lpHF1 != NULL; lpHF1 = lpHF1->lpBrotherHF) {
-        lpfc1 = lpHF1->lpFirstFC;
-        if (lpfc1 != NULL) {
-            if ((lpfc2 = SearchDirChain(lpfc1->lpszFileName, lpHF2)) != NULL) {   // note lpHF2 should not changed here!
-                CompareFirstSubFile(lpfc1, lpfc2);                              // if found, we do compare
-            } else {    // cannot find matched lpfc1 in lpHF2 chain.
-                GetAllSubFile(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpfc1);
+    for (; NULL != lpHF1; lpHF1 = lpHF1->lpBrotherHF) {
+        lpFC1 = lpHF1->lpFirstFC;
+        if (NULL != lpFC1) {
+            if (NULL != (lpFC2 = SearchDirChain(lpFC1->lpszFileName, lpHF2))) {   // note lpHF2 should not changed here!
+                CompareFiles(lpFC1, lpFC2);                              // if found, we do compare
+            } else {    // cannot find matched lpFC1 in lpHF2 chain.
+                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
             }
         }
     }
@@ -777,11 +777,11 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         lpHF2 = lpShot1->lpHF;
     }
     // second loop
-    for (; lpHF2 != NULL; lpHF2 = lpHF2->lpBrotherHF) {
-        lpfc2 = lpHF2->lpFirstFC;
-        if (lpfc2 != NULL) {
-            if ((lpfc1 = SearchDirChain(lpfc2->lpszFileName, lpHF1)) == NULL) {   // in the second loop we only find those do not match
-                GetAllSubFile(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpfc2);
+    for (; NULL != lpHF2; lpHF2 = lpHF2->lpBrotherHF) {
+        lpFC2 = lpHF2->lpFirstFC;
+        if (NULL != lpFC2) {
+            if (NULL == (lpFC1 = SearchDirChain(lpFC2->lpszFileName, lpHF1))) {   // in the second loop we only find those do not match
+                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
             }
         }
     }
