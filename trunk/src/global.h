@@ -535,7 +535,7 @@ extern LPTSTR lpszEmpty;
 #endif
 
 size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
-VOID SaveHeadFile(LPHEADFILE lpHF, DWORD nFPCaller);
+VOID SaveHeadFiles(LPHEADFILE lpStartHF, DWORD nFPCaller);
 VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 
 #ifdef DEBUGLOG

@@ -1755,7 +1755,7 @@ VOID SaveHive(LPREGSHOT lpShot)
 
     // Save HEADFILEs
     if (NULL != lpShot->lpHF) {
-        SaveHeadFile(lpShot->lpHF, offsetof(FILEHEADER, ofsHF));
+        SaveHeadFiles(lpShot->lpHF, offsetof(FILEHEADER, ofsHF));
     }
 
     // Close file
