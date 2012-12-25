@@ -441,7 +441,6 @@ VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
 VOID    InitProgressBar(VOID);
-VOID    CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
 VOID    ErrMsg(LPTSTR lpszErrMsg);
 VOID    WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML);
@@ -453,8 +452,7 @@ VOID    WriteHTML_BR(void);
 VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
 VOID    FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen);
 BOOL    DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2);
-VOID    LogAllFiles(BOOL fIncludeBrothers, DWORD typedir, DWORD typefile, LPDWORD lpcountdir, LPDWORD lpcountfile, LPFILECONTENT lpFileContent);
-LPFILECONTENT SearchDirChain(LPTSTR lpszName, LPHEADFILE lpStartHF);
+VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
