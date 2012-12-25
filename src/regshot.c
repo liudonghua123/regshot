@@ -584,7 +584,7 @@ VOID FreeAllCompareResults(void)
 //-------------------------------------------------------------
 // Registry comparison engine
 //-------------------------------------------------------------
-VOID *CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
+VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 {
     LPKEYCONTENT lpKC1;
     LPKEYCONTENT lpKC2;
@@ -702,8 +702,6 @@ VOID *CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
             SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
         }
     }
-
-    return NULL;
 }
 
 
