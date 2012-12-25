@@ -252,6 +252,39 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
         }
 }
 
+//-------------------------------------------------------------
+// Directory and file comparison engine
+//-------------------------------------------------------------
+VOID CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2)
+{
+    LPHEADFILE lpHF1;
+    LPHEADFILE lpHF2;
+    LPFILECONTENT lpFC1;
+    LPFILECONTENT lpFC2;
+
+    // first loop
+    for (lpHF1 = lpStartHF1; NULL != lpHF1; lpHF1 = lpHF1->lpBrotherHF) {
+        lpFC1 = lpHF1->lpFirstFC;
+        if (NULL != lpFC1) {
+            if (NULL != (lpFC2 = SearchDirChain(lpFC1->lpszFileName, lpStartHF2))) {   // note lpHF2 should not changed here!
+                CompareFiles(lpFC1, lpFC2);                              // if found, we do compare
+            } else {    // cannot find matched lpFC1 in lpHF2 chain.
+                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
+            }
+        }
+    }
+
+    // second loop
+    for (lpHF2 = lpStartHF2; NULL != lpHF2; lpHF2 = lpHF2->lpBrotherHF) {
+        lpFC2 = lpHF2->lpFirstFC;
+        if (NULL != lpFC2) {
+            if (NULL == (lpFC1 = SearchDirChain(lpFC2->lpszFileName, lpStartHF1))) {   // in the second loop we only find those do not match
+                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
+            }
+        }
+    }
+}
+
 
 // ----------------------------------------------------------------------
 // Get file snap shot

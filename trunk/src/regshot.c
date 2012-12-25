@@ -719,10 +719,6 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     DWORD   buffersize = 2048;
     DWORD   nTotal;
     size_t  nLengthofStr;
-    LPHEADFILE  lpHF1;
-    LPHEADFILE  lpHF2;
-    LPFILECONTENT lpFC1;
-    LPFILECONTENT lpFC2;
     FILETIME ftime1;
     FILETIME ftime2;
 
@@ -749,39 +745,9 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     // Dir comparison v1.8.1
     // determine newer
     if (bshot2isnewer) {
-        lpHF1 = lpShot1->lpHF;
-        lpHF2 = lpShot2->lpHF;
+        CompareHeadFiles(lpShot1->lpHF, lpShot2->lpHF);
     } else {
-        lpHF1 = lpShot2->lpHF;
-        lpHF2 = lpShot1->lpHF;
-    }
-    // first loop
-    for (; NULL != lpHF1; lpHF1 = lpHF1->lpBrotherHF) {
-        lpFC1 = lpHF1->lpFirstFC;
-        if (NULL != lpFC1) {
-            if (NULL != (lpFC2 = SearchDirChain(lpFC1->lpszFileName, lpHF2))) {   // note lpHF2 should not changed here!
-                CompareFiles(lpFC1, lpFC2);                              // if found, we do compare
-            } else {    // cannot find matched lpFC1 in lpHF2 chain.
-                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
-            }
-        }
-    }
-    // reset pointers
-    if (bshot2isnewer) {
-        lpHF1 = lpShot1->lpHF;
-        lpHF2 = lpShot2->lpHF;
-    } else {
-        lpHF1 = lpShot2->lpHF;
-        lpHF2 = lpShot1->lpHF;
-    }
-    // second loop
-    for (; NULL != lpHF2; lpHF2 = lpHF2->lpBrotherHF) {
-        lpFC2 = lpHF2->lpFirstFC;
-        if (NULL != lpFC2) {
-            if (NULL == (lpFC1 = SearchDirChain(lpFC2->lpszFileName, lpHF1))) {   // in the second loop we only find those do not match
-                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
-            }
-        }
+        CompareHeadFiles(lpShot2->lpHF, lpShot1->lpHF);
     }
 
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)MAXPBPOSITION, (LPARAM)0);
