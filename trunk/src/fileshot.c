@@ -103,27 +103,26 @@ VOID LogAllFiles(
     DWORD   typefile,
     LPDWORD lpcountdir,
     LPDWORD lpcountfile,
-    LPFILECONTENT lpFC
+    LPFILECONTENT lpStartFC
 )
 {
-    //LPTSTR   lpTemp;
+    LPFILECONTENT lpFC;
 
-    if (ISDIR(lpFC->nFileAttributes)) {
-        //lpTemp = lpFC->lpszFileName;
-        if ((NULL != lpFC->lpszFileName) && (0 != _tcscmp(lpFC->lpszFileName, TEXT("."))) && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".."))))  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
-            //if (*(unsigned short *)lpTemp != 0x002E && !(*(unsigned short *)lpTemp == 0x2E2E && *(lpTemp + 2) == 0x00)) {     // 1.8.2
-            LogToMem(typedir, lpcountdir, lpFC);
+    for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
+        if (ISDIR(lpFC->nFileAttributes)) {
+            if ((NULL != lpFC->lpszFileName) && (0 != _tcscmp(lpFC->lpszFileName, TEXT("."))) && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".."))))  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
+                LogToMem(typedir, lpcountdir, lpFC);
+            }
+        } else {
+            LogToMem(typefile, lpcountfile, lpFC);
         }
-    } else {
-        LogToMem(typefile, lpcountfile, lpFC);
-    }
 
-    if (NULL != lpFC->lpFirstSubFC)    {
-        LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
-    }
-    if (fIncludeBrothers) {
-        if (NULL != lpFC->lpBrotherFC) {
-            LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpBrotherFC);
+        if (NULL != lpFC->lpFirstSubFC)    {
+            LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
+        }
+
+        if (!fIncludeBrothers) {
+            break;
         }
     }
 }
@@ -166,59 +165,60 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     LPFILECONTENT lpFC1;
     LPFILECONTENT lpFC2;
 
+    // Compare files
     for (lpFC1 = lpStartFC1; NULL != lpFC1; lpFC1 = lpFC1->lpBrotherFC) {
+        // Find a matching file for FC1
         for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
-            if ((lpFC2->fFileMatch == NOMATCH) && _tcscmp(lpFC1->lpszFileName, lpFC2->lpszFileName) == 0) { // 1.8.2 from lstrcmp to strcmp
-                // Two files have the same name, but we are not sure they are the same, so we compare them!
-                if (ISFILE(lpFC1->nFileAttributes) && ISFILE(lpFC2->nFileAttributes))
-                    //(lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    // Lp1 is file, lpFC2 is file
-                    if (lpFC1->nWriteDateTimeLow == lpFC2->nWriteDateTimeLow && lpFC1->nWriteDateTimeHigh == lpFC2->nWriteDateTimeHigh &&
-                            lpFC1->nFileSizeLow == lpFC2->nFileSizeLow && lpFC1->nFileSizeHigh == lpFC2->nFileSizeHigh && lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
-                        // We found a match file!
-                        lpFC2->fFileMatch = ISMATCH;
-                    } else {
-                        // We found a dismatch file, they will be logged
-                        lpFC2->fFileMatch = ISMODI;
-                        LogToMem(FILEMODI, &nFILEMODI, lpFC1);
-                    }
-
-                } else {
-                    // At least one file of the pair is directory, so we try to determine
-                    if (ISDIR(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes))
-                        // (lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
-                    {
-                        // The two 'FILE's are all dirs
-                        if (lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
-                            // Same dir attributes, we compare their subfiles
-                            lpFC2->fFileMatch = ISMATCH;
-                            CompareFiles(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
-                        } else {
-                            // Dir attributes changed, they will be logged
-                            lpFC2->fFileMatch = ISMODI;
-                            LogToMem(DIRMODI, &nDIRMODI, lpFC1);
-                        }
-                        //break;
-                    } else {
-                        // One of the 'FILE's is dir, but which one?
-                        if (ISFILE(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes))
-                            //(lpFC1->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY && (lpFC2->nFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
-                        {
-                            // lpFC1 is file, lpFC2 is dir
-                            lpFC1->fFileMatch = ISDEL;
-                            LogToMem(FILEDEL, &nFILEDEL, lpFC1);
-                            LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
-                        } else {
-                            // lpFC1 is dir, lpFC2 is file
-                            lpFC2->fFileMatch = ISADD;
-                            LogToMem(FILEADD, &nFILEADD, lpFC2);
-                            LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
-                        }
-                    }
-                }
-                break;
+            // skip FC2 if already matched
+            if (lpFC2->fFileMatch != NOMATCH) {
+                continue;
             }
+            // skip FC2 if names do *not* match
+            if ((NULL == lpFC1->lpszFileName) || (NULL == lpFC2->lpszFileName) || (0 != _tcsicmp(lpFC1->lpszFileName, lpFC2->lpszFileName))) { // 1.8.2 from lstrcmp to strcmp  // 1.9.0 to _tcsicmp
+                continue;
+            }
+
+            // Two files have the same (non-case-sensitive) name, but we are not sure they are the same, so we compare them!
+            if (ISFILE(lpFC1->nFileAttributes) && ISFILE(lpFC2->nFileAttributes)) {
+                // Both are files
+                if ((lpFC1->nWriteDateTimeLow == lpFC2->nWriteDateTimeLow)
+                        && (lpFC1->nWriteDateTimeHigh == lpFC2->nWriteDateTimeHigh)
+                        && (lpFC1->nFileSizeLow == lpFC2->nFileSizeLow)
+                        && (lpFC1->nFileSizeHigh == lpFC2->nFileSizeHigh)
+                        && (lpFC1->nFileAttributes == lpFC2->nFileAttributes)) {
+                    // We found a match file!
+                    lpFC2->fFileMatch = ISMATCH;
+                } else {
+                    // We found a dismatch file, they will be logged
+                    lpFC2->fFileMatch = ISMODI;
+                    LogToMem(FILEMODI, &nFILEMODI, lpFC1);
+                }
+            } else if (ISDIR(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes)) {
+                // Both are dirs
+                if (lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
+                    // Same dir attributes, we compare their subfiles
+                    lpFC2->fFileMatch = ISMATCH;
+                } else {
+                    // Dir attributes changed, they will be logged
+                    lpFC2->fFileMatch = ISMODI;
+                    LogToMem(DIRMODI, &nDIRMODI, lpFC1);
+                }
+                CompareFiles(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
+            } else {
+                // At least one file of the pair is directory, so we try to determine
+                if (ISFILE(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes)) {
+                    // lpFC1 is file, lpFC2 is dir
+                    lpFC1->fFileMatch = ISDEL;
+                    LogToMem(FILEDEL, &nFILEDEL, lpFC1);
+                    LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
+                } else {
+                    // lpFC1 is dir, lpFC2 is file
+                    LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
+                    lpFC2->fFileMatch = ISADD;
+                    LogToMem(FILEADD, &nFILEADD, lpFC2);
+                }
+            }
+            break;
         }
 
         if (NULL == lpFC2) {
@@ -656,7 +656,7 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
 
         lpFC->lpszFileName = MYALLOC0(sFC.nFileNameLen * sizeof(TCHAR));
         if (sizeof(TCHAR) == fileheader.nCharSize) {
-            _tcscpy(lpFC->lpszFileName, lpStringBuffer);
+            _tcsncpy(lpFC->lpszFileName, lpStringBuffer, sFC.nFileNameLen);
         } else {
 #ifdef _UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen);
