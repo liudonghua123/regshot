@@ -747,7 +747,7 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
     for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         if ((NULL != lpHF->lpFirstFC)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
-            nLen = _tcslen(lpHF->lpFirstFC->cchFileName);
+            nLen = lpHF->lpFirstFC->cchFileName;
             if (nLen > 0) {
                 fAddBackslash = FALSE;
                 if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
