@@ -139,6 +139,7 @@ typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
 // Struct used for Windows File System
 struct _FILECONTENT {
     LPTSTR lpszFileName;                    // Pointer to file's name
+    size_t cchFileName;                     // Length of file's name in chars
     DWORD  nWriteDateTimeLow;               // File write time [LOW  DWORD]
     DWORD  nWriteDateTimeHigh;              // File write time [HIGH DWORD]
     DWORD  nFileSizeLow;                    // File size [LOW  DWORD]

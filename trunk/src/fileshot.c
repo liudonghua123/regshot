@@ -66,7 +66,7 @@ VOID FreeAllFileHead(LPHEADFILE lpHF)
 
 
 //-------------------------------------------------------------
-// Get whole file name [root dir] from FILECONTENT
+// Get whole file name from FILECONTENT
 //-------------------------------------------------------------
 LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 {
@@ -78,7 +78,7 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
     cchName = 0;
     for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpFatherFC) {
         if (NULL != lpFC->lpszFileName) {
-            cchName += _tcslen(lpFC->lpszFileName) + 1;  // +1 char for backslash or NULL char
+            cchName += lpFC->cchFileName + 1;  // +1 char for backslash or NULL char
         }
     }
     if (0 == cchName) {  // at least create an empty string with NULL char
@@ -92,7 +92,7 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 
     for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpFatherFC) {
         if (NULL != lpFC->lpszFileName) {
-            cchName = _tcslen(lpFC->lpszFileName);
+            cchName = lpFC->cchFileName;
             _tcsncpy(lpszTail -= cchName, lpFC->lpszFileName, cchName);
             if (lpszTail > lpszName) {
                 *--lpszTail = (TCHAR)'\\';
@@ -166,15 +166,14 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
     // Extra local block to reduce stack usage due to recursive calls
     {
         LPTSTR lpszFindFileName;
-        size_t cchName;
 
         // Set file name
-        cchName = _tcslen(lpszName) + 1;
-        lpFC->lpszFileName = MYALLOC0(cchName * sizeof(TCHAR));
+        lpFC->cchFileName = _tcslen(lpszName);
+        lpFC->lpszFileName = MYALLOC0((lpFC->cchFileName + 1) * sizeof(TCHAR));
         _tcscpy(lpFC->lpszFileName, lpszName);
 
         // Check if file is to be excluded
-        lpszFindFileName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory
+        lpszFindFileName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory (later in routine)
         if (IsInSkipList(lpszFindFileName, lprgszFileSkipStrings)) {
             MYFREE(lpszFindFileName);
             FreeAllFileContent(lpFC);
@@ -474,7 +473,7 @@ VOID SaveFiles(LPFILECONTENT lpStartFC, DWORD nFPFatherFile, DWORD nFPCaller)
 
         // Determine file name length
         if (NULL != lpFC->lpszFileName) {
-            sFC.nFileNameLen = (DWORD)_tcslen(lpFC->lpszFileName);
+            sFC.nFileNameLen = (DWORD)lpFC->cchFileName;
             if (0 < sFC.nFileNameLen) {  // otherwise leave it all 0
                 sFC.nFileNameLen++;  // account for NULL char
 #ifdef _UNICODE
@@ -613,6 +612,10 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
             WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen, NULL, NULL);
 #endif
         }
+
+        // Set file name length in chars
+        lpFC->lpszFileName[sFC.nFileNameLen - 1] = (TCHAR)'\0';  // safety NULL char
+        lpFC->cchFileName = _tcslen(lpFC->lpszFileName);
     }
 
     // Check if file is to be generic excluded
@@ -744,7 +747,7 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
     for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         if ((NULL != lpHF->lpFirstFC)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
-            nLen = _tcslen(lpHF->lpFirstFC->lpszFileName);
+            nLen = _tcslen(lpHF->lpFirstFC->cchFileName);
             if (nLen > 0) {
                 fAddBackslash = FALSE;
                 if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
