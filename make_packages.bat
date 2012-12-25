@@ -21,7 +21,7 @@
 @rem *
 @rem *
 @rem *  make_packages.bat
-@rem *    Batch file for building Regshot with WDK and creating the zip packages
+@rem *    Batch file for creating the Regshot release packages
 @rem *
 @rem ***************************************************************************
 
