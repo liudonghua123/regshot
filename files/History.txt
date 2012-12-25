@@ -8,15 +8,16 @@ History of Regshot
 -: Function deleted
 -------------------------------------------------
 
-V1.8.3 beta1V1-beta1V5 2011-12-25,2012-01-02
-! Testing purpose only
-! beta1V1-beta1V5 tried several compiler and fix
-+ Add 64-Bit build
-* New program icon (thanks to the PortableApps guys)
+V1.8.3 beta 2012-12-25
+! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
++ Add 64-Bit builds
++ Add Unicode builds (not compatible with ANSI .hiv files)
++ Structure of .hiv file enhanced, while keeping backwards compatibility for ANSI builds
++ Symbol files released for all builds
 ! Add support for various compilers
 ! Add a proper manifest file
-! Various code cleanup
-! Struct of .hiv file slightly changed.
+! Various code cleanups
+* New program icon (thanks to the PortableApps guys)
 
 V1.8.2 2007-11-03
 ! Change some calls to ANSI version (lstrcmp->strcmp...)

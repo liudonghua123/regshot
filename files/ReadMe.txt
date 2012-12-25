@@ -1,6 +1,6 @@
 
-Readme file of Regshot 1.8.3 beta1    (2011-12-25) (beta1V1-beta1V5)
-(Note: it is the beta version for testing purpose only)
+Readme file of Regshot 1.8.3 beta (2012-12-25)
+(Note: this is the beta version for testing purpose only)
 
 -----------------
 Introduction:
@@ -60,12 +60,12 @@ are included. The executable's size is smaller!
 File shots are now saved in hive file.
 "UseLongRegHead" option added in regshot.ini to compatible with undoReg (1.46)
 "UseLongRegHead=1" means using "HKEY_LOCAL_MACHINE" instead of "HKLM", default 0
-Do not compare shots saved with different "UseLongRegHead" option!
+Do not compare shots saved with different "UseLongRegHead" option! (limit gone in 1.8.3)
 
 (12) New to 1.8.3 (beta):
-Regshot hive's structure is slightly changed in this version, so old hive cannot load into this version.
-182to183.exe can make transfers from old hive to new one.
-x64 build is added, try it on 64bit Windows.
+You can compare shots saved with different "UseLongRegHead" option.
+Loading ANSI hive files in Unicode builds and vice versa is not supported.
+
 
 -----------------
 Thanks:
@@ -118,7 +118,7 @@ Dchenka, itschy, HANDLE and all those we forgot to mention!!
 LICENSE:
 -----------------
 
-Copyright 2011 The Regshot Team : TiANWEi, Maddes, XhmikosR
+Copyright 2011-2012 The Regshot Team : TiANWEi, Maddes, XhmikosR
 Copyright 1999-2003,2007,2011 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri
