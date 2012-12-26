@@ -44,6 +44,11 @@ typedef long LONG_PTR;
 #endif
 #endif  // _MSC_VER && (_MSC_VER < 1300)
 
+#if defined(_MSC_VER) && (_MSC_VER < 1400)  // before VS 2005 (e.g. VS 6)
+#   define REPLACEMENT_STRNLEN
+size_t strnlen(const char *lpszText, size_t cchMax);
+#endif  // _MSC_VER
+
 #if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
 #   if (defined(_M_IA64) || defined(__ia64__) || defined(_M_AMD64) || defined(_M_X64) || defined(__amd64__) || defined(_M_IX86) || defined(_X86_) || defined(__i386__) || defined(__i486__) || defined(__i586__) || defined(__i686__))
 #       define __LITTLE_ENDIAN__ 1
