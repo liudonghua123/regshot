@@ -449,11 +449,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 
 #ifdef REPLACEMENT_STRNLEN
-size_t strnlen(const TCHAR *lpszText, size_t cchMax)
+size_t strnlen(const char *lpszText, size_t cchMax)
 {
     size_t cchActual;
 
-    for (cchActual = 0; (cchActual < cchMax) && ((TCHAR)'\0' != lpszText[cchActual]); cchActual++) {
+    for (cchActual = 0; (cchActual < cchMax) && ('\0' != lpszText[cchActual]); cchActual++) {
     }
 
     return cchActual;
