@@ -84,6 +84,18 @@ IF "%~1" == "" (
   IF /I "%~1" == "--WDK" (
     SET SOURCE=WDK
   )
+  IF /I "%~1" == "VS6" (
+    SET SOURCE=VS6
+  )
+  IF /I "%~1" == "/VS6" (
+    SET SOURCE=VS6
+  )
+  IF /I "%~1" == "-VS6" (
+    SET SOURCE=VS6
+  )
+  IF /I "%~1" == "--VS6" (
+    SET SOURCE=VS6
+  )
   IF /I "%~1" == "VS2008" (
     SET SOURCE=VS2008
   )
@@ -169,6 +181,11 @@ IF "%SOURCE%" == "WDK" (
   SET SOURCEFILEx86A=bin\WDK\Release_Win32
   SET SOURCEFILEx64A=bin\WDK\Release_x64
   SET SUFFIX=_WDK
+)
+IF "%SOURCE%" == "VS6" (
+  SET SOURCEFILEx86A=bin\%SOURCE%\%VS_PROJECT_NAME%\Win32\Release\%VS_SOURCEFILE_BASENAME%-x86-ANSI.exe
+  SET SUFFIX=_VS6
+  SET SYMBOLS_SUFFIX=pdb
 )
 IF "%SOURCE%" == "VS2008" (
   SET SOURCEFILEx86A=%VS_OUTPUT%bin\%SOURCE%\%VS_PROJECT_NAME%\Win32\Release\%VS_SOURCEFILE_BASENAME%-x86-ANSI.exe
