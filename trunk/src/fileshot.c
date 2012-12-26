@@ -560,7 +560,7 @@ VOID SaveFiles(LPFILECONTENT lpStartFC, DWORD nFPFatherFile, DWORD nFPCaller)
         // Set "ofsBrotherFile" position for storing the following brother's position
         nFPCaller = nFPFile + offsetof(SAVEFILECONTENT, ofsBrotherFile);
 
-        // TODO: Need to adjust progress bar para!!
+        // Update progress bar
         nSavingFile++;
         if (0 != nGettingFile) {
             if (nSavingFile % nGettingFile > nFileStep) {
