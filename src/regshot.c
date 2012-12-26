@@ -116,7 +116,6 @@ DWORD nSavingKey;
 DWORD nGettingTime;
 DWORD nBASETIME;
 DWORD nBASETIME1;
-//DWORD nMask = 0xf7fd;     // not used now, but should be added; TODO: what for?
 DWORD NBW;                // that is: NumberOfBytesWritten;
 
 HANDLE   hFileWholeReg;  // Handle of file regshot use
@@ -1072,7 +1071,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                      NULL
                  );
         if (ERROR_SUCCESS != nErrNo) {
-            // TODO: process/protocol issue in some way, do not silently ignore it
+            // TODO: process/protocol issue in some way, do not silently ignore it (at least in Debug builds)
             FreeAllKeyContent(lpKC);
             return NULL;
         }
@@ -1127,7 +1126,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     break;
                 }
                 if (ERROR_SUCCESS != nErrNo) {
-                    // TODO: process/protocol issue in some way, do not silently ignore it
+                    // TODO: process/protocol issue in some way, do not silently ignore it (at least in Debug builds)
                     continue;
                 }
                 lpStringBuffer[cchValueName] = (TCHAR)'\0';  // safety NULL char
@@ -1247,7 +1246,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     break;
                 }
                 if (ERROR_SUCCESS != nErrNo) {
-                    // TODO: process/protocol issue in some way, do not silently ignore it
+                    // TODO: process/protocol issue in some way, do not silently ignore it (at least in Debug builds)
                     continue;
                 }
                 lpStringBuffer[cchSubKeyName] = (TCHAR)'\0';  // safety NULL char
@@ -1277,7 +1276,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
             nErrNo = RegOpenKeyEx(hRegKey, lpszRegSubKeyName, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hRegSubKey);
             if (ERROR_SUCCESS != nErrNo) {
-                // TODO: process/protocol issue in some way, do not silently ignore it
+                // TODO: process/protocol issue in some way, do not silently ignore it (at least in Debug builds)
                 //       e.g. when ERROR_ACCESS_DENIED then at least add key itself to the list
                 MYFREE(lpszRegSubKeyName);
                 continue;

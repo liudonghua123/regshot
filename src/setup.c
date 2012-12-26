@@ -191,7 +191,6 @@ BOOL IsInSkipList(LPTSTR lpszString, LPTSTR rgszSkipList[])  // tfx skip the lis
 {
     int i;
 
-    // todo: it seems bypass null item. But the getsetting is get all. Is it safe without the null thing? tianwei
     for (i = 0; (MAX_INI_SKIPITEMS > i) && (NULL != rgszSkipList[i]); i++) {
         if (0 == _tcsicmp(lpszString, rgszSkipList[i])) {
             return TRUE;
