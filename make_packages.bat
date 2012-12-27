@@ -26,7 +26,7 @@
 @rem ***************************************************************************
 
 @rem Helpful links:
-@rem http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/batch.mspx
+@rem Batch files: http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/batch.mspx
 
 
 
@@ -178,9 +178,12 @@ SET SOURCEFILEx64U=
 SET SUFFIX=
 SET SYMBOLS_SUFFIX=
 IF "%SOURCE%" == "WDK" (
-  SET SOURCEFILEx86A=bin\WDK\Release_Win32
-  SET SOURCEFILEx64A=bin\WDK\Release_x64
+  SET SOURCEFILEx86A=bin\%SOURCE%\%VS_PROJECT_NAME%\Win32\Release\%VS_SOURCEFILE_BASENAME%-x86-ANSI.exe
+  SET SOURCEFILEx86U=bin\%SOURCE%\%VS_PROJECT_NAME%\Win32\Release_Unicode\%VS_SOURCEFILE_BASENAME%-x86-Unicode.exe
+  SET SOURCEFILEx64A=bin\%SOURCE%\%VS_PROJECT_NAME%\x64\Release\%VS_SOURCEFILE_BASENAME%-x64-ANSI.exe
+  SET SOURCEFILEx64U=bin\%SOURCE%\%VS_PROJECT_NAME%\x64\Release_Unicode\%VS_SOURCEFILE_BASENAME%-x64-Unicode.exe
   SET SUFFIX=_WDK
+  SET SYMBOLS_SUFFIX=pdb
 )
 IF "%SOURCE%" == "VS6" (
   SET SOURCEFILEx86A=bin\%SOURCE%\%VS_PROJECT_NAME%\Win32\Release\%VS_SOURCEFILE_BASENAME%-x86-ANSI.exe
@@ -450,9 +453,9 @@ EXIT /B
 @rem *** Sub routine: display a message
 :SubMsg
 @ECHO.
-@ECHO ______________________________
+@ECHO ____________________________________________________________
 @ECHO [%~1] %~2
-@ECHO ______________________________
+@ECHO ____________________________________________________________
 EXIT /B
 
 @rem ***************************************************************************
