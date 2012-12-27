@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.8.3 beta (2012-12-25)
+Readme file of Regshot 1.9.0 beta (2012-12-27)
 (Note: this is the beta version for testing purpose only)
 
 -----------------
@@ -60,9 +60,10 @@ are included. The executable's size is smaller!
 File shots are now saved in hive file.
 "UseLongRegHead" option added in regshot.ini to compatible with undoReg (1.46)
 "UseLongRegHead=1" means using "HKEY_LOCAL_MACHINE" instead of "HKLM", default 0
-Do not compare shots saved with different "UseLongRegHead" option! (limit gone in 1.8.3)
+Do not compare shots saved with different "UseLongRegHead" option! (limit gone in 1.9.0)
 
-(12) New to 1.8.3 (beta):
+(12) New to 1.9.0 (beta):
+x64 and Unicode versions.
 You can compare shots saved with different "UseLongRegHead" option.
 Loading ANSI hive files in Unicode builds and vice versa is not supported.
 
