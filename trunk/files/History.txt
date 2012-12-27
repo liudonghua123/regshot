@@ -8,7 +8,7 @@ History of Regshot
 -: Function deleted
 -------------------------------------------------
 
-V1.8.3 beta 2012-12-25
+V1.9.0 beta 2012-12-27
 ! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
 + Add 64-Bit builds
 + Add Unicode builds (not compatible with ANSI .hiv files)
@@ -18,6 +18,7 @@ V1.8.3 beta 2012-12-25
 ! Add a proper manifest file
 ! Various code cleanups
 * New program icon (thanks to the PortableApps guys)
+* All Regshot versions can be build via WDK
 
 V1.8.2 2007-11-03
 ! Change some calls to ANSI version (lstrcmp->strcmp...)
