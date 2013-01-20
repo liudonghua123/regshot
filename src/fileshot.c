@@ -792,8 +792,8 @@ VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
 
         // Create new head file
         // put in a separate var for later use
-        lpHF = MYALLOC0(sizeof(SAVEHEADFILE));
-        ZeroMemory(lpHF, sizeof(SAVEHEADFILE));
+        lpHF = MYALLOC0(sizeof(HEADFILE));
+        ZeroMemory(lpHF, sizeof(HEADFILE));
 
         // Write pointer to current head file into caller's pointer
         if (NULL != lplpHFCaller) {
