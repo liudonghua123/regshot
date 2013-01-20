@@ -270,7 +270,7 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
     nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
-        lpszValueData = MYALLOC0(sizeof(lpszValueDataIsNULL));
+        lpszValueData = MYALLOC0((_tcslen(lpszValueDataIsNULL) + 1) * sizeof(TCHAR));
         _tcscpy(lpszValueData, lpszValueDataIsNULL);
     } else {
         switch (type) {
@@ -339,7 +339,7 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
     nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
-        lpszValueData = MYALLOC0(sizeof(lpszValueDataIsNULL));
+        lpszValueData = MYALLOC0((_tcslen(lpszValueDataIsNULL) + 1) * sizeof(TCHAR));
         _tcscpy(lpszValueData, lpszValueDataIsNULL);
     } else {
         switch (lpVC->nTypeCode) {

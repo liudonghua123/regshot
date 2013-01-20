@@ -170,7 +170,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
         // Find a matching file for FC1
         for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
             // skip FC2 if already matched
-            if (lpFC2->fFileMatch != NOMATCH) {
+            if (NOMATCH != lpFC2->fFileMatch) {
                 continue;
             }
             // skip FC2 if names do *not* match
@@ -234,7 +234,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     // We loop to the end, then we do an extra loop of lpFC2 use flag we previous made
     for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
         nComparing++;
-        if (lpFC2->fFileMatch == NOMATCH) {
+        if (NOMATCH == lpFC2->fFileMatch) {
             // We did not find a lpFC1 matches a lpFC2, so lpFC2 is added!
             if (ISDIR(lpFC2->nFileAttributes)) {
                 LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
@@ -245,7 +245,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     }
 
     // Progress bar update
-    if (nGettingFile != 0)
+    if (0 != nGettingFile)
         if (nComparing % nGettingFile > nFileStep) {
             nComparing = 0;
             SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
@@ -313,6 +313,10 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
     // Extra local block to reduce stack usage due to recursive calls
     {
         LPTSTR lpszFindFileName;
+#ifdef _DEBUG
+        DWORD nError;
+        LPTSTR lpszMessage;
+#endif
 
         // Set file name
         lpFC->cchFileName = _tcslen(lpszName);
@@ -332,16 +336,57 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
             *lplpCaller = lpFC;
         }
 
-        // Get file data if not already provide
+        // Get file data if not already provided
         if (NULL == lpFindData) {
             lpFindData = &FindData;
+
             hFile = FindFirstFile(lpszFindFileName, lpFindData);
-            if (hFile == INVALID_HANDLE_VALUE) {
-                nGettingFile++;  // count as file
-                MYFREE(lpszFindFileName);
-                return lpFC;
+            if (INVALID_HANDLE_VALUE != hFile) {
+                FindClose(hFile);
+            } else {
+                // Workaround for some cases in Windows Vista and later
+#ifdef _DEBUG
+                nError = GetLastError();
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                              NULL, nError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpszMessage, 0, NULL);
+                LocalFree(lpszMessage);
+#endif
+
+                ZeroMemory(lpFindData, sizeof(FindData));
+
+                hFile = CreateFile(lpszFindFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                if (INVALID_HANDLE_VALUE != hFile) {
+                    BY_HANDLE_FILE_INFORMATION FileInformation;
+                    BOOL bResult;
+
+                    bResult = GetFileInformationByHandle(hFile, &FileInformation);
+                    if (bResult) {
+                        lpFindData->dwFileAttributes = FileInformation.dwFileAttributes;
+                        lpFindData->ftCreationTime = FileInformation.ftCreationTime;
+                        lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
+                        lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
+                        lpFindData->nFileSizeHigh = FileInformation.nFileSizeHigh;
+                        lpFindData->nFileSizeLow = FileInformation.nFileSizeLow;
+                    } else {
+                        lpFindData->dwFileAttributes = GetFileAttributes(lpszFindFileName);
+                        if (INVALID_FILE_ATTRIBUTES == lpFindData->dwFileAttributes) {
+                            lpFindData->dwFileAttributes = 0;
+                        }
+                        bResult = GetFileTime(hFile, &lpFindData->ftCreationTime, &lpFindData->ftLastAccessTime, &lpFindData->ftLastWriteTime);
+                        if (!bResult) {
+                            lpFindData->ftCreationTime = FileInformation.ftCreationTime;
+                            lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
+                            lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
+                        }
+                        lpFindData->nFileSizeLow = GetFileSize(hFile, &lpFindData->nFileSizeHigh);
+                        if (INVALID_FILE_SIZE == lpFindData->nFileSizeLow) {
+                            lpFindData->nFileSizeHigh = 0;
+                            lpFindData->nFileSizeLow = 0;
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
             }
-            FindClose(hFile);
         }
 
         // Set file data
@@ -376,7 +421,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         _tcscat(lpszFindFileName, TEXT("\\*.*"));
         hFile = FindFirstFile(lpszFindFileName, &FindData);
         MYFREE(lpszFindFileName);
-        if (hFile == INVALID_HANDLE_VALUE) {
+        if (INVALID_HANDLE_VALUE == hFile) {
             return lpFC;
         }
     }
@@ -390,7 +435,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         if (NULL != lpFCSub) {
             lplpFCPrev = &lpFCSub->lpBrotherFC;
         }
-    } while (FindNextFile(hFile, &FindData) != FALSE);
+    } while (FALSE != FindNextFile(hFile, &FindData));
     FindClose(hFile);
 
     return lpFC;
@@ -781,14 +826,14 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
         if ((NULL != lpHF->lpFirstFC)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
             nLen = lpHF->lpFirstFC->cchFileName;
-            if (nLen > 0) {
+            if (0 < nLen) {
                 fAddBackslash = FALSE;
                 if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
                     nLen++;
                     fAddBackslash = TRUE;
                 }
                 fAddSeparator = FALSE;
-                if (nWholeLen > 0) {
+                if (0 < nWholeLen) {
                     nLen++;
                     fAddSeparator = TRUE;
                 }
