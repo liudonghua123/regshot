@@ -313,6 +313,10 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
     // Extra local block to reduce stack usage due to recursive calls
     {
         LPTSTR lpszFindFileName;
+#ifdef _DEBUG
+        DWORD nError;
+        LPTSTR lpszMessage;
+#endif
 
         // Set file name
         lpFC->cchFileName = _tcslen(lpszName);
@@ -332,16 +336,57 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
             *lplpCaller = lpFC;
         }
 
-        // Get file data if not already provide
+        // Get file data if not already provided
         if (NULL == lpFindData) {
             lpFindData = &FindData;
+
             hFile = FindFirstFile(lpszFindFileName, lpFindData);
-            if (hFile == INVALID_HANDLE_VALUE) {
-                nGettingFile++;  // count as file
-                MYFREE(lpszFindFileName);
-                return lpFC;
+            if (INVALID_HANDLE_VALUE != hFile) {
+                FindClose(hFile);
+            } else {
+                // Workaround for some cases in Windows Vista and later
+#ifdef _DEBUG
+                nError = GetLastError();
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                              NULL, nError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpszMessage, 0, NULL);
+                LocalFree(lpszMessage);
+#endif
+
+                ZeroMemory(lpFindData, sizeof(FindData));
+
+                hFile = CreateFile(lpszFindFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                if (INVALID_HANDLE_VALUE != hFile) {
+                    BY_HANDLE_FILE_INFORMATION FileInformation;
+                    BOOL bResult;
+
+                    bResult = GetFileInformationByHandle(hFile, &FileInformation);
+                    if (bResult) {
+                        lpFindData->dwFileAttributes = FileInformation.dwFileAttributes;
+                        lpFindData->ftCreationTime = FileInformation.ftCreationTime;
+                        lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
+                        lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
+                        lpFindData->nFileSizeHigh = FileInformation.nFileSizeHigh;
+                        lpFindData->nFileSizeLow = FileInformation.nFileSizeLow;
+                    } else {
+                        lpFindData->dwFileAttributes = GetFileAttributes(lpszFindFileName);
+                        if (INVALID_FILE_ATTRIBUTES == lpFindData->dwFileAttributes) {
+                            lpFindData->dwFileAttributes = 0;
+                        }
+                        bResult = GetFileTime(hFile, &lpFindData->ftCreationTime, &lpFindData->ftLastAccessTime, &lpFindData->ftLastWriteTime);
+                        if (!bResult) {
+                            lpFindData->ftCreationTime = FileInformation.ftCreationTime;
+                            lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
+                            lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
+                        }
+                        lpFindData->nFileSizeLow = GetFileSize(hFile, &lpFindData->nFileSizeHigh);
+                        if (INVALID_FILE_SIZE == lpFindData->nFileSizeLow) {
+                            lpFindData->nFileSizeHigh = 0;
+                            lpFindData->nFileSizeLow = 0;
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
             }
-            FindClose(hFile);
         }
 
         // Set file data
