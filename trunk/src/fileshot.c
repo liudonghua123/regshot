@@ -170,7 +170,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
         // Find a matching file for FC1
         for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
             // skip FC2 if already matched
-            if (lpFC2->fFileMatch != NOMATCH) {
+            if (NOMATCH != lpFC2->fFileMatch) {
                 continue;
             }
             // skip FC2 if names do *not* match
@@ -234,7 +234,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     // We loop to the end, then we do an extra loop of lpFC2 use flag we previous made
     for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
         nComparing++;
-        if (lpFC2->fFileMatch == NOMATCH) {
+        if (NOMATCH == lpFC2->fFileMatch) {
             // We did not find a lpFC1 matches a lpFC2, so lpFC2 is added!
             if (ISDIR(lpFC2->nFileAttributes)) {
                 LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
@@ -245,7 +245,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     }
 
     // Progress bar update
-    if (nGettingFile != 0)
+    if (0 != nGettingFile)
         if (nComparing % nGettingFile > nFileStep) {
             nComparing = 0;
             SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
@@ -421,7 +421,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         _tcscat(lpszFindFileName, TEXT("\\*.*"));
         hFile = FindFirstFile(lpszFindFileName, &FindData);
         MYFREE(lpszFindFileName);
-        if (hFile == INVALID_HANDLE_VALUE) {
+        if (INVALID_HANDLE_VALUE == hFile) {
             return lpFC;
         }
     }
@@ -435,7 +435,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         if (NULL != lpFCSub) {
             lplpFCPrev = &lpFCSub->lpBrotherFC;
         }
-    } while (FindNextFile(hFile, &FindData) != FALSE);
+    } while (FALSE != FindNextFile(hFile, &FindData));
     FindClose(hFile);
 
     return lpFC;
@@ -826,14 +826,14 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
         if ((NULL != lpHF->lpFirstFC)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
             nLen = lpHF->lpFirstFC->cchFileName;
-            if (nLen > 0) {
+            if (0 < nLen) {
                 fAddBackslash = FALSE;
                 if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
                     nLen++;
                     fAddBackslash = TRUE;
                 }
                 fAddSeparator = FALSE;
-                if (nWholeLen > 0) {
+                if (0 < nWholeLen) {
                     nLen++;
                     fAddSeparator = TRUE;
                 }
