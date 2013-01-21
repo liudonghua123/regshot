@@ -1,8 +1,8 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007 TiANWEi
-    Copyright 2004 tulipfan
     Copyright 2007 Belogorokhov Youri
-    Copyright 2011-2012 Regshot Team
+    Copyright 2004 tulipfan
 
     This file is part of Regshot.
 
@@ -228,7 +228,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     FreeAllCompareResults();
                     ClearRegKeyMatchFlags(Shot2.lpHKLM);  // we clear Shot2's tag
                     ClearRegKeyMatchFlags(Shot2.lpHKU);
-                    ClearHeadFileMatchTag(Shot2.lpHF);
+                    ClearHeadFileMatchFlags(Shot2.lpHF);
                     UI_AfterClear();
                     return(TRUE);
 
@@ -238,7 +238,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     FreeAllCompareResults();
                     ClearRegKeyMatchFlags(Shot1.lpHKLM);  // we clear Shot1's tag
                     ClearRegKeyMatchFlags(Shot1.lpHKU);
-                    ClearHeadFileMatchTag(Shot1.lpHF);
+                    ClearHeadFileMatchFlags(Shot1.lpHF);
                     UI_AfterClear();
                     return(TRUE);
 
@@ -249,8 +249,8 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         ClearRegKeyMatchFlags(Shot2.lpHKLM);
                         ClearRegKeyMatchFlags(Shot1.lpHKU);
                         ClearRegKeyMatchFlags(Shot2.lpHKU);
-                        ClearHeadFileMatchTag(Shot1.lpHF);
-                        ClearHeadFileMatchTag(Shot2.lpHF);
+                        ClearHeadFileMatchFlags(Shot1.lpHF);
+                        ClearHeadFileMatchFlags(Shot2.lpHF);
                         UI_AfterClear();
                         return(TRUE);*/
 

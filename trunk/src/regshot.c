@@ -55,6 +55,7 @@ LPTSTR lpszEmpty = TEXT("");
 #endif
 
 FILEHEADER fileheader;
+FILEEXTRADATA fileextradata;
 SAVEKEYCONTENT sKC;
 SAVEVALUECONTENT sVC;
 
@@ -293,7 +294,7 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
                 nSize--;  // account for last NULL char
                 // TODO: this logic destroys the original data, better copy data to target and replace there
                 for (nCount = 0; nCount < nSize; nCount++) {
-                    if ((TCHAR)'\0' == ((LPTSTR)lpVC->lpValueData)[nCount]) {        // look for a NULL char before the end of the data
+                    if ((TCHAR)'\0' == ((LPTSTR)lpVC->lpValueData)[nCount]) {  // look for a NULL char before the end of the data
                         ((LPTSTR)lpVC->lpValueData)[nCount] = (TCHAR)' ';  // then overwrite with space  // TODO: check if works with Unicode
                     }
                 }
@@ -453,11 +454,11 @@ VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
     LPTSTR   lpdata;
     LPTSTR   lpall;
 
-    if (actiontype == KEYADD || actiontype == KEYDEL) {
+    if (KEYADD == actiontype || KEYDEL == actiontype) {
         lpname = GetWholeKeyName(lp, bUseLongRegHead);
         CreateNewResult(actiontype, lpcount, lpname);
     } else {
-        if (actiontype == VALADD || actiontype == VALDEL || actiontype == VALMODI) {
+        if (VALADD == actiontype || VALDEL == actiontype || VALMODI == actiontype) {
             lpname = GetWholeValueName(lp, bUseLongRegHead);
             lpdata = GetWholeValueData(lp);
             lpall = MYALLOC((_tcslen(lpname) + _tcslen(lpdata) + 1) * sizeof(TCHAR));
@@ -730,7 +731,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     SystemTimeToFileTime(&lpShot1->systemtime, &ftime1);
     SystemTimeToFileTime(&lpShot2->systemtime, &ftime2);
 
-    bshot2isnewer = (CompareFileTime(&ftime1, &ftime2) <= 0) ? TRUE : FALSE;
+    bshot2isnewer = (0 >= CompareFileTime(&ftime1, &ftime2)) ? TRUE : FALSE;
     if (bshot2isnewer) {
         CompareRegKeys(lpShot1->lpHKLM, lpShot2->lpHKLM);
         CompareRegKeys(lpShot1->lpHKU, lpShot2->lpHKU);
@@ -751,7 +752,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)MAXPBPOSITION, (LPARAM)0);
 
-    if (SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
+    if (1 == SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
         fAsHTML = FALSE;
         lpExt = TEXT(".txt");
     } else {
@@ -766,9 +767,9 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     nLengthofStr = _tcslen(lpszOutputPath);
 
-    if (nLengthofStr > 0 && *(lpszOutputPath + nLengthofStr - 1) != '\\') {
-        *(lpszOutputPath + nLengthofStr) = '\\';
-        *(lpszOutputPath + nLengthofStr + 1) = 0x00;    // bug found by "itschy" <itschy@lycos.de> 1.61d->1.61e
+    if ((0 < nLengthofStr) && ((TCHAR)'\\' != *(lpszOutputPath + nLengthofStr - 1))) {
+        *(lpszOutputPath + nLengthofStr) = (TCHAR)'\\';
+        *(lpszOutputPath + nLengthofStr + 1) = (TCHAR)'\0';  // bug found by "itschy" <itschy@lycos.de> 1.61d->1.61e
         nLengthofStr++;
     }
     _tcscpy(lpDestFileName, lpszOutputPath);
@@ -783,17 +784,17 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     nLengthofStr = _tcslen(lpDestFileName);
     _tcscat(lpDestFileName, lpExt);
     hFile = CreateFile(lpDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
+    if (INVALID_HANDLE_VALUE == hFile) {
         DWORD filetail = 0;
 
-        for (filetail = 0; filetail < MAXAMOUNTOFFILE; filetail++) {
+        for (filetail = 0; MAXAMOUNTOFFILE > filetail; filetail++) {
             _sntprintf(lpDestFileName + nLengthofStr, 6, TEXT("_%04u\0"), filetail);
             //*(lpDestFileName+nLengthofStr + 5) = 0x00;
             _tcscpy(lpDestFileName + nLengthofStr + 5, lpExt);
 
             hFile = CreateFile(lpDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (hFile == INVALID_HANDLE_VALUE) {
-                if (GetLastError() == ERROR_FILE_EXISTS) {    // My God! I use stupid ERROR_ALREADY_EXISTS first!!
+            if (INVALID_HANDLE_VALUE == hFile) {
+                if (ERROR_FILE_EXISTS == GetLastError()) {  // My God! I use stupid ERROR_ALREADY_EXISTS first!!
                     continue;
                 } else {
                     ErrMsg(asLangTexts[iszTextErrorCreateFile].lpszText);
@@ -807,10 +808,9 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
             ErrMsg(asLangTexts[iszTextErrorCreateFile].lpszText);
             return FALSE;
         }
-
     }
 
-    if (fAsHTML == TRUE) {
+    if (fAsHTML) {
         WriteHTMLBegin();
     } else {
         WriteFile(hFile, lpszProgramName, (DWORD)(_tcslen(lpszProgramName) * sizeof(TCHAR)), &NBW, NULL);
@@ -862,73 +862,73 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     MYFREE(lpstrcomp);
 
     // Write keydel part
-    if (nKEYDEL != 0) {
+    if (0 != nKEYDEL) {
         WriteTableHead(asLangTexts[iszTextKeyDel].lpszText, nKEYDEL, fAsHTML);
         WritePart(lpKEYDELHEAD, fAsHTML, FALSE);
     }
     // Write keyadd part
-    if (nKEYADD != 0) {
+    if (0 != nKEYADD) {
         WriteTableHead(asLangTexts[iszTextKeyAdd].lpszText, nKEYADD, fAsHTML);
         WritePart(lpKEYADDHEAD, fAsHTML, FALSE);
     }
     // Write valdel part
-    if (nVALDEL != 0) {
+    if (0 != nVALDEL) {
         WriteTableHead(asLangTexts[iszTextValDel].lpszText, nVALDEL, fAsHTML);
         WritePart(lpVALDELHEAD, fAsHTML, FALSE);
     }
     // Write valadd part
-    if (nVALADD != 0) {
+    if (0 != nVALADD) {
         WriteTableHead(asLangTexts[iszTextValAdd].lpszText, nVALADD, fAsHTML);
         WritePart(lpVALADDHEAD, fAsHTML, FALSE);
     }
     // Write valmodi part
-    if (nVALMODI != 0) {
+    if (0 != nVALMODI) {
         WriteTableHead(asLangTexts[iszTextValModi].lpszText, nVALMODI, fAsHTML);
         WritePart(lpVALMODIHEAD, fAsHTML, TRUE);
     }
     // Write file add part
-    if (nFILEADD != 0) {
+    if (0 != nFILEADD) {
         WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, nFILEADD, fAsHTML);
         WritePart(lpFILEADDHEAD, fAsHTML, FALSE);
     }
     // Write file del part
-    if (nFILEDEL != 0) {
+    if (0 != nFILEDEL) {
         WriteTableHead(asLangTexts[iszTextFileDel].lpszText, nFILEDEL, fAsHTML);
         WritePart(lpFILEDELHEAD, fAsHTML, FALSE);
     }
     // Write file modi part
-    if (nFILEMODI != 0) {
+    if (0 != nFILEMODI) {
         WriteTableHead(asLangTexts[iszTextFileModi].lpszText, nFILEMODI, fAsHTML);
         WritePart(lpFILEMODIHEAD, fAsHTML, FALSE);
     }
     // Write directory add part
-    if (nDIRADD != 0) {
+    if (0 != nDIRADD) {
         WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, nDIRADD, fAsHTML);
         WritePart(lpDIRADDHEAD, fAsHTML, FALSE);
     }
     // Write directory del part
-    if (nDIRDEL != 0) {
+    if (0 != nDIRDEL) {
         WriteTableHead(asLangTexts[iszTextDirDel].lpszText, nDIRDEL, fAsHTML);
         WritePart(lpDIRDELHEAD, fAsHTML, FALSE);
     }
     // Write directory modi part
-    if (nDIRMODI != 0) {
+    if (0 != nDIRMODI) {
         WriteTableHead(asLangTexts[iszTextDirModi].lpszText, nDIRMODI, fAsHTML);
         WritePart(lpDIRMODIHEAD, fAsHTML, FALSE);
     }
 
     nTotal = nKEYADD + nKEYDEL + nVALADD + nVALDEL + nVALMODI + nFILEADD + nFILEDEL  + nFILEMODI + nDIRADD + nDIRDEL + nDIRMODI;
-    if (fAsHTML == TRUE) {
+    if (fAsHTML) {
         WriteHTML_BR();
     }
     WriteTableHead(asLangTexts[iszTextTotal].lpszText, nTotal, fAsHTML);
-    if (fAsHTML == TRUE) {
+    if (fAsHTML) {
         WriteHTMLEnd();
     }
 
     CloseHandle(hFile);
 
-    if ((size_t)ShellExecute(hWnd, TEXT("open"), lpDestFileName, NULL, NULL, SW_SHOW) <= 32) {
+    if (32 >= (size_t)ShellExecute(hWnd, TEXT("open"), lpDestFileName, NULL, NULL, SW_SHOW)) {
         ErrMsg(asLangTexts[iszTextErrorExecViewer].lpszText);
     }
     MYFREE(lpDestFileName);
@@ -1439,7 +1439,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             if (NULL != lpszKeyName) {
                 sKC.nKeyNameLen = (DWORD)lpKC->cchKeyName;
 
-                if ((0 == nFPFatherKey) && (bUseLongRegHead)) {
+                if ((bUseLongRegHead) && (0 == nFPFatherKey)) {
                     // Adopt to long HKLM/HKU
                     if (lpszHKLMShort == lpszKeyName) {
                         lpszKeyName = lpszHKLMLong;
@@ -1752,7 +1752,7 @@ VOID SaveHive(LPREGSHOT lpShot)
     MessageBeep(0xffffffff);
 
     // overwrite first letter of file name with NULL character to get path only, then create backup for initialization on next call
-    *(opfn.lpstrFile + opfn.nFileOffset) = 0x00;  // TODO: check
+    *(opfn.lpstrFile + opfn.nFileOffset) = (TCHAR)'\0';  // TODO: check
     _tcscpy(lpszLastSaveDir, opfn.lpstrFile);
 }
 
@@ -1827,7 +1827,7 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
             CopyMemory(lpStringBuffer, (lpFileBuffer + sKC.ofsKeyName), nSourceSize);
 
             lpKC->lpszKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
-            if (sizeof(TCHAR) == fileheader.nCharSize) {
+            if (fileextradata.bSameCharSize) {
                 _tcsncpy(lpKC->lpszKeyName, lpStringBuffer, sKC.nKeyNameLen);
             } else {
 #ifdef _UNICODE
@@ -1899,7 +1899,7 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
                     CopyMemory(lpStringBuffer, (lpFileBuffer + sVC.ofsValueName), nSourceSize);
 
                     lpVC->lpszValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
-                    if (sizeof(TCHAR) == fileheader.nCharSize) {
+                    if (fileextradata.bSameCharSize) {
                         _tcsncpy(lpVC->lpszValueName, lpStringBuffer, sVC.nValueNameLen);
                     } else {
 #ifdef _UNICODE
@@ -2001,6 +2001,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
 
     // Initialize file header
     ZeroMemory(&fileheader, sizeof(fileheader));
+    ZeroMemory(&fileextradata, sizeof(fileextradata));
 
     // Read first part of file header from file (signature, nHeaderSize)
     ReadFile(hFileWholeReg, &fileheader, offsetof(FILEHEADER, ofsHKLM), &NBW, NULL);
@@ -2140,7 +2141,10 @@ BOOL LoadHive(LPREGSHOT lpShot)
     }
 
     // Check for incompatible char size (known: 1 = SBCS/MBCS, 2 = UTF-16)
-    if (sizeof(TCHAR) != fileheader.nCharSize) {
+    if (sizeof(TCHAR) == fileheader.nCharSize) {
+        fileextradata.bSameCharSize = TRUE;
+    } else {
+        fileextradata.bSameCharSize = FALSE;
 #ifdef _UNICODE
         if (1 == fileheader.nCharSize) {
             ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));
@@ -2161,7 +2165,10 @@ BOOL LoadHive(LPREGSHOT lpShot)
     }
 
     // Check for incompatible endianness (known: Intel = Little Endian)
-    if (fileheader.nEndianness != FILEHEADER_ENDIANNESS_VALUE) {
+    if (FILEHEADER_ENDIANNESS_VALUE == fileheader.nEndianness) {
+        fileextradata.bSameEndianness = TRUE;
+    } else {
+        fileextradata.bSameEndianness = FALSE;
 #ifdef __LITTLE_ENDIAN__
         ErrMsg(TEXT("It is not a Little Endian Regshot hive file!"));
 #else
@@ -2173,6 +2180,12 @@ BOOL LoadHive(LPREGSHOT lpShot)
         }
         UI_AfterShot();
         return FALSE;
+    }
+
+    if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
+        fileextradata.bOldFCVersion = TRUE;
+    } else {
+        fileextradata.bOldFCVersion = FALSE;
     }
 
     // ^^^ here the file header can be checked for additional extended content
@@ -2191,7 +2204,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
             CopyMemory(lpStringBuffer, (lpFileBuffer + fileheader.ofsComputerName), nSourceSize);
 
             lpShot->lpszComputerName = MYALLOC0(fileheader.nComputerNameLen * sizeof(TCHAR));
-            if (sizeof(TCHAR) == fileheader.nCharSize) {
+            if (fileextradata.bSameCharSize) {
                 _tcscpy(lpShot->lpszComputerName, lpStringBuffer);
             } else {
 #ifdef _UNICODE
@@ -2229,7 +2242,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
             CopyMemory(lpStringBuffer, (lpFileBuffer + fileheader.ofsUserName), nSourceSize);
 
             lpShot->lpszUserName = MYALLOC0(fileheader.nUserNameLen * sizeof(TCHAR));
-            if (sizeof(TCHAR) == fileheader.nCharSize) {
+            if (fileextradata.bSameCharSize) {
                 _tcscpy(lpShot->lpszUserName, lpStringBuffer);
             } else {
 #ifdef _UNICODE

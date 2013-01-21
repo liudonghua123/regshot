@@ -77,12 +77,10 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 //--------------------------------------------------
 // Walkthrough lpHF chain and find lpszName matches
 //--------------------------------------------------
-LPFILECONTENT SearchDirChain(LPTSTR lpszName, LPHEADFILE lpStartHF)
+LPFILECONTENT SearchDirChain(LPTSTR lpszName, LPHEADFILE lpHF)
 {
-    LPHEADFILE lpHF;
-
     if (NULL != lpszName) {
-        for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
+        for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
             if ((NULL != lpHF->lpFirstFC)
                     && (NULL != lpHF->lpFirstFC->lpszFileName)
                     && (0 == _tcsicmp(lpszName, lpHF->lpFirstFC->lpszFileName))) {
@@ -317,15 +315,15 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
 
     // Check if file is to be generic excluded
     if ((NULL == lpszName)
-            || (0 == _tcscmp(lpszName, TEXT(".")))
-            || (0 == _tcscmp(lpszName, TEXT("..")))) {
+            || (((TCHAR)'.' == lpszName[0])  // fast exclusion for 99% of the cases
+                && ((0 == _tcscmp(lpszName, TEXT(".")))
+                    || (0 == _tcscmp(lpszName, TEXT("..")))))) {
         return NULL;
     }
 
     // Create new file content
     // put in a separate var for later use
     lpFC = MYALLOC0(sizeof(FILECONTENT));
-    ZeroMemory(lpFC, sizeof(FILECONTENT));
 
     // Set father of current key
     lpFC->lpFatherFC = lpFatherFC;
@@ -454,7 +452,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         if (NULL != lpFCSub) {
             lplpFCPrev = &lpFCSub->lpBrotherFC;
         }
-    } while (FALSE != FindNextFile(hFile, &FindData));
+    } while (FindNextFile(hFile, &FindData));
     FindClose(hFile);
 
     return lpFC;
@@ -493,7 +491,6 @@ VOID FileShot(LPREGSHOT lpShot)
                 // if anything is left then process this directory
                 if ((0 < j) && ((TCHAR)'\0' != lpszExtDir[j])) {
                     lpHF = MYALLOC0(sizeof(HEADFILE));
-                    ZeroMemory(lpHF, sizeof(HEADFILE));
 
                     *lplpHFPrev = lpHF;
                     lplpHFPrev = &lpHF->lpBrotherHF;
@@ -515,25 +512,25 @@ VOID FileShot(LPREGSHOT lpShot)
 // ----------------------------------------------------------------------
 // Clear comparison match flags of directories and files
 // ----------------------------------------------------------------------
-VOID ClearFileMatchFlags(LPFILECONTENT lpStartFC)
+VOID ClearFileMatchFlags(LPFILECONTENT lpFC)
 {
-    LPFILECONTENT lpFC;
-
-    for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
+    for (; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
         lpFC->fFileMatch = NOMATCH;
-        ClearFileMatchFlags(lpFC->lpFirstSubFC);
+        if (NULL != lpFC->lpFirstSubFC) {
+            ClearFileMatchFlags(lpFC->lpFirstSubFC);
+        }
     }
 }
 
 // ----------------------------------------------------------------------
 // Clear comparison match flags in all head files
 // ----------------------------------------------------------------------
-VOID ClearHeadFileMatchTag(LPHEADFILE lpStartHF)
+VOID ClearHeadFileMatchFlags(LPHEADFILE lpHF)
 {
-    LPHEADFILE lpHF;
-
-    for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
-        ClearFileMatchFlags(lpHF->lpFirstFC);
+    for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
+        if (NULL != lpHF->lpFirstFC) {
+            ClearFileMatchFlags(lpHF->lpFirstFC);
+        }
     }
 }
 
@@ -685,9 +682,9 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
     LPFILECONTENT lpFC;
     DWORD ofsBrotherFile;
 
+    // Read all files and their sub file contents
     for (; 0 != ofsFile; ofsFile = ofsBrotherFile) {
         // Copy SAVEFILECONTENT to aligned memory block
-        ZeroMemory(&sFC, sizeof(sFC));
         CopyMemory(&sFC, (lpFileBuffer + ofsFile), fileheader.nFCSize);
 
         // Save offset in local variable
@@ -696,13 +693,12 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
         // Create new file content
         // put in a separate var for later use
         lpFC = MYALLOC0(sizeof(FILECONTENT));
-        ZeroMemory(lpFC, sizeof(FILECONTENT));
 
         // Set father of current file
         lpFC->lpFatherFC = lpFatherFC;
 
         // Copy file name
-        if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
+        if (fileextradata.bOldFCVersion) {  // old SBCS/MBCS version
             sFC.nFileNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sFC.ofsFileName));
             if (0 < sFC.nFileNameLen) {
                 sFC.nFileNameLen++;  // account for NULL char
@@ -715,8 +711,8 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
             ZeroMemory(lpStringBuffer, nStringBufferSize);
             CopyMemory(lpStringBuffer, (lpFileBuffer + sFC.ofsFileName), nSourceSize);
 
-            lpFC->lpszFileName = MYALLOC0(sFC.nFileNameLen * sizeof(TCHAR));
-            if (sizeof(TCHAR) == fileheader.nCharSize) {
+            lpFC->lpszFileName = MYALLOC(sFC.nFileNameLen * sizeof(TCHAR));
+            if (fileextradata.bSameCharSize) {
                 _tcsncpy(lpFC->lpszFileName, lpStringBuffer, sFC.nFileNameLen);
             } else {
 #ifdef _UNICODE
@@ -725,16 +721,17 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
                 WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen, NULL, NULL);
 #endif
             }
+            lpFC->lpszFileName[sFC.nFileNameLen - 1] = (TCHAR)'\0';  // safety NULL char
 
             // Set file name length in chars
-            lpFC->lpszFileName[sFC.nFileNameLen - 1] = (TCHAR)'\0';  // safety NULL char
             lpFC->cchFileName = _tcslen(lpFC->lpszFileName);
         }
 
         // Check if file is to be generic excluded
         if ((NULL == lpFC->lpszFileName)
-                || (0 == _tcscmp(lpFC->lpszFileName, TEXT(".")))
-                || (0 == _tcscmp(lpFC->lpszFileName, TEXT("..")))) {
+                || (((TCHAR)'.' == lpFC->lpszFileName[0])  // fast exclusion for 99% of the cases
+                    && ((0 == _tcscmp(lpFC->lpszFileName, TEXT(".")))
+                        || (0 == _tcscmp(lpFC->lpszFileName, TEXT("..")))))) {
             FreeAllFileContents(lpFC);
             continue;  // ignore this entry and continue with next brother file
         }
@@ -785,16 +782,18 @@ VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
 {
     LPHEADFILE lpHF;
 
+    // Initialize save structures
+    ZeroMemory(&sHF, sizeof(sHF));
+    ZeroMemory(&sFC, sizeof(sFC));
+
     // Read all head files and their file contents
     for (; 0 != ofsHeadFile; ofsHeadFile = sHF.ofsBrotherHeadFile) {
         // Copy SAVEHEADFILE to aligned memory block
-        ZeroMemory(&sHF, sizeof(sHF));
         CopyMemory(&sHF, (lpFileBuffer + ofsHeadFile), fileheader.nHFSize);
 
         // Create new head file
         // put in a separate var for later use
         lpHF = MYALLOC0(sizeof(HEADFILE));
-        ZeroMemory(lpHF, sizeof(HEADFILE));
 
         // Write pointer to current head file into caller's pointer
         if (NULL != lplpCaller) {
@@ -813,35 +812,34 @@ VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
 
 
 //--------------------------------------------------
-// Walkthrough lpHF chain and collect it's first dirname to lpszDir
+// Walkthrough head file chain and collect it's first dirname to lpszDir
 //--------------------------------------------------
-VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
+BOOL FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen)
 {
-    LPHEADFILE  lpHF;
     size_t      nLen;
     size_t      nWholeLen;
-    BOOL        fAddBackslash;
     BOOL        fAddSeparator;
+    BOOL        fAddBackslash;
 
     lpszDir[0] = (TCHAR)'\0';
     nWholeLen = 0;
-    for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
+    for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         if ((NULL != lpHF->lpFirstFC)
                 && (NULL != lpHF->lpFirstFC->lpszFileName)) {
             nLen = lpHF->lpFirstFC->cchFileName;
             if (0 < nLen) {
-                fAddBackslash = FALSE;
-                if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
-                    nLen++;
-                    fAddBackslash = TRUE;
-                }
                 fAddSeparator = FALSE;
                 if (0 < nWholeLen) {
                     nLen++;
                     fAddSeparator = TRUE;
                 }
-                if ((nWholeLen + nLen) < nBufferLen) {
-                    nWholeLen += nLen;
+                fAddBackslash = FALSE;
+                if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
+                    nLen++;
+                    fAddBackslash = TRUE;
+                }
+                nWholeLen += nLen;
+                if (nWholeLen < nBufferLen) {
                     if (fAddSeparator) {
                         _tcscat(lpszDir, TEXT(";"));
                     }
@@ -850,11 +848,13 @@ VOID FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen)
                         _tcscat(lpszDir, TEXT("\\"));
                     }
                 } else {
-                    break;
+                    //nWholeLen -= nLen;
+                    return FALSE;  // buffer too small, exit for-loop and routine
                 }
             }
         }
     }
+    return TRUE;  // exit for loop and routine
 }
 
 
@@ -866,15 +866,12 @@ BOOL DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2)
     TCHAR lpszDir1[EXTDIRLEN];
     TCHAR lpszDir2[EXTDIRLEN];
 
-    ZeroMemory(lpszDir1, sizeof(lpszDir1));
-    ZeroMemory(lpszDir2, sizeof(lpszDir2));
-
     FindDirChain(lpHF1, lpszDir1, EXTDIRLEN);  // Length in TCHARs incl. NULL char
     FindDirChain(lpHF2, lpszDir2, EXTDIRLEN);  // Length in TCHARs incl. NULL char
 
     if (0 != _tcsicmp(lpszDir1, lpszDir2)) {
         return FALSE;
-    } else {
-        return TRUE;
     }
+
+    return TRUE;
 }
