@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.9.0 beta (2012-12-30)
+Readme file of Regshot 1.9.0 beta (2013-01-21)
 (Note: this is the beta version for testing purpose only)
 
 -----------------
@@ -119,7 +119,7 @@ Dchenka, itschy, HANDLE and all those we forgot to mention!!
 LICENSE:
 -----------------
 
-Copyright 2011-2012 The Regshot Team : TiANWEi, Maddes, XhmikosR
+Copyright 2011-2013 The Regshot Team : TiANWEi, Maddes, XhmikosR
 Copyright 1999-2003,2007,2011 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri

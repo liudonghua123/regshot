@@ -1,7 +1,7 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -441,7 +441,7 @@ VOID    SaveHive(LPREGSHOT lpShot);
 BOOL    LoadHive(LPREGSHOT lpShot);
 VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
-VOID    FreeAllFileHead(LPHEADFILE lpHF);
+VOID    FreeAllHeadFiles(LPHEADFILE lpHF);
 VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
@@ -539,8 +539,8 @@ extern LPTSTR lpszEmpty;
 #endif
 
 size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
-VOID SaveHeadFiles(LPHEADFILE lpStartHF, DWORD nFPCaller);
-VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
+VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller);
+VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 
 #ifdef DEBUGLOG
 #define REGSHOT_DEBUG_MESSAGE_LENGTH 101

@@ -1,6 +1,9 @@
 
 History of Regshot
 
+Download latest version at:
+http://sourceforge.net/projects/regshot/
+
 -------------------------------------------------
 *: Note you may interest
 !: Changes made
@@ -8,7 +11,7 @@ History of Regshot
 -: Function deleted
 -------------------------------------------------
 
-V1.9.0 beta 2012-12-30
+V1.9.0 beta 2013-01-21
 ! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
 + Add 64-Bit builds
 + Add Unicode builds (not compatible with ANSI .hiv files)
@@ -238,9 +241,3 @@ Version 1.01d
 
 Version before 1.01c
 * I don't remember so much!:))
-
--------------------------------------------------
-
-
-Download new version at:
-http://sourceforge.net/projects/regshot/
