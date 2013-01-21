@@ -1,7 +1,7 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -131,14 +131,25 @@ VOID LogAllFiles(
 // ----------------------------------------------------------------------
 // Free all files
 // ----------------------------------------------------------------------
-VOID FreeAllFileContent(LPFILECONTENT lpFC)
+VOID FreeAllFileContents(LPFILECONTENT lpFC)
 {
-    if (NULL != lpFC) {
+    LPFILECONTENT lpBrotherFC;
+
+    for (; NULL != lpFC; lpFC = lpBrotherFC) {
+        // Save pointer in local variable
+        lpBrotherFC = lpFC->lpBrotherFC;
+
+        // Free file name
         if (NULL != lpFC->lpszFileName) {
             MYFREE(lpFC->lpszFileName);
         }
-        FreeAllFileContent(lpFC->lpFirstSubFC);
-        FreeAllFileContent(lpFC->lpBrotherFC);
+
+        // If the entry has childs, then do a recursive call for the first child
+        if (NULL != lpFC->lpFirstSubFC) {
+            FreeAllFileContents(lpFC->lpFirstSubFC);
+        }
+
+        // Free entry itself
         MYFREE(lpFC);
     }
 }
@@ -147,11 +158,20 @@ VOID FreeAllFileContent(LPFILECONTENT lpFC)
 // ----------------------------------------------------------------------
 // Free all head files
 // ----------------------------------------------------------------------
-VOID FreeAllFileHead(LPHEADFILE lpHF)
+VOID FreeAllHeadFiles(LPHEADFILE lpHF)
 {
-    if (NULL != lpHF) {
-        FreeAllFileContent(lpHF->lpFirstFC);
-        FreeAllFileHead(lpHF->lpBrotherHF);
+    LPHEADFILE lpBrotherHF;
+
+    for (; NULL != lpHF; lpHF = lpBrotherHF) {
+        // Save pointer in local variable
+        lpBrotherHF = lpHF->lpBrotherHF;
+
+        // If the entry has childs, then do a recursive call for the first child
+        if (NULL != lpHF->lpFirstFC) {
+            FreeAllFileContents(lpHF->lpFirstFC);
+        }
+
+        // Free entry itself
         MYFREE(lpHF);
     }
 }
@@ -327,7 +347,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
         lpszFindFileName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory (later in routine)
         if (IsInSkipList(lpszFindFileName, lprgszFileSkipStrings)) {
             MYFREE(lpszFindFileName);
-            FreeAllFileContent(lpFC);
+            FreeAllFileContents(lpFC);
             return NULL;
         }
 
@@ -415,8 +435,6 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
             return lpFC;
         }
 
-        // ATTENTION!!! Content of lpFindData is INVALID from this point on, due to recursive calls
-
         // Find all file entries of directory
         _tcscat(lpszFindFileName, TEXT("\\*.*"));
         hFile = FindFirstFile(lpszFindFileName, &FindData);
@@ -431,6 +449,7 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
     do {
         LPFILECONTENT lpFCSub;
 
+        // ATTENTION!!! Content of lpFindData will be INVALID from this point on, due to recursive calls
         lpFCSub = GetFilesSnap(lpFindData->cFileName, &FindData, lpFC, lplpFCPrev);
         if (NULL != lpFCSub) {
             lplpFCPrev = &lpFCSub->lpBrotherFC;
@@ -525,12 +544,11 @@ VOID ClearHeadFileMatchTag(LPHEADFILE lpStartHF)
 // This routine is called recursively to store the entries of the file/dir tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveFiles(LPFILECONTENT lpStartFC, DWORD nFPFatherFile, DWORD nFPCaller)
+VOID SaveFiles(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
 {
-    LPFILECONTENT lpFC;
     DWORD nFPFile;
 
-    for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
+    for (; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
         // Get current file position
         // put in a separate var for later use
         nFPFile = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
@@ -595,7 +613,6 @@ VOID SaveFiles(LPFILECONTENT lpStartFC, DWORD nFPFatherFile, DWORD nFPCaller)
         }
 
         // ATTENTION!!! sFC is INVALID from this point on, due to recursive calls
-
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "ofsFirstSubFile" position for storing the first child's position
         if (NULL != lpFC->lpFirstSubFC) {
@@ -621,13 +638,12 @@ VOID SaveFiles(LPFILECONTENT lpStartFC, DWORD nFPFatherFile, DWORD nFPCaller)
 //--------------------------------------------------
 // Save head file to HIVE file
 //--------------------------------------------------
-VOID SaveHeadFiles(LPHEADFILE lpStartHF, DWORD nFPCaller)
+VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller)
 {
-    LPHEADFILE lpHF;
     DWORD nFPHF;
 
     // Write all head files and their file contents
-    for (lpHF = lpStartHF; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
+    for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         // Get current file position
         // put in a separate var for later use
         nFPHF = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
@@ -664,66 +680,65 @@ VOID SaveHeadFiles(LPHEADFILE lpStartHF, DWORD nFPCaller)
 // ----------------------------------------------------------------------
 // Load file from HIVE file
 // ----------------------------------------------------------------------
-VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
+VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
 {
     LPFILECONTENT lpFC;
-    DWORD ofsFirstSubFile;
     DWORD ofsBrotherFile;
-    BOOL fIgnore;
 
-    fIgnore = FALSE;
+    for (; 0 != ofsFile; ofsFile = ofsBrotherFile) {
+        // Copy SAVEFILECONTENT to aligned memory block
+        ZeroMemory(&sFC, sizeof(sFC));
+        CopyMemory(&sFC, (lpFileBuffer + ofsFile), fileheader.nFCSize);
 
-    // Copy SAVEFILECONTENT to aligned memory block
-    ZeroMemory(&sFC, sizeof(sFC));
-    CopyMemory(&sFC, (lpFileBuffer + ofsFileContent), fileheader.nFCSize);
+        // Save offset in local variable
+        ofsBrotherFile = sFC.ofsBrotherFile;
 
-    // Create new file content
-    // put in a separate var for later use
-    lpFC = MYALLOC0(sizeof(FILECONTENT));
-    ZeroMemory(lpFC, sizeof(FILECONTENT));
+        // Create new file content
+        // put in a separate var for later use
+        lpFC = MYALLOC0(sizeof(FILECONTENT));
+        ZeroMemory(lpFC, sizeof(FILECONTENT));
 
-    // Set father of current file
-    lpFC->lpFatherFC = lpFatherFC;
+        // Set father of current file
+        lpFC->lpFatherFC = lpFatherFC;
 
-    // Copy file name
-    if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
-        sFC.nFileNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sFC.ofsFileName));
-        if (0 < sFC.nFileNameLen) {
-            sFC.nFileNameLen++;  // account for NULL char
+        // Copy file name
+        if (FILECONTENT_VERSION_2 > fileheader.nFCVersion) {  // old SBCS/MBCS version
+            sFC.nFileNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sFC.ofsFileName));
+            if (0 < sFC.nFileNameLen) {
+                sFC.nFileNameLen++;  // account for NULL char
+            }
         }
-    }
-    if (0 < sFC.nFileNameLen) {  // otherwise leave it NULL
-        // Copy string to an aligned memory block
-        nSourceSize = sFC.nFileNameLen * fileheader.nCharSize;
-        nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
-        ZeroMemory(lpStringBuffer, nStringBufferSize);
-        CopyMemory(lpStringBuffer, (lpFileBuffer + sFC.ofsFileName), nSourceSize);
+        if (0 < sFC.nFileNameLen) {  // otherwise leave it NULL
+            // Copy string to an aligned memory block
+            nSourceSize = sFC.nFileNameLen * fileheader.nCharSize;
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, (lpFileBuffer + sFC.ofsFileName), nSourceSize);
 
-        lpFC->lpszFileName = MYALLOC0(sFC.nFileNameLen * sizeof(TCHAR));
-        if (sizeof(TCHAR) == fileheader.nCharSize) {
-            _tcsncpy(lpFC->lpszFileName, lpStringBuffer, sFC.nFileNameLen);
-        } else {
+            lpFC->lpszFileName = MYALLOC0(sFC.nFileNameLen * sizeof(TCHAR));
+            if (sizeof(TCHAR) == fileheader.nCharSize) {
+                _tcsncpy(lpFC->lpszFileName, lpStringBuffer, sFC.nFileNameLen);
+            } else {
 #ifdef _UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen);
+                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen);
 #else
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpFC->lpszFileName, sFC.nFileNameLen, NULL, NULL);
 #endif
+            }
+
+            // Set file name length in chars
+            lpFC->lpszFileName[sFC.nFileNameLen - 1] = (TCHAR)'\0';  // safety NULL char
+            lpFC->cchFileName = _tcslen(lpFC->lpszFileName);
         }
 
-        // Set file name length in chars
-        lpFC->lpszFileName[sFC.nFileNameLen - 1] = (TCHAR)'\0';  // safety NULL char
-        lpFC->cchFileName = _tcslen(lpFC->lpszFileName);
-    }
+        // Check if file is to be generic excluded
+        if ((NULL == lpFC->lpszFileName)
+                || (0 == _tcscmp(lpFC->lpszFileName, TEXT(".")))
+                || (0 == _tcscmp(lpFC->lpszFileName, TEXT("..")))) {
+            FreeAllFileContents(lpFC);
+            continue;  // ignore this entry and continue with next brother file
+        }
 
-    // Check if file is to be generic excluded
-    if ((NULL == lpFC->lpszFileName)
-            || (0 == _tcscmp(lpFC->lpszFileName, TEXT(".")))
-            || (0 == _tcscmp(lpFC->lpszFileName, TEXT("..")))) {
-        FreeAllFileContent(lpFC);
-        fIgnore = TRUE;
-    }
-
-    if (!fIgnore) {
         // Write pointer to current file into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpFC;
@@ -749,28 +764,16 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
         if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
             UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
         }
-    }
 
-    // Save offsets in local variables
-    ofsFirstSubFile = sFC.ofsFirstSubFile;
-    ofsBrotherFile = sFC.ofsBrotherFile;
-
-    // ATTENTION!!! sFC is INVALID from this point on, due to recursive calls
-
-    // If the entry has childs, then do a recursive call for the first child
-    // Pass this entry as father and "lpFirstSubFC" pointer for storing the first child's pointer
-    if ((!fIgnore) && (0 != ofsFirstSubFile)) {
-        LoadFile(ofsFirstSubFile, lpFC, &lpFC->lpFirstSubFC);
-    }
-
-    // If the entry has a following brother, then do a recursive call for the following brother
-    // Pass father as father and "lpBrotherFC" pointer for storing the next brother's pointer
-    if (0 != ofsBrotherFile) {
-        if (!fIgnore) {
-            LoadFile(ofsBrotherFile, lpFatherFC, &lpFC->lpBrotherFC);
-        } else {
-            LoadFile(ofsBrotherFile, lpFatherFC, lplpCaller);
+        // ATTENTION!!! sFC will be INVALID from this point on, due to recursive calls
+        // If the entry has childs, then do a recursive call for the first child
+        // Pass this entry as father and "lpFirstSubFC" pointer for storing the first child's pointer
+        if (0 != sFC.ofsFirstSubFile) {
+            LoadFiles(sFC.ofsFirstSubFile, lpFC, &lpFC->lpFirstSubFC);
         }
+
+        // Set "lpBrotherFC" pointer for storing the next brother's pointer
+        lplpCaller = &lpFC->lpBrotherFC;
     }
 }
 
@@ -778,13 +781,11 @@ VOID LoadFile(DWORD ofsFileContent, LPFILECONTENT lpFatherFC, LPFILECONTENT *lpl
 //--------------------------------------------------
 // Load head file from HIVE file
 //--------------------------------------------------
-VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
+VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
 {
-    LPHEADFILE *lplpHFCaller;
     LPHEADFILE lpHF;
 
     // Read all head files and their file contents
-    lplpHFCaller = lplpCaller;
     for (; 0 != ofsHeadFile; ofsHeadFile = sHF.ofsBrotherHeadFile) {
         // Copy SAVEHEADFILE to aligned memory block
         ZeroMemory(&sHF, sizeof(sHF));
@@ -796,15 +797,17 @@ VOID LoadHeadFile(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
         ZeroMemory(lpHF, sizeof(HEADFILE));
 
         // Write pointer to current head file into caller's pointer
-        if (NULL != lplpHFCaller) {
-            *lplpHFCaller = lpHF;
+        if (NULL != lplpCaller) {
+            *lplpCaller = lpHF;
         }
-        lplpHFCaller = &lpHF->lpBrotherHF;
 
         // If the entry has file contents, then do a call for the first file content
         if (0 != sHF.ofsFirstFileContent) {
-            LoadFile(sHF.ofsFirstFileContent, NULL, &lpHF->lpFirstFC);
+            LoadFiles(sHF.ofsFirstFileContent, NULL, &lpHF->lpFirstFC);
         }
+
+        // Set "lpBrotherHF" pointer for storing the next brother's pointer
+        lplpCaller = &lpHF->lpBrotherHF;
     }
 }
 
