@@ -1,7 +1,7 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -958,16 +958,25 @@ VOID ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC)
 // ----------------------------------------------------------------------
 // Free all registry keys and values
 // ----------------------------------------------------------------------
-VOID FreeAllValueContent(LPVALUECONTENT lpVC)
+VOID FreeAllValueContents(LPVALUECONTENT lpVC)
 {
-    if (NULL != lpVC) {
+    LPVALUECONTENT lpBrotherVC;
+
+    for (; NULL != lpVC; lpVC = lpBrotherVC) {
+        // Save pointer in local variable
+        lpBrotherVC = lpVC->lpBrotherVC;
+
+        // Free value name
         if (NULL != lpVC->lpszValueName) {
             MYFREE(lpVC->lpszValueName);
         }
+
+        // Free value data
         if (NULL != lpVC->lpValueData) {
             MYFREE(lpVC->lpValueData);
         }
-        FreeAllValueContent(lpVC->lpBrotherVC);
+
+        // Free entry itself
         MYFREE(lpVC);
     }
 }
@@ -975,20 +984,36 @@ VOID FreeAllValueContent(LPVALUECONTENT lpVC)
 // ----------------------------------------------------------------------
 // Free all registry keys and values
 // ----------------------------------------------------------------------
-VOID FreeAllKeyContent(LPKEYCONTENT lpKC)
+VOID FreeAllKeyContents(LPKEYCONTENT lpKC)
 {
-    if (NULL != lpKC) {
+    LPKEYCONTENT lpBrotherKC;
+
+    for (; NULL != lpKC; lpKC = lpBrotherKC) {
+        // Save pointer in local variable
+        lpBrotherKC = lpKC->lpBrotherKC;
+
+        // Free key name
         if (NULL != lpKC->lpszKeyName) {
-            if ((lpKC->lpszKeyName != lpszHKLMShort)
-                    && (lpKC->lpszKeyName != lpszHKLMLong)
-                    && (lpKC->lpszKeyName != lpszHKUShort)
-                    && (lpKC->lpszKeyName != lpszHKULong)) {
+            if ((NULL != lpKC->lpFatherKC)  // only the top KC can have HKLM/HKU, so ignore the sub KCs
+                    || ((lpKC->lpszKeyName != lpszHKLMShort)
+                        && (lpKC->lpszKeyName != lpszHKLMLong)
+                        && (lpKC->lpszKeyName != lpszHKUShort)
+                        && (lpKC->lpszKeyName != lpszHKULong))) {
                 MYFREE(lpKC->lpszKeyName);
             }
         }
-        FreeAllValueContent(lpKC->lpFirstVC);
-        FreeAllKeyContent(lpKC->lpFirstSubKC);
-        FreeAllKeyContent(lpKC->lpBrotherKC);
+
+        // If the entry has values, then do a call for the first value
+        if (NULL != lpKC->lpFirstVC) {
+            FreeAllValueContents(lpKC->lpFirstVC);
+        }
+
+        // If the entry has childs, then do a recursive call for the first child
+        if (NULL != lpKC->lpFirstSubKC) {
+            FreeAllKeyContents(lpKC->lpFirstSubKC);
+        }
+
+        // Free entry itself
         MYFREE(lpKC);
     }
 }
@@ -1006,9 +1031,9 @@ VOID FreeShot(LPREGSHOT lpShot)
         MYFREE(lpShot->lpszUserName);
     }
 
-    FreeAllKeyContent(lpShot->lpHKLM);
-    FreeAllKeyContent(lpShot->lpHKU);
-    FreeAllFileHead(lpShot->lpHF);
+    FreeAllKeyContents(lpShot->lpHKLM);
+    FreeAllKeyContents(lpShot->lpHKU);
+    FreeAllHeadFiles(lpShot->lpHF);
 
     ZeroMemory(lpShot, sizeof(REGSHOT));
 }
@@ -1049,7 +1074,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
             lpszFullName = GetWholeKeyName(lpKC, FALSE);
             if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
                 MYFREE(lpszFullName);
-                FreeAllKeyContent(lpKC);
+                FreeAllKeyContents(lpKC);
                 return NULL;
             }
             MYFREE(lpszFullName);
@@ -1072,7 +1097,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                  );
         if (ERROR_SUCCESS != nErrNo) {
             // TODO: process/protocol issue in some way, do not silently ignore it (at least in Debug builds)
-            FreeAllKeyContent(lpKC);
+            FreeAllKeyContents(lpKC);
             return NULL;
         }
 
@@ -1156,7 +1181,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     lpszFullName = GetWholeValueName(lpVC, FALSE);
                     if (IsInSkipList(lpszFullName, lprgszRegSkipStrings)) {
                         MYFREE(lpszFullName);
-                        FreeAllValueContent(lpVC);
+                        FreeAllValueContents(lpVC);
                         continue;
                     }
                     MYFREE(lpszFullName);
@@ -1369,12 +1394,11 @@ VOID Shot(LPREGSHOT lpShot)
 // This routine is called recursively to store the keys of the Registry tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
+VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
 {
-    LPKEYCONTENT lpKC;
     DWORD nFPKey;
 
-    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
+    for (; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
         // Get current file position
         // put in a separate var for later use
         nFPKey = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
@@ -1536,8 +1560,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpStartKC, DWORD nFPFatherKey, DWORD nFPCaller)
             }
         }
 
-        // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
-
+        // ATTENTION!!! sKC will be INVALID from this point on, due to recursive calls
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "ofsFirstSubKey" position for storing the first child's position
         if (NULL != lpKC->lpFirstSubKC) {
@@ -1768,169 +1791,165 @@ size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, s
 // ----------------------------------------------------------------------
 // Load registry key with values from HIVE file
 // ----------------------------------------------------------------------
-VOID LoadRegKey(DWORD ofsKeyContent, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
+VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
 {
     LPKEYCONTENT lpKC;
-    DWORD ofsFirstSubKey;
     DWORD ofsBrotherKey;
 
-    // Copy SAVEKEYCONTENT to aligned memory block
-    ZeroMemory(&sKC, sizeof(sKC));
-    CopyMemory(&sKC, (lpFileBuffer + ofsKeyContent), fileheader.nKCSize);
+    for (; 0 != ofsKey; ofsKey = ofsBrotherKey) {
+        // Copy SAVEKEYCONTENT to aligned memory block
+        ZeroMemory(&sKC, sizeof(sKC));
+        CopyMemory(&sKC, (lpFileBuffer + ofsKey), fileheader.nKCSize);
 
-    // Create new key content
-    // put in a separate var for later use
-    lpKC = MYALLOC0(sizeof(KEYCONTENT));
-    ZeroMemory(lpKC, sizeof(KEYCONTENT));
+        // Save offsets in local variables due to recursive calls
+        ofsBrotherKey = sKC.ofsBrotherKey;
 
-    // Set father of current key
-    lpKC->lpFatherKC = lpFatherKC;
+        // Create new key content
+        // put in a separate var for later use
+        lpKC = MYALLOC0(sizeof(KEYCONTENT));
+        ZeroMemory(lpKC, sizeof(KEYCONTENT));
 
-    // Copy key name
-    if (KEYCONTENT_VERSION_2 > fileheader.nKCVersion) {  // old SBCS/MBCS version
-        sKC.nKeyNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sKC.ofsKeyName));
-        if (0 < sKC.nKeyNameLen) {
-            sKC.nKeyNameLen++;  // account for NULL char
+        // Set father of current key
+        lpKC->lpFatherKC = lpFatherKC;
+
+        // Copy key name
+        if (KEYCONTENT_VERSION_2 > fileheader.nKCVersion) {  // old SBCS/MBCS version
+            sKC.nKeyNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sKC.ofsKeyName));
+            if (0 < sKC.nKeyNameLen) {
+                sKC.nKeyNameLen++;  // account for NULL char
+            }
         }
-    }
-    if (0 < sKC.nKeyNameLen) {  // otherwise leave it NULL
-        // Copy string to an aligned memory block
-        nSourceSize = sKC.nKeyNameLen * fileheader.nCharSize;
-        nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
-        ZeroMemory(lpStringBuffer, nStringBufferSize);
-        CopyMemory(lpStringBuffer, (lpFileBuffer + sKC.ofsKeyName), nSourceSize);
+        if (0 < sKC.nKeyNameLen) {  // otherwise leave it NULL
+            // Copy string to an aligned memory block
+            nSourceSize = sKC.nKeyNameLen * fileheader.nCharSize;
+            nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+            ZeroMemory(lpStringBuffer, nStringBufferSize);
+            CopyMemory(lpStringBuffer, (lpFileBuffer + sKC.ofsKeyName), nSourceSize);
 
-        lpKC->lpszKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
-        if (sizeof(TCHAR) == fileheader.nCharSize) {
-            _tcsncpy(lpKC->lpszKeyName, lpStringBuffer, sKC.nKeyNameLen);
-        } else {
+            lpKC->lpszKeyName = MYALLOC0(sKC.nKeyNameLen * sizeof(TCHAR));
+            if (sizeof(TCHAR) == fileheader.nCharSize) {
+                _tcsncpy(lpKC->lpszKeyName, lpStringBuffer, sKC.nKeyNameLen);
+            } else {
 #ifdef _UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen);
+                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen);
 #else
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpKC->lpszKeyName, sKC.nKeyNameLen, NULL, NULL);
 #endif
-        }
+            }
 
-        // Set key name length in chars
-        lpKC->lpszKeyName[sKC.nKeyNameLen - 1] = (TCHAR)'\0';  // safety NULL char
-        lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
-    }
-
-    // Adopt to short HKLM/HKU
-    if (NULL == lpKC->lpFatherKC) {
-        if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMShort))
-                || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong))) {
-            MYFREE(lpKC->lpszKeyName);
-            lpKC->lpszKeyName = lpszHKLMShort;
-            lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
-        } else if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort))
-                   || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong))) {
-            MYFREE(lpKC->lpszKeyName);
-            lpKC->lpszKeyName = lpszHKUShort;
+            // Set key name length in chars
+            lpKC->lpszKeyName[sKC.nKeyNameLen - 1] = (TCHAR)'\0';  // safety NULL char
             lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
         }
-    }
 
-    // Increase key count
-    nGettingKey++;
-
-    // Write pointer to current key into caller's pointer
-    if (NULL != lplpCaller) {
-        *lplpCaller = lpKC;
-    }
-
-    // Copy the value contents of the current key
-    if (0 != sKC.ofsFirstValue) {
-        LPVALUECONTENT lpVC;
-        LPVALUECONTENT *lplpVCPrev;
-        DWORD ofsValueContent;
-
-        lplpVCPrev = &lpKC->lpFirstVC;
-        for (ofsValueContent = sKC.ofsFirstValue; 0 != ofsValueContent; ofsValueContent = sVC.ofsBrotherValue) {
-            // Copy SAVEVALUECONTENT to aligned memory block
-            ZeroMemory(&sVC, sizeof(sVC));
-            CopyMemory(&sVC, (lpFileBuffer + ofsValueContent), fileheader.nVCSize);
-
-            // Create new value content
-            lpVC = MYALLOC0(sizeof(VALUECONTENT));
-            ZeroMemory(lpVC, sizeof(VALUECONTENT));
-
-            // Set father key of current value to current key
-            lpVC->lpFatherKC = lpKC;
-
-            // Copy value name
-            if (VALUECONTENT_VERSION_2 > fileheader.nVCVersion) {  // old SBCS/MBCS version
-                sVC.nValueNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sVC.ofsValueName));
-                if (0 < sVC.nValueNameLen) {
-                    sVC.nValueNameLen++;  // account for NULL char
-                }
-            }
-            if (0 < sVC.nValueNameLen) {  // otherwise leave it NULL
-                // Copy string to an aligned memory block
-                nSourceSize = sVC.nValueNameLen * fileheader.nCharSize;
-                nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
-                ZeroMemory(lpStringBuffer, nStringBufferSize);
-                CopyMemory(lpStringBuffer, (lpFileBuffer + sVC.ofsValueName), nSourceSize);
-
-                lpVC->lpszValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
-                if (sizeof(TCHAR) == fileheader.nCharSize) {
-                    _tcsncpy(lpVC->lpszValueName, lpStringBuffer, sVC.nValueNameLen);
-                } else {
-#ifdef _UNICODE
-                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen);
-#else
-                    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen, NULL, NULL);
-#endif
-                }
-
-                // Set value name length in chars
-                lpVC->lpszValueName[sVC.nValueNameLen - 1] = (TCHAR)'\0';  // safety NULL char
-                lpVC->cchValueName = _tcslen(lpVC->lpszValueName);
-            }
-
-            // Increase value count
-            nGettingValue++;
-
-            // Write pointer to current value into previous value's next value pointer
-            if (NULL != lplpVCPrev) {
-                *lplpVCPrev = lpVC;
-            }
-            lplpVCPrev = &lpVC->lpBrotherVC;
-
-            // Copy value meta data
-            lpVC->nTypeCode = sVC.nTypeCode;
-            lpVC->cbData = sVC.cbData;
-
-            // Copy value data
-            if (0 < sVC.cbData) {  // otherwise leave it NULL
-                lpVC->lpValueData = MYALLOC0(sVC.cbData);
-                CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
+        // Adopt to short HKLM/HKU
+        if (NULL == lpKC->lpFatherKC) {
+            if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMShort))
+                    || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKLMLong))) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKLMShort;
+                lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
+            } else if ((0 == _tcscmp(lpKC->lpszKeyName, lpszHKUShort))
+                       || (0 == _tcscmp(lpKC->lpszKeyName, lpszHKULong))) {
+                MYFREE(lpKC->lpszKeyName);
+                lpKC->lpszKeyName = lpszHKUShort;
+                lpKC->cchKeyName = _tcslen(lpKC->lpszKeyName);
             }
         }
-    }
 
-    // Update counters display
-    nGettingTime = GetTickCount();
-    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
-    }
+        // Increase key count
+        nGettingKey++;
 
-    // Save offsets in local variables
-    ofsFirstSubKey = sKC.ofsFirstSubKey;
-    ofsBrotherKey = sKC.ofsBrotherKey;
+        // Write pointer to current key into caller's pointer
+        if (NULL != lplpCaller) {
+            *lplpCaller = lpKC;
+        }
 
-    // ATTENTION!!! sKC is INVALID from this point on, due to recursive calls
+        // Copy the value contents of the current key
+        if (0 != sKC.ofsFirstValue) {
+            LPVALUECONTENT lpVC;
+            LPVALUECONTENT *lplpVCPrev;
+            DWORD ofsValueContent;
 
-    // If the entry has childs, then do a recursive call for the first child
-    // Pass this entry as father and "lpFirstSubKC" pointer for storing the first child's pointer
-    if (0 != ofsFirstSubKey) {
-        LoadRegKey(ofsFirstSubKey, lpKC, &lpKC->lpFirstSubKC);
-    }
+            lplpVCPrev = &lpKC->lpFirstVC;
+            for (ofsValueContent = sKC.ofsFirstValue; 0 != ofsValueContent; ofsValueContent = sVC.ofsBrotherValue) {
+                // Copy SAVEVALUECONTENT to aligned memory block
+                ZeroMemory(&sVC, sizeof(sVC));
+                CopyMemory(&sVC, (lpFileBuffer + ofsValueContent), fileheader.nVCSize);
 
-    // If the entry has a following brother, then do a recursive call for the following brother
-    // Pass father as father and "lpBrotherKC" pointer for storing the next brother's pointer
-    if (0 != ofsBrotherKey) {
-        LoadRegKey(ofsBrotherKey, lpFatherKC, &lpKC->lpBrotherKC);
+                // Create new value content
+                lpVC = MYALLOC0(sizeof(VALUECONTENT));
+                ZeroMemory(lpVC, sizeof(VALUECONTENT));
+
+                // Set father key of current value to current key
+                lpVC->lpFatherKC = lpKC;
+
+                // Copy value name
+                if (VALUECONTENT_VERSION_2 > fileheader.nVCVersion) {  // old SBCS/MBCS version
+                    sVC.nValueNameLen = (DWORD)strlen((const char *)(lpFileBuffer + sVC.ofsValueName));
+                    if (0 < sVC.nValueNameLen) {
+                        sVC.nValueNameLen++;  // account for NULL char
+                    }
+                }
+                if (0 < sVC.nValueNameLen) {  // otherwise leave it NULL
+                    // Copy string to an aligned memory block
+                    nSourceSize = sVC.nValueNameLen * fileheader.nCharSize;
+                    nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, nSourceSize, REGSHOT_BUFFER_BLOCK_BYTES);
+                    ZeroMemory(lpStringBuffer, nStringBufferSize);
+                    CopyMemory(lpStringBuffer, (lpFileBuffer + sVC.ofsValueName), nSourceSize);
+
+                    lpVC->lpszValueName = MYALLOC0(sVC.nValueNameLen * sizeof(TCHAR));
+                    if (sizeof(TCHAR) == fileheader.nCharSize) {
+                        _tcsncpy(lpVC->lpszValueName, lpStringBuffer, sVC.nValueNameLen);
+                    } else {
+#ifdef _UNICODE
+                        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen);
+#else
+                        WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (LPCWSTR)lpStringBuffer, -1, lpVC->lpszValueName, sVC.nValueNameLen, NULL, NULL);
+#endif
+                    }
+
+                    // Set value name length in chars
+                    lpVC->lpszValueName[sVC.nValueNameLen - 1] = (TCHAR)'\0';  // safety NULL char
+                    lpVC->cchValueName = _tcslen(lpVC->lpszValueName);
+                }
+
+                // Increase value count
+                nGettingValue++;
+
+                // Write pointer to current value into previous value's next value pointer
+                if (NULL != lplpVCPrev) {
+                    *lplpVCPrev = lpVC;
+                }
+                lplpVCPrev = &lpVC->lpBrotherVC;
+
+                // Copy value meta data
+                lpVC->nTypeCode = sVC.nTypeCode;
+                lpVC->cbData = sVC.cbData;
+
+                // Copy value data
+                if (0 < sVC.cbData) {  // otherwise leave it NULL
+                    lpVC->lpValueData = MYALLOC0(sVC.cbData);
+                    CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
+                }
+            }
+        }
+
+        // Update counters display
+        nGettingTime = GetTickCount();
+        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
+            UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
+        }
+
+        // ATTENTION!!! sKC will be INVALID from this point on, due to recursive calls
+        // If the entry has childs, then do a recursive call for the first child
+        // Pass this entry as father and "lpFirstSubKC" pointer for storing the first child's pointer
+        if (0 != sKC.ofsFirstSubKey) {
+            LoadRegKeys(sKC.ofsFirstSubKey, lpKC, &lpKC->lpFirstSubKC);
+        }
+
+        // Set "lpBrotherKC" pointer for storing the next brother's pointer
+        lplpCaller = &lpKC->lpBrotherKC;
     }
 }
 
@@ -2241,15 +2260,15 @@ BOOL LoadHive(LPREGSHOT lpShot)
     CopyMemory(&lpShot->systemtime, &fileheader.systemtime, sizeof(SYSTEMTIME));
 
     if (0 != fileheader.ofsHKLM) {
-        LoadRegKey(fileheader.ofsHKLM, NULL, &lpShot->lpHKLM);
+        LoadRegKeys(fileheader.ofsHKLM, NULL, &lpShot->lpHKLM);
     }
 
     if (0 != fileheader.ofsHKU) {
-        LoadRegKey(fileheader.ofsHKU, NULL, &lpShot->lpHKU);
+        LoadRegKeys(fileheader.ofsHKU, NULL, &lpShot->lpHKU);
     }
 
     if (0 != fileheader.ofsHF) {
-        LoadHeadFile(fileheader.ofsHF, &lpShot->lpHF);
+        LoadHeadFiles(fileheader.ofsHF, &lpShot->lpHF);
     }
 
     // Setup GUI for loading...
