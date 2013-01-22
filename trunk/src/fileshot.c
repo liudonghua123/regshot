@@ -826,6 +826,19 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
             continue;  // ignore this entry and continue with next brother file
         }
 
+        // Check if file is to be excluded
+        if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
+            LPTSTR lpszFullName;
+
+            lpszFullName = GetWholeFileName(lpFC, 0);
+            if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
+                MYFREE(lpszFullName);
+                FreeAllFileContents(lpFC);
+                continue;  // ignore this entry and continue with next brother file
+            }
+            MYFREE(lpszFullName);
+        }
+
         // Write pointer to current file into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpFC;

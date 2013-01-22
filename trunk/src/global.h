@@ -248,6 +248,8 @@ typedef struct _FILEHEADER FILEHEADER, FAR *LPFILEHEADER;
 struct _FILEEXTRADATA {
     BOOL bSameCharSize;
     BOOL bSameEndianness;
+    BOOL bOldKCVersion;
+    BOOL bOldVCVersion;
     BOOL bOldFCVersion;
 };
 typedef struct _FILEEXTRADATA FILEEXTRADATA, FAR *LPFILEEXTRADATA;
@@ -449,7 +451,7 @@ BOOL    LoadHive(LPREGSHOT lpShot);
 VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllHeadFiles(LPHEADFILE lpHF);
-VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC);
+VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
 VOID    InitProgressBar(VOID);
