@@ -493,10 +493,14 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
 
         // Check if file is to be excluded
         if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
+            if (IsInSkipList(FindData.cFileName, lprgszFileSkipStrings)) {
+                FreeAllFileContents(lpFC);
+                continue;  // ignore this entry and continue with next file
+            }
+
             lpFC->lpszFileName = FindData.cFileName;  // borrow for creating whole name
             lpszFullName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory (possible recursive call later in iteration)
             lpFC->lpszFileName = NULL;
-
             if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
                 MYFREE(lpszFullName);
                 FreeAllFileContents(lpFC);
@@ -834,6 +838,11 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
         // Check if file is to be excluded
         if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
             LPTSTR lpszFullName;
+
+            if (IsInSkipList(lpFC->lpszFileName, lprgszFileSkipStrings)) {
+                FreeAllFileContents(lpFC);
+                continue;  // ignore this entry and continue with next file
+            }
 
             lpszFullName = GetWholeFileName(lpFC, 0);
             if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
