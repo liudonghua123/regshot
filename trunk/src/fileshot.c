@@ -307,46 +307,196 @@ VOID CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2)
 // ----------------------------------------------------------------------
 // Get file snap shot
 // ----------------------------------------------------------------------
-LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
+VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
 {
     LPFILECONTENT lpFC;
-    LPFILECONTENT *lplpFCPrev;
     HANDLE hFile;
-
-    // Check if file is to be generic excluded
-    if ((NULL == lpszName)
-            || (((TCHAR)'.' == lpszName[0])  // fast exclusion for 99% of the cases
-                && ((0 == _tcscmp(lpszName, TEXT(".")))
-                    || (0 == _tcscmp(lpszName, TEXT("..")))))) {
-        return NULL;
-    }
-
-    // Create new file content
-    // put in a separate var for later use
-    lpFC = MYALLOC0(sizeof(FILECONTENT));
-
-    // Set father of current key
-    lpFC->lpFatherFC = lpFatherFC;
 
     // Extra local block to reduce stack usage due to recursive calls
     {
         LPTSTR lpszFindFileName;
+
+        lpszFindFileName = NULL;
+
+        // Get father file data if not already provided
+        if (NULL == lpFatherFC) {
+            // Check if file is to be generic excluded
+            if ((NULL == lpszFullName)
+                    || (((TCHAR)'.' == lpszFullName[0])  // fast exclusion for 99% of the cases
+                        && ((0 == _tcscmp(lpszFullName, TEXT(".")))
+                            || (0 == _tcscmp(lpszFullName, TEXT("..")))))) {
+                return;
+            }
+
+            // Create new file content
+            lpFatherFC = MYALLOC0(sizeof(FILECONTENT));
+
+            // Set file name length
+            lpFatherFC->cchFileName = _tcslen(lpszFullName);
+
+            // Check if file is to be excluded
+            if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
+                if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
+                    FreeAllFileContents(lpFatherFC);
+                    return;
+                }
+            }
+
+            hFile = FindFirstFile(lpszFullName, &FindData);
+            if (INVALID_HANDLE_VALUE != hFile) {
+                FindClose(hFile);
+            } else {
+                // Workaround for some cases in Windows Vista and later
+#ifdef _DEBUG
+                DWORD nError;
+                LPTSTR lpszMessage;
+
+                nError = GetLastError();
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                              NULL, nError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpszMessage, 0, NULL);
+                LocalFree(lpszMessage);
+#endif
+
+                ZeroMemory(&FindData, sizeof(FindData));
+
+                hFile = CreateFile(lpszFullName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                if (INVALID_HANDLE_VALUE != hFile) {
+                    BY_HANDLE_FILE_INFORMATION FileInformation;
+                    BOOL bResult;
+
+                    bResult = GetFileInformationByHandle(hFile, &FileInformation);
+                    if (bResult) {
+                        FindData.dwFileAttributes = FileInformation.dwFileAttributes;
+                        FindData.ftCreationTime = FileInformation.ftCreationTime;
+                        FindData.ftLastAccessTime = FileInformation.ftLastAccessTime;
+                        FindData.ftLastWriteTime = FileInformation.ftLastWriteTime;
+                        FindData.nFileSizeHigh = FileInformation.nFileSizeHigh;
+                        FindData.nFileSizeLow = FileInformation.nFileSizeLow;
+                    } else {
+                        FindData.dwFileAttributes = GetFileAttributes(lpszFullName);
+                        if (INVALID_FILE_ATTRIBUTES == FindData.dwFileAttributes) {
+                            FindData.dwFileAttributes = 0;
+                        }
+                        bResult = GetFileTime(hFile, &FindData.ftCreationTime, &FindData.ftLastAccessTime, &FindData.ftLastWriteTime);
+                        if (!bResult) {
+                            FindData.ftCreationTime.dwLowDateTime = 0;
+                            FindData.ftCreationTime.dwHighDateTime = 0;
+                            FindData.ftLastAccessTime.dwLowDateTime = 0;
+                            FindData.ftLastAccessTime.dwHighDateTime = 0;
+                            FindData.ftLastWriteTime.dwLowDateTime = 0;
+                            FindData.ftLastWriteTime.dwHighDateTime = 0;
+                        }
+                        FindData.nFileSizeLow = GetFileSize(hFile, &FindData.nFileSizeHigh);
+                        if (INVALID_FILE_SIZE == FindData.nFileSizeLow) {
+                            FindData.nFileSizeHigh = 0;
+                            FindData.nFileSizeLow = 0;
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
+            }
+
+            // Write pointer to current file into caller's pointer
+            if (NULL != lplpCaller) {
+                *lplpCaller = lpFatherFC;
+            }
+
+            // Copy file name
+            lpFatherFC->lpszFileName = MYALLOC((lpFatherFC->cchFileName + 1) * sizeof(TCHAR));
+            _tcscpy(lpFatherFC->lpszFileName, lpszFullName);
+
+            // Copy file data
+            lpFatherFC->nWriteDateTimeLow = FindData.ftLastWriteTime.dwLowDateTime;
+            lpFatherFC->nWriteDateTimeHigh = FindData.ftLastWriteTime.dwHighDateTime;
+            lpFatherFC->nFileSizeLow = FindData.nFileSizeLow;
+            lpFatherFC->nFileSizeHigh = FindData.nFileSizeHigh;
+            lpFatherFC->nFileAttributes = FindData.dwFileAttributes;
+
+            // Increase file/dir count
+            if (ISDIR(lpFatherFC->nFileAttributes)) {
+                nGettingDir++;
+            } else {
+                nGettingFile++;
+            }
+
+            // Update counters display
+            nGettingTime = GetTickCount();
+            if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
+                UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
+            }
+
+            // Set "lpFirstSubFC" pointer for storing the first child's pointer
+            lplpCaller = &lpFatherFC->lpFirstSubFC;
+
+            // Copy file name to new buffer for directory search
+            lpszFindFileName = MYALLOC((lpFatherFC->cchFileName + 4 + 1) * sizeof(TCHAR));  // +4 for "\*.*" search when directory (later in routine)
+            _tcscpy(lpszFindFileName, lpszFullName);
+        }
+
+        // If the father is a file, then leave
+        if (ISFILE(lpFatherFC->nFileAttributes)) {
+            if (NULL != lpszFindFileName) {
+                MYFREE(lpszFindFileName);
+            }
+            return;
+        }
+
+        // Process all entries of directory
+        // a) Create search pattern and start search
+        if (NULL == lpszFindFileName) {
+            lpszFindFileName = lpszFullName;
+        }
+        _tcscat(lpszFindFileName, TEXT("\\*.*"));
+        hFile = FindFirstFile(lpszFindFileName, &FindData);
+        if (lpszFindFileName != lpszFullName) {
+            MYFREE(lpszFindFileName);
+        }
+    }  // End of extra local block
+    if (INVALID_HANDLE_VALUE == hFile) {
 #ifdef _DEBUG
         DWORD nError;
         LPTSTR lpszMessage;
-#endif
 
-        // Set file name
-        lpFC->cchFileName = _tcslen(lpszName);
-        lpFC->lpszFileName = MYALLOC0((lpFC->cchFileName + 1) * sizeof(TCHAR));
-        _tcscpy(lpFC->lpszFileName, lpszName);
+        nError = GetLastError();
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL, nError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpszMessage, 0, NULL);
+        LocalFree(lpszMessage);
+#endif
+        return;
+    }
+    // b) process entry then find next
+    do {
+        lpszFullName = NULL;
+
+        // Check if file is to be generic excluded
+        if ((NULL == FindData.cFileName)
+                || (((TCHAR)'.' == FindData.cFileName[0])  // fast exclusion for 99% of the cases
+                    && ((0 == _tcscmp(FindData.cFileName, TEXT(".")))
+                        || (0 == _tcscmp(FindData.cFileName, TEXT("..")))))) {
+            continue;  // ignore this entry and continue with next file
+        }
+
+        // Create new file content
+        // put in a separate var for later use
+        lpFC = MYALLOC0(sizeof(FILECONTENT));
+
+        // Set father of current key
+        lpFC->lpFatherFC = lpFatherFC;
+
+        // Set file name length
+        lpFC->cchFileName = _tcslen(FindData.cFileName);
 
         // Check if file is to be excluded
-        lpszFindFileName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory (later in routine)
-        if (IsInSkipList(lpszFindFileName, lprgszFileSkipStrings)) {
-            MYFREE(lpszFindFileName);
-            FreeAllFileContents(lpFC);
-            return NULL;
+        if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
+            lpFC->lpszFileName = FindData.cFileName;  // borrow for creating whole name
+            lpszFullName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search when directory (possible recursive call later in iteration)
+            lpFC->lpszFileName = NULL;
+
+            if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
+                MYFREE(lpszFullName);
+                FreeAllFileContents(lpFC);
+                continue;  // ignore this entry and continue with next file
+            }
         }
 
         // Write pointer to current file into caller's pointer
@@ -354,65 +504,16 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
             *lplpCaller = lpFC;
         }
 
-        // Get file data if not already provided
-        if (NULL == lpFindData) {
-            lpFindData = &FindData;
+        // Copy file name
+        lpFC->lpszFileName = MYALLOC((lpFC->cchFileName + 1) * sizeof(TCHAR));
+        _tcscpy(lpFC->lpszFileName, FindData.cFileName);
 
-            hFile = FindFirstFile(lpszFindFileName, lpFindData);
-            if (INVALID_HANDLE_VALUE != hFile) {
-                FindClose(hFile);
-            } else {
-                // Workaround for some cases in Windows Vista and later
-#ifdef _DEBUG
-                nError = GetLastError();
-                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                              NULL, nError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpszMessage, 0, NULL);
-                LocalFree(lpszMessage);
-#endif
-
-                ZeroMemory(lpFindData, sizeof(FindData));
-
-                hFile = CreateFile(lpszFindFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-                if (INVALID_HANDLE_VALUE != hFile) {
-                    BY_HANDLE_FILE_INFORMATION FileInformation;
-                    BOOL bResult;
-
-                    bResult = GetFileInformationByHandle(hFile, &FileInformation);
-                    if (bResult) {
-                        lpFindData->dwFileAttributes = FileInformation.dwFileAttributes;
-                        lpFindData->ftCreationTime = FileInformation.ftCreationTime;
-                        lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
-                        lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
-                        lpFindData->nFileSizeHigh = FileInformation.nFileSizeHigh;
-                        lpFindData->nFileSizeLow = FileInformation.nFileSizeLow;
-                    } else {
-                        lpFindData->dwFileAttributes = GetFileAttributes(lpszFindFileName);
-                        if (INVALID_FILE_ATTRIBUTES == lpFindData->dwFileAttributes) {
-                            lpFindData->dwFileAttributes = 0;
-                        }
-                        bResult = GetFileTime(hFile, &lpFindData->ftCreationTime, &lpFindData->ftLastAccessTime, &lpFindData->ftLastWriteTime);
-                        if (!bResult) {
-                            lpFindData->ftCreationTime = FileInformation.ftCreationTime;
-                            lpFindData->ftLastAccessTime = FileInformation.ftLastAccessTime;
-                            lpFindData->ftLastWriteTime = FileInformation.ftLastWriteTime;
-                        }
-                        lpFindData->nFileSizeLow = GetFileSize(hFile, &lpFindData->nFileSizeHigh);
-                        if (INVALID_FILE_SIZE == lpFindData->nFileSizeLow) {
-                            lpFindData->nFileSizeHigh = 0;
-                            lpFindData->nFileSizeLow = 0;
-                        }
-                    }
-                    CloseHandle(hFile);
-                }
-            }
-        }
-
-        // Set file data
-        lpFC->nWriteDateTimeLow = lpFindData->ftLastWriteTime.dwLowDateTime;
-        lpFC->nWriteDateTimeHigh = lpFindData->ftLastWriteTime.dwHighDateTime;
-        lpFC->nFileSizeLow = lpFindData->nFileSizeLow;
-        lpFC->nFileSizeHigh = lpFindData->nFileSizeHigh;
-        lpFC->nFileAttributes = lpFindData->dwFileAttributes;
+        // Copy file data
+        lpFC->nWriteDateTimeLow = FindData.ftLastWriteTime.dwLowDateTime;
+        lpFC->nWriteDateTimeHigh = FindData.ftLastWriteTime.dwHighDateTime;
+        lpFC->nFileSizeLow = FindData.nFileSizeLow;
+        lpFC->nFileSizeHigh = FindData.nFileSizeHigh;
+        lpFC->nFileAttributes = FindData.dwFileAttributes;
 
         // Increase file/dir count
         if (ISDIR(lpFC->nFileAttributes)) {
@@ -427,35 +528,24 @@ LPFILECONTENT GetFilesSnap(LPTSTR lpszName, LPWIN32_FIND_DATA lpFindData, LPFILE
             UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
         }
 
-        // When file then leave
-        if (ISFILE(lpFC->nFileAttributes)) {
-            MYFREE(lpszFindFileName);
-            return lpFC;
+        // ATTENTION!!! FindData will be INVALID from this point on, due to recursive calls
+        // If the entry is a directory, then do a recursive call for it
+        // Pass this entry as father and "lpFirstSubFC" pointer for storing the first child's pointer
+        if (ISDIR(lpFC->nFileAttributes)) {
+            if (NULL == lpszFullName) {
+                lpszFullName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search (in recursive call)
+            }
+            GetFilesSnap(lpszFullName, lpFC, &lpFC->lpFirstSubFC);
         }
 
-        // Find all file entries of directory
-        _tcscat(lpszFindFileName, TEXT("\\*.*"));
-        hFile = FindFirstFile(lpszFindFileName, &FindData);
-        MYFREE(lpszFindFileName);
-        if (INVALID_HANDLE_VALUE == hFile) {
-            return lpFC;
+        if (NULL != lpszFullName) {
+            MYFREE(lpszFullName);
         }
-    }
 
-    // Process all directory entries
-    lplpFCPrev = &lpFC->lpFirstSubFC;
-    do {
-        LPFILECONTENT lpFCSub;
-
-        // ATTENTION!!! Content of lpFindData will be INVALID from this point on, due to recursive calls
-        lpFCSub = GetFilesSnap(lpFindData->cFileName, &FindData, lpFC, lplpFCPrev);
-        if (NULL != lpFCSub) {
-            lplpFCPrev = &lpFCSub->lpBrotherFC;
-        }
+        // Set "lpBrotherFC" pointer for storing the next brother's pointer
+        lplpCaller = &lpFC->lpBrotherFC;
     } while (FindNextFile(hFile, &FindData));
     FindClose(hFile);
-
-    return lpFC;
 }
 
 
@@ -495,7 +585,7 @@ VOID FileShot(LPREGSHOT lpShot)
                     *lplpHFPrev = lpHF;
                     lplpHFPrev = &lpHF->lpBrotherHF;
 
-                    GetFilesSnap(lpszSubExtDir, NULL, NULL, &lpHF->lpFirstFC);
+                    GetFilesSnap(lpszSubExtDir, NULL, &lpHF->lpFirstFC);
                 }
 
                 lpszSubExtDir = &lpszExtDir[i + 1];
