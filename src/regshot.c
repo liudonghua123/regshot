@@ -27,7 +27,7 @@ LPTSTR lpszDefResPre = REGSHOT_RESULT_FILE;
 
 LPTSTR lpszFilter =
 #ifdef _UNICODE
-    TEXT("Regshot Unicode hive files (*.hiv2)\0*.hiv2\0All files\0*.*\0\0");
+    TEXT("Regshot Unicode hive files (*.hivu)\0*.hivu\0All files\0*.*\0\0");
 #else
     TEXT("Regshot ANSI hive files (*.hiv)\0*.hiv\0All files\0*.*\0\0");
 #endif
@@ -43,7 +43,7 @@ char szRegshotFileSignatureUTF16[] = "REGSHOTHIV2";  // use a number to define a
 
 LPTSTR lpszRegshotFileDefExt =
 #ifdef _UNICODE
-    TEXT("hiv2");
+    TEXT("hivu");
 #else
     TEXT("hiv");
 #endif
