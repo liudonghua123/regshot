@@ -951,7 +951,7 @@ BOOL FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen)
                     fAddSeparator = TRUE;
                 }
                 fAddBackslash = FALSE;
-                if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[nLen - 1]) {
+                if ((TCHAR)':' == lpHF->lpFirstFC->lpszFileName[lpHF->lpFirstFC->cchFileName - 1]) {
                     nLen++;
                     fAddBackslash = TRUE;
                 }
