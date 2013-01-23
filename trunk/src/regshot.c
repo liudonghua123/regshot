@@ -1077,7 +1077,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
         // Check if key is to be excluded
         if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
-            if (IsInSkipList(lpKC->lpszKeyName, lprgszRegSkipStrings)) {
+            if ((NULL != lpKC->lpszKeyName) && (IsInSkipList(lpKC->lpszKeyName, lprgszRegSkipStrings))) {
                 FreeAllKeyContents(lpKC);
                 return NULL;
             }
@@ -1188,7 +1188,7 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
 
                 // Check if value is to be excluded
                 if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
-                    if (IsInSkipList(lpVC->lpszValueName, lprgszRegSkipStrings)) {
+                    if ((NULL != lpVC->lpszValueName) && (IsInSkipList(lpVC->lpszValueName, lprgszRegSkipStrings))) {
                         FreeAllValueContents(lpVC);
                         continue;  // ignore this entry and continue with next brother value
                     }
@@ -1876,7 +1876,7 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
         if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
             LPTSTR lpszFullName;
 
-            if (IsInSkipList(lpKC->lpszKeyName, lprgszRegSkipStrings)) {
+            if ((NULL != lpKC->lpszKeyName) && (IsInSkipList(lpKC->lpszKeyName, lprgszRegSkipStrings))) {
                 FreeAllKeyContents(lpKC);
                 continue;  // ignore this entry and continue with next brother key
             }
@@ -1949,7 +1949,7 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
 
                 // Check if value is to be excluded
                 if (NULL != lprgszRegSkipStrings[0]) {  // only if there is something to exclude
-                    if (IsInSkipList(lpVC->lpszValueName, lprgszRegSkipStrings)) {
+                    if ((NULL != lpVC->lpszValueName) && (IsInSkipList(lpVC->lpszValueName, lprgszRegSkipStrings))) {
                         FreeAllValueContents(lpVC);
                         continue;  // ignore this entry and continue with next brother value
                     }
