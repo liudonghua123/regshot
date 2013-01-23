@@ -245,6 +245,15 @@ typedef struct _FILEHEADER FILEHEADER, FAR *LPFILEHEADER;
 
 #define FILEHEADER_ENDIANNESS_VALUE 0x12345678
 
+struct _FILEEXTRADATA {
+    BOOL bSameCharSize;
+    BOOL bSameEndianness;
+    BOOL bOldKCVersion;
+    BOOL bOldVCVersion;
+    BOOL bOldFCVersion;
+};
+typedef struct _FILEEXTRADATA FILEEXTRADATA, FAR *LPFILEEXTRADATA;
+
 // Struct for reg key, used in saving and loading
 // when accessing fields of this structure always put a version check around them, e.g. "if version >= 2 then use nKeyNameLen"
 struct _SAVEKEYCONTENT {
@@ -442,7 +451,7 @@ BOOL    LoadHive(LPREGSHOT lpShot);
 VOID    FreeAllCompareResults(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllHeadFiles(LPHEADFILE lpHF);
-VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpStartKC);
+VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
 VOID    InitProgressBar(VOID);
@@ -454,8 +463,8 @@ VOID    WriteTitle(LPTSTR lpszTitle, LPTSTR lpszValue, BOOL fAsHTML);
 VOID    WriteHTMLBegin(void);
 VOID    WriteHTMLEnd(void);
 VOID    WriteHTML_BR(void);
-VOID    ClearHeadFileMatchTag(LPHEADFILE lpHF);
-VOID    FindDirChain(LPHEADFILE lpStartHF, LPTSTR lpszDir, size_t nBufferLen);
+VOID    ClearHeadFileMatchFlags(LPHEADFILE lpHF);
+BOOL    FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen);
 BOOL    DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2);
 VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
 
@@ -525,6 +534,7 @@ typedef struct _LANGUAGETEXT LANGUAGETEXT, FAR *LPLANGUAGETEXT;
 extern LANGUAGETEXT asLangTexts[];
 
 extern FILEHEADER fileheader;
+extern FILEEXTRADATA fileextradata;
 extern LPBYTE lpFileBuffer;
 extern LPTSTR lpStringBuffer;
 extern size_t nStringBufferSize;

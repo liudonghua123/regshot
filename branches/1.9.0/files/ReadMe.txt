@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.9.0 beta (2013-01-21)
+Readme file of Regshot 1.9.0 beta (2013-01-24)
 (Note: this is the beta version for testing purpose only)
 
 -----------------
