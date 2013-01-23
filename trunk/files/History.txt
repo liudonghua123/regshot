@@ -11,14 +11,15 @@ http://sourceforge.net/projects/regshot/
 -: Function deleted
 -------------------------------------------------
 
-V1.9.0 beta 2013-01-21
+V1.9.0 beta 2013-01-24
 ! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
 + Add 64-Bit builds
-+ Add Unicode builds (not compatible with ANSI .hiv files)
-+ Structure of .hiv file enhanced, while keeping backwards compatibility for ANSI builds
++ Add Unicode builds with .hivu files (not compatible with ANSI .hiv files)
++ Structure of hive files enhanced, while keeping backwards compatibility for ANSI builds
++ Skip list checks now also against the single key/value/file name additionally to checking the complete path
++ Add a proper manifest file to enable UAC elevation
 + Symbol files released for all builds
 ! Add support for various compilers
-! Add a proper manifest file
 ! Various code cleanups
 * New program icon (thanks to the PortableApps guys)
 * All Regshot versions can be build via WDK
