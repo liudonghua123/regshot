@@ -11,7 +11,7 @@ http://sourceforge.net/projects/regshot/
 -: Function deleted
 -------------------------------------------------
 
-V1.9.0 beta 2013-01-24
+V1.9.0 2013-02-02
 ! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
 + Add 64-Bit builds
 + Add Unicode builds with .hivu files (not compatible with ANSI .hiv files)
