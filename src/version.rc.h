@@ -39,7 +39,7 @@
 #define trunk     1
 #define beta      2
 
-#define REGSHOT_VERSION_TYPE    trunk
+#define REGSHOT_VERSION_TYPE    beta
 #define REGSHOT_VERSION_MAJOR   1
 #define REGSHOT_VERSION_MINOR   9
 #define REGSHOT_VERSION_PATCH   0
