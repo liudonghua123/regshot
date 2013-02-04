@@ -84,6 +84,7 @@ Mikhail A.Medvedev    -- Russian[Thanks!]
 Kenneth Aarseth       -- Norsk
 Marcel Drappier       -- French
 Vittorio "Capoccione" -- Italian
+Giacomo Margarito     -- Italian
 Gnatix                -- Deutsch
 Murat KASABOGLU       -- Türkçe
 Paul Lowagie          -- Nederlands
