@@ -94,6 +94,7 @@ Murat KASABOGLU       -- Türkçe
 Paul Lowagie          -- Nederlands
 ondra                 -- Èesky
 AVE7                  -- Fixed Deutsch!
+Martin Claus          -- Deutsch
 Pau Bosch i Crespo    -- Catalan
 Michael Papadakis     -- Greek
 Per Bryldt            -- Danish
