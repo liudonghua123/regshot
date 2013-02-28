@@ -7,6 +7,8 @@ REGEDIT4
 "RegShot"="Test"
 
 [HKEY_CURRENT_USER\RegTypes]
+""="Default"
+
 "REG_NONE_EMPTY"=hex(0):00,00
 "REG_BINARY_EMPTY"=hex:
 "REG_DWORD_EMPTY"=dword:00000000
