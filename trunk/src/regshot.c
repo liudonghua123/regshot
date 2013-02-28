@@ -23,7 +23,7 @@
 #include "version.h"
 #include <LMCons.h>  // for UNLEN define
 
-LPTSTR lpszDefResPre = REGSHOT_RESULT_FILE;
+LPTSTR lpszResultFileBaseName = REGSHOT_RESULT_FILE;
 
 LPTSTR lpszFilter =
 #ifdef _UNICODE
@@ -258,67 +258,110 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC, BOOL fUseLongNames)
 
 
 // ----------------------------------------------------------------------
-// Transform VALUECONTENT.data from binary into string
+// Transform value content data from binary into string according
+// to given conversion type (may differ from original type)
 // Called by GetWholeValueData()
 // ----------------------------------------------------------------------
-LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
+LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
 {
     LPTSTR lpszValueData;
-    DWORD nCount;
-    DWORD nSize;
 
     lpszValueData = NULL;
-    nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
         lpszValueData = MYALLOC((_tcslen(lpszValueDataIsNULL) + 1) * sizeof(TCHAR));
         _tcscpy(lpszValueData, lpszValueDataIsNULL);
     } else {
-        switch (type) {
+        DWORD cbData;
+        DWORD ibCurrent;
+        size_t cchToGo;
+        size_t cchString;
+        size_t cchActual;
+        LPTSTR lpszSrc;
+        LPTSTR lpszDst;
+
+        cbData = lpVC->cbData;
+
+        switch (nConversionType) {
             case REG_SZ:
-                // case REG_EXPAND_SZ: Not used any more, is included in [default], because some non-regular value would corrupt this.
-                lpszValueData = MYALLOC0(((3 + 2) * sizeof(TCHAR)) + nSize);  // format  ": \"<string>\"\0"
+            case REG_EXPAND_SZ:
+                // string value that can be displayed as a string
+                // format  ": \"<string>\"\0"
+                lpszValueData = MYALLOC0(((3 + 2) * sizeof(TCHAR)) + cbData);
                 _tcscpy(lpszValueData, TEXT(": \""));
                 if (NULL != lpVC->lpValueData) {
-                    _tcscat(lpszValueData, (LPTSTR)lpVC->lpValueData);
+                    memcpy(&lpszValueData[3], lpVC->lpValueData, cbData);
                 }
                 _tcscat(lpszValueData, TEXT("\""));
-                // wsprintf has a bug that cannot print string too long one time!);
-                //wsprintf(lpszValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
                 break;
+
             case REG_MULTI_SZ:
-                // Be sure to add below line outside of following "if",
-                // for that GlobalFree(lp) must had lp already located!
-                lpszValueData = MYALLOC0(((3 + 2) * sizeof(TCHAR)) + nSize);  // format  ": \"<string>\"\0"
-                nSize /= sizeof(TCHAR);  // convert bytes to chars
-                nSize--;  // account for last NULL char
-                // TODO: this logic destroys the original data, better copy data to target and replace there
-                for (nCount = 0; nCount < nSize; nCount++) {
-                    if ((TCHAR)'\0' == ((LPTSTR)lpVC->lpValueData)[nCount]) {  // look for a NULL char before the end of the data
-                        ((LPTSTR)lpVC->lpValueData)[nCount] = (TCHAR)' ';  // then overwrite with space  // TODO: check if works with Unicode
+                // multi string value that can be displayed as strings
+                // format  ": \"<string>\", \"<string>\", \"<string>\", ...\0"
+                // see http://msdn.microsoft.com/en-us/library/windows/desktop/ms724884.aspx
+                nStringBufferSize = AdjustBuffer(&lpStringBuffer, nStringBufferSize, 10 + (2 * cbData), REGSHOT_BUFFER_BLOCK_BYTES);
+                ZeroMemory(lpStringBuffer, nStringBufferSize);
+                lpszDst = lpStringBuffer;
+                _tcscpy(lpszDst, TEXT(": \""));
+                lpszDst += 3;
+                cchActual = 0;
+                if (NULL != lpVC->lpValueData) {
+                    lpszSrc = (LPTSTR)lpVC->lpValueData;
+                    cchToGo = cbData / sizeof(TCHAR);  // convert byte count to char count
+                    while ((cchToGo > 0) && (*lpszSrc)) {
+                        if (0 != cchActual) {
+                            _tcscpy(lpszDst, TEXT("\", \""));
+                            lpszDst += 4;
+                            cchActual += 4;
+                        }
+                        cchString = _tcsnlen(lpszSrc, cchToGo);
+                        _tcsncpy(lpszDst, lpszSrc, cchString);
+                        lpszDst += cchString;
+                        cchActual += cchString;
+
+                        cchToGo -= cchString;
+                        if (cchToGo == 0) {
+                            break;
+                        }
+
+                        // account for null char
+                        lpszSrc += cchString + 1;
+                        cchToGo -= 1;
                     }
                 }
-                _tcscpy(lpszValueData, TEXT(": \""));
-                if (NULL != lpVC->lpValueData) {
-                    _tcscat(lpszValueData, (LPTSTR)lpVC->lpValueData);
-                }
-                _tcscat(lpszValueData, TEXT("\""));
-                //wsprintf(lpszValueData,"%s%s%s",": \"",lpVC->lpValueData,"\"");
+                _tcscpy(lpszDst, TEXT("\""));
+                cchActual += 3 + 1 + 1;  // account for null char
+                lpszValueData = MYALLOC(cchActual * sizeof(TCHAR));
+                _tcscpy(lpszValueData, lpStringBuffer);
                 break;
+
             case REG_DWORD:
-                // case REG_DWORD_BIG_ENDIAN: Not used any more, they all included in [default]
-                lpszValueData = MYALLOC0((2 + 2 + 8 + 1) * sizeof(TCHAR));  // format  ": 0xXXXXXXXX\0"
-                _tcscpy(lpszValueData, TEXT(": "));
+                // native DWORD that can be displayed as DWORD
+                // format  ": 0xXXXXXXXX\0"
+                lpszValueData = MYALLOC0((1 + 3 + 8 + 1) * sizeof(TCHAR));
+                _tcscpy(lpszValueData, TEXT(":"));
                 if (NULL != lpVC->lpValueData) {
-                    _sntprintf(lpszValueData + 2, (2 + 8 + 1), TEXT("%s%08X\0"), TEXT("0x"), *(LPDWORD)(lpVC->lpValueData));
+                    _sntprintf(lpszValueData + 1, (3 + 8 + 1), TEXT(" 0x%08X\0"), *(LPDWORD)(lpVC->lpValueData));
                 }
                 break;
+
+            case REG_QWORD:
+                // native QWORD that can be displayed as QWORD
+                // format  ": 0xXXXXXXXXXXXXXXXX\0"
+                lpszValueData = MYALLOC0((1 + 3 + 16 + 1) * sizeof(TCHAR));
+                _tcscpy(lpszValueData, TEXT(":"));
+                if (NULL != lpVC->lpValueData) {
+                    _sntprintf(lpszValueData + 1, (3 + 16 + 1), TEXT(" 0x%016I64X\0"), *(LPQWORD)(lpVC->lpValueData));
+                }
+                break;
+
             default:
-                lpszValueData = MYALLOC0((2 + (nSize * 3) + 1) * sizeof(TCHAR));  // format ": [ xx][ xx]...[ xx]\0"
-                _tcscpy(lpszValueData, TEXT(": "));
-                // for the resttype lengthofvaluedata doesn't contains the 0!
-                for (nCount = 0; nCount < nSize; nCount++) {
-                    _sntprintf(lpszValueData + (2 + (nCount * 3)), 4, TEXT(" %02X\0"), *(lpVC->lpValueData + nCount));
+                // display value as hex bytes
+                // format ":[ xx][ xx]...[ xx]\0"
+                lpszValueData = MYALLOC0((1 + (cbData * 3) + 1) * sizeof(TCHAR));
+                _tcscpy(lpszValueData, TEXT(":"));
+                for (ibCurrent = 0; ibCurrent < cbData; ibCurrent++) {
+                    _sntprintf(lpszValueData + (1 + (ibCurrent * 3)), 4, TEXT(" %02X\0"), *(lpVC->lpValueData + ibCurrent));
                 }
         }
     }
@@ -328,55 +371,83 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD type)
 
 
 // ----------------------------------------------------------------------
-// Get value data from VALUECONTENT as string
+// Get value data from value content as string
+// Check for special cases to call TransData() properly
 // ----------------------------------------------------------------------
 LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
 {
     LPTSTR lpszValueData;
-    DWORD nCount;
-    DWORD nSize;
 
     lpszValueData = NULL;
-    nSize = lpVC->cbData;
 
     if (NULL == lpVC->lpValueData) {
-        lpszValueData = MYALLOC((_tcslen(lpszValueDataIsNULL) + 1) * sizeof(TCHAR));
-        _tcscpy(lpszValueData, lpszValueDataIsNULL);
+        lpszValueData = TransData(lpVC, REG_BINARY);
     } else {
+        DWORD cbData;
+        size_t cchMax;
+        size_t cchActual;
+
+        cbData = lpVC->cbData;
+
         switch (lpVC->nTypeCode) {
             case REG_SZ:
             case REG_EXPAND_SZ:
-                if ((DWORD)((_tcslen((LPTSTR)lpVC->lpValueData) + 1) * sizeof(TCHAR)) == nSize) {
-                    lpszValueData = TransData(lpVC, REG_SZ);
-                } else {
-                    lpszValueData = TransData(lpVC, REG_BINARY);
-                }
-                break;
             case REG_MULTI_SZ:
-                if (0 != ((LPTSTR)lpVC->lpValueData)[0]) {
-                    for (nCount = 0; ; nCount++) {
-                        if (0 == ((LPTSTR)lpVC->lpValueData)[nCount]) {
+                // string values
+                // check for hidden bytes after string[s]
+                cchMax = cbData / sizeof(TCHAR);  // convert byte count to char count
+                if (REG_MULTI_SZ == lpVC->nTypeCode) {
+                    // search double null chars
+                    for (cchActual = 0; cchActual < cchMax; cchActual++) {
+                        if (0 != ((LPTSTR)lpVC->lpValueData)[cchActual]) {
+                            continue;
+                        }
+
+                        cchActual++;
+                        if (cchActual >= cchMax) {  // special case: incorrectly terminated
                             break;
                         }
+
+                        if (0 != ((LPTSTR)lpVC->lpValueData)[cchActual]) {
+                            continue;
+                        }
+
+                        // found
+                        cchActual++;
+                        break;
                     }
-                    if (((nCount + 1) * sizeof(TCHAR)) == nSize) {
-                        lpszValueData = TransData(lpVC, REG_MULTI_SZ);
-                    } else {
-                        lpszValueData = TransData(lpVC, REG_BINARY);
+                } else {
+                    cchActual = _tcsnlen((LPTSTR)lpVC->lpValueData, cchMax);
+                    if (cchActual < cchMax) {
+                        cchActual++;  // account for null char
                     }
+                }
+                if ((cchActual * sizeof(TCHAR)) == cbData) {
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
                 } else {
                     lpszValueData = TransData(lpVC, REG_BINARY);
                 }
                 break;
+
             case REG_DWORD:
-            case REG_DWORD_BIG_ENDIAN:
-                if (sizeof(DWORD) == nSize) {
-                    lpszValueData = TransData(lpVC, REG_DWORD);
+                // native DWORD
+                if (sizeof(DWORD) == cbData) {
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
                 } else {
                     lpszValueData = TransData(lpVC, REG_BINARY);
                 }
                 break;
-            default :
+
+            case REG_QWORD:
+                // native QWORD
+                if (sizeof(QWORD) == cbData) {
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
+                } else {
+                    lpszValueData = TransData(lpVC, REG_BINARY);
+                }
+                break;
+
+            default:
                 lpszValueData = TransData(lpVC, REG_BINARY);
         }
     }
@@ -450,23 +521,33 @@ VOID CreateNewResult(DWORD actiontype, LPDWORD lpcount, LPTSTR lpresult)
 //-------------------------------------------------------------
 VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
 {
-    LPTSTR   lpname;
-    LPTSTR   lpdata;
-    LPTSTR   lpall;
+    LPTSTR lpname;
 
     if (KEYADD == actiontype || KEYDEL == actiontype) {
         lpname = GetWholeKeyName(lp, bUseLongRegHead);
         CreateNewResult(actiontype, lpcount, lpname);
     } else {
         if (VALADD == actiontype || VALDEL == actiontype || VALMODI == actiontype) {
+            LPTSTR lpdata;
+            LPTSTR lpall;
+            size_t cchData;
+
             lpname = GetWholeValueName(lp, bUseLongRegHead);
             lpdata = GetWholeValueData(lp);
-            lpall = MYALLOC((_tcslen(lpname) + _tcslen(lpdata) + 1) * sizeof(TCHAR));
+            cchData = 0;
+            if (NULL != lpdata) {
+                cchData = _tcslen(lpdata);
+            }
+            lpall = MYALLOC((_tcslen(lpname) + cchData + 1) * sizeof(TCHAR));
             // do not use:wsprintf(lpall,"%s%s",lpname,lpdata); !!! strlen limit!
             _tcscpy(lpall, lpname);
-            _tcscat(lpall, lpdata);
+            if (NULL != lpdata) {
+                _tcscat(lpall, lpdata);
+            }
             MYFREE(lpname);
-            MYFREE(lpdata);
+            if (NULL != lpdata) {
+                MYFREE(lpdata);
+            }
             CreateNewResult(actiontype, lpcount, lpall);
         } else {
             lpname = GetWholeFileName(lp, 0);
@@ -778,7 +859,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (ReplaceInvalidFileNameChars(lpstrcomp)) {
         _tcscat(lpDestFileName, lpstrcomp);
     } else {
-        _tcscat(lpDestFileName, lpszDefResPre);
+        _tcscat(lpDestFileName, lpszResultFileBaseName);
     }
 
     nLengthofStr = _tcslen(lpDestFileName);
@@ -1798,7 +1879,7 @@ size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, s
             }
         }
 
-        *lpBuffer = MYALLOC0(nCurrentSize);
+        *lpBuffer = MYALLOC(nCurrentSize);
     }
 
     return nCurrentSize;
