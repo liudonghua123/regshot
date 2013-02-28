@@ -57,6 +57,13 @@ size_t strnlen(const char *lpszText, size_t cchMax);
 #   endif
 #endif
 
+//
+//  Define QWORD -- not yet defined globally (in WinDef.h)
+//
+#ifndef QWORD
+typedef unsigned __int64 QWORD, NEAR *PQWORD, FAR *LPQWORD;
+#endif //QWORD
+
 // added in 1.8.2 to gain a slightly faster speed but it is danger!
 #define USEHEAPALLOC_DANGER
 
