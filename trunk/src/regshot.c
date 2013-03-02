@@ -265,8 +265,14 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC, BOOL fUseLongNames)
 LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
 {
     LPTSTR lpszValueData;
+    LPDWORD lpDword;
+    LPQWORD lpQword;
+    DWORD nDwordCpu;
+    QWORD nQwordCpu;
 
     lpszValueData = NULL;
+    lpDword = NULL;
+    lpQword = NULL;
 
     if (NULL == lpVC->lpValueData) {
         lpszValueData = MYALLOC((_tcslen(lpszValueDataIsNULL) + 1) * sizeof(TCHAR));
@@ -335,23 +341,59 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
                 _tcscpy(lpszValueData, lpStringBuffer);
                 break;
 
-            case REG_DWORD:
+#if 1 == __LITTLE_ENDIAN__
+            case REG_DWORD_BIG_ENDIAN:
+#elif
+            case REG_DWORD_LITTLE_ENDIAN:
+#endif
+                // convert DWORD with different endianness
+                lpDword = &nDwordCpu;
+                for (ibCurrent = 0; ibCurrent < sizeof(DWORD); ibCurrent++) {
+                    ((LPBYTE)&nDwordCpu)[ibCurrent] = lpVC->lpValueData[sizeof(DWORD) - 1 - ibCurrent];
+                }
+
+#if 1 == __LITTLE_ENDIAN__
+            case REG_DWORD_LITTLE_ENDIAN:
+#elif
+            case REG_DWORD_BIG_ENDIAN:
+#endif
                 // native DWORD that can be displayed as DWORD
+                if (NULL == lpDword) {
+                    lpDword = (LPDWORD)lpVC->lpValueData;
+                }
                 // format  ": 0xXXXXXXXX\0"
                 lpszValueData = MYALLOC0((1 + 3 + 8 + 1) * sizeof(TCHAR));
                 _tcscpy(lpszValueData, TEXT(":"));
                 if (NULL != lpVC->lpValueData) {
-                    _sntprintf(lpszValueData + 1, (3 + 8 + 1), TEXT(" 0x%08X\0"), *(LPDWORD)(lpVC->lpValueData));
+                    _sntprintf(lpszValueData + 1, (3 + 8 + 1), TEXT(" 0x%08X\0"), *lpDword);
                 }
                 break;
 
-            case REG_QWORD:
+#if 1 == __LITTLE_ENDIAN__
+                //case REG_QWORD_BIG_ENDIAN:
+#elif
+            case REG_QWORD_LITTLE_ENDIAN:
+                // convert QWORD with different endianness
+                lpQword = &nQwordCpu;
+                for (ibCurrent = 0; ibCurrent < sizeof(QWORD); i++) {
+                    ((LPBYTE)&nQwordCpu)[ibCurrent] = lpVC->lpValueData[sizeof(QWORD) - ibCurrent - ibCurrent];
+                }
+#endif
+
+#if 1 == __LITTLE_ENDIAN__
+            case REG_QWORD_LITTLE_ENDIAN:
+#elif
+                //case REG_QWORD_BIG_ENDIAN:
+#endif
                 // native QWORD that can be displayed as QWORD
+                if (NULL == lpQword) {
+                    lpQword = (LPQWORD)lpVC->lpValueData;
+                }
                 // format  ": 0xXXXXXXXXXXXXXXXX\0"
                 lpszValueData = MYALLOC0((1 + 3 + 16 + 1) * sizeof(TCHAR));
                 _tcscpy(lpszValueData, TEXT(":"));
                 if (NULL != lpVC->lpValueData) {
-                    _sntprintf(lpszValueData + 1, (3 + 16 + 1), TEXT(" 0x%016I64X\0"), *(LPQWORD)(lpVC->lpValueData));
+                    _sntprintf(lpszValueData + 1, (3 + 16 + 1), TEXT(" 0x%016I64X\0"), *lpQword);
                 }
                 break;
 
@@ -429,8 +471,9 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
                 }
                 break;
 
-            case REG_DWORD:
-                // native DWORD
+            case REG_DWORD_LITTLE_ENDIAN:
+            case REG_DWORD_BIG_ENDIAN:
+                // DWORD values
                 if (sizeof(DWORD) == cbData) {
                     lpszValueData = TransData(lpVC, lpVC->nTypeCode);
                 } else {
@@ -438,8 +481,9 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
                 }
                 break;
 
-            case REG_QWORD:
-                // native QWORD
+            case REG_QWORD_LITTLE_ENDIAN:
+                //case REG_QWORD_BIG_ENDIAN:
+                // QWORD values
                 if (sizeof(QWORD) == cbData) {
                     lpszValueData = TransData(lpVC, lpVC->nTypeCode);
                 } else {
