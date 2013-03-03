@@ -69,55 +69,19 @@ size_t nSourceSize;
 #define MAX_SIGNATURE_LENGTH 12
 #define REGSHOT_READ_BLOCK_SIZE 8192
 
-// Pointers to compare result
-LPCOMRESULT lpKEYADD;
-LPCOMRESULT lpKEYDEL;
-LPCOMRESULT lpVALADD;
-LPCOMRESULT lpVALDEL;
-LPCOMRESULT lpVALMODI;
-LPCOMRESULT lpFILEADD;
-LPCOMRESULT lpFILEDEL;
-LPCOMRESULT lpFILEMODI;
-LPCOMRESULT lpDIRADD;
-LPCOMRESULT lpDIRDEL;
-LPCOMRESULT lpDIRMODI;
+// Compare result
+COMPRESULT CompareResult;
 
-LPCOMRESULT lpKEYADDHEAD;
-LPCOMRESULT lpKEYDELHEAD;
-LPCOMRESULT lpVALADDHEAD;
-LPCOMRESULT lpVALDELHEAD;
-LPCOMRESULT lpVALMODIHEAD;
-LPCOMRESULT lpFILEADDHEAD;
-LPCOMRESULT lpFILEDELHEAD;
-LPCOMRESULT lpFILEMODIHEAD;
-LPCOMRESULT lpDIRADDHEAD;
-LPCOMRESULT lpDIRDELHEAD;
-LPCOMRESULT lpDIRMODIHEAD;
+// Some vars used to update the "status bar"
+DWORD nCurrentTime;
+DWORD nStartTime;
+DWORD nLastTime;
 
-// Number of Modifications detected
-DWORD nKEYADD;
-DWORD nKEYDEL;
-DWORD nVALADD;
-DWORD nVALDEL;
-DWORD nVALMODI;
-DWORD nFILEADD;
-DWORD nFILEDEL;
-DWORD nFILEMODI;
-DWORD nDIRADD;
-DWORD nDIRDEL;
-DWORD nDIRMODI;
+// Some vars used to update the progress bar
+DWORD cCurrent;
+DWORD cEnd;
 
-// Some DWORDs used to show the progress bar and etc
-DWORD nGettingValue;
-DWORD nGettingKey;
-DWORD nComparing;
-DWORD nRegStep;
-DWORD nFileStep;
-DWORD nSavingKey;
-DWORD nGettingTime;
-DWORD nBASETIME;
-DWORD nBASETIME1;
-DWORD NBW;                // that is: NumberOfBytesWritten;
+DWORD NBW;               // that is: NumberOfBytesWritten
 
 HANDLE   hFileWholeReg;  // Handle of file regshot use
 FILETIME ftLastWrite;    // Filetime struct
@@ -501,145 +465,98 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
 
 
 //-------------------------------------------------------------
-// Routine to create new comparison result, distribute to different lp???MODI
+// Routine to create new comparison result, distribute to different pointers
 //-------------------------------------------------------------
-VOID CreateNewResult(DWORD actiontype, LPDWORD lpcount, LPTSTR lpresult)
+VOID CreateNewResult(DWORD nActionType, LPTSTR lpszResult)
 {
-    LPCOMRESULT lpnew;
-    lpnew = (LPCOMRESULT)MYALLOC0(sizeof(COMRESULT));
-    lpnew->lpszResult = lpresult;
+    LPCOMRESULT lpCR;
 
-    switch (actiontype) {
+    lpCR = (LPCOMRESULT)MYALLOC0(sizeof(COMRESULT));
+    lpCR->lpszResult = lpszResult;
+
+    switch (nActionType) {
         case KEYADD:
-            *lpcount == 0 ? (lpKEYADDHEAD = lpnew) : (lpKEYADD->lpnextresult = lpnew);
-            lpKEYADD = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRKeyAdded) ? (CompareResult.stCRHeads.lpCRKeyAdded = lpCR) : (CompareResult.stCRCurrent.lpCRKeyAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRKeyAdded = lpCR;
             break;
         case KEYDEL:
-            *lpcount == 0 ? (lpKEYDELHEAD = lpnew) : (lpKEYDEL->lpnextresult = lpnew);
-            lpKEYDEL = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRKeyDeleted) ? (CompareResult.stCRHeads.lpCRKeyDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRKeyDeleted->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRKeyDeleted = lpCR;
             break;
         case VALADD:
-            *lpcount == 0 ? (lpVALADDHEAD = lpnew) : (lpVALADD->lpnextresult = lpnew);
-            lpVALADD = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRValAdded) ? (CompareResult.stCRHeads.lpCRValAdded = lpCR) : (CompareResult.stCRCurrent.lpCRValAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRValAdded = lpCR;
             break;
         case VALDEL:
-            *lpcount == 0 ? (lpVALDELHEAD = lpnew) : (lpVALDEL->lpnextresult = lpnew);
-            lpVALDEL = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRValDeleted) ? (CompareResult.stCRHeads.lpCRValDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRValDeleted->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRValDeleted = lpCR;
             break;
         case VALMODI:
-            *lpcount == 0 ? (lpVALMODIHEAD = lpnew) : (lpVALMODI->lpnextresult = lpnew);
-            lpVALMODI = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRValModified) ? (CompareResult.stCRHeads.lpCRValModified = lpCR) : (CompareResult.stCRCurrent.lpCRValModified->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRValModified = lpCR;
             break;
         case FILEADD:
-            *lpcount == 0 ? (lpFILEADDHEAD = lpnew) : (lpFILEADD->lpnextresult = lpnew);
-            lpFILEADD = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRFileAdded) ? (CompareResult.stCRHeads.lpCRFileAdded = lpCR) : (CompareResult.stCRCurrent.lpCRFileAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileAdded = lpCR;
             break;
         case FILEDEL:
-            *lpcount == 0 ? (lpFILEDELHEAD = lpnew) : (lpFILEDEL->lpnextresult = lpnew);
-            lpFILEDEL = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRFileDeleted) ? (CompareResult.stCRHeads.lpCRFileDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRFileDeleted->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileDeleted = lpCR;
             break;
         case FILEMODI:
-            *lpcount == 0 ? (lpFILEMODIHEAD = lpnew) : (lpFILEMODI->lpnextresult = lpnew);
-            lpFILEMODI = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRFileModified) ? (CompareResult.stCRHeads.lpCRFileModified = lpCR) : (CompareResult.stCRCurrent.lpCRFileModified->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileModified = lpCR;
             break;
         case DIRADD:
-            *lpcount == 0 ? (lpDIRADDHEAD = lpnew) : (lpDIRADD->lpnextresult = lpnew);
-            lpDIRADD = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRDirAdded) ? (CompareResult.stCRHeads.lpCRDirAdded = lpCR) : (CompareResult.stCRCurrent.lpCRDirAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRDirAdded = lpCR;
             break;
         case DIRDEL:
-            *lpcount == 0 ? (lpDIRDELHEAD = lpnew) : (lpDIRDEL->lpnextresult = lpnew);
-            lpDIRDEL = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRDirDeleted) ? (CompareResult.stCRHeads.lpCRDirDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRDirDeleted->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRDirDeleted = lpCR;
             break;
         case DIRMODI:
-            *lpcount == 0 ? (lpDIRMODIHEAD = lpnew) : (lpDIRMODI->lpnextresult = lpnew);
-            lpDIRMODI = lpnew;
+            (NULL == CompareResult.stCRHeads.lpCRDirModified) ? (CompareResult.stCRHeads.lpCRDirModified = lpCR) : (CompareResult.stCRCurrent.lpCRDirModified->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRDirModified = lpCR;
             break;
-
     }
-    (*lpcount)++;
 }
 
 
 //-------------------------------------------------------------
 // Write comparison results into memory and call CreateNewResult()
 //-------------------------------------------------------------
-VOID LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp)
+VOID LogToMem(DWORD nActionType, LPVOID lpContent)
 {
-    LPTSTR lpname;
+    LPTSTR lpszName;
 
-    if (KEYADD == actiontype || KEYDEL == actiontype) {
-        lpname = GetWholeKeyName(lp, bUseLongRegHead);
-        CreateNewResult(actiontype, lpcount, lpname);
+    if ((KEYADD == nActionType) || (KEYDEL == nActionType)) {
+        lpszName = GetWholeKeyName(lpContent, fUseLongRegHead);
+        CreateNewResult(nActionType, lpszName);
+    } else if ((VALADD == nActionType) || (VALDEL == nActionType) || (VALMODI == nActionType)) {
+        LPTSTR lpszData;
+        LPTSTR lpszAll;
+        size_t cchData;
+
+        lpszName = GetWholeValueName(lpContent, fUseLongRegHead);
+        lpszData = GetWholeValueData(lpContent);
+        cchData = 0;
+        if (NULL != lpszData) {
+            cchData = _tcslen(lpszData);
+        }
+        lpszAll = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
+        _tcscpy(lpszAll, lpszName);
+        if (NULL != lpszData) {
+            _tcscat(lpszAll, lpszData);
+        }
+        MYFREE(lpszName);
+        if (NULL != lpszData) {
+            MYFREE(lpszData);
+        }
+        CreateNewResult(nActionType, lpszAll);
     } else {
-        if (VALADD == actiontype || VALDEL == actiontype || VALMODI == actiontype) {
-            LPTSTR lpdata;
-            LPTSTR lpall;
-            size_t cchData;
-
-            lpname = GetWholeValueName(lp, bUseLongRegHead);
-            lpdata = GetWholeValueData(lp);
-            cchData = 0;
-            if (NULL != lpdata) {
-                cchData = _tcslen(lpdata);
-            }
-            lpall = MYALLOC((_tcslen(lpname) + cchData + 1) * sizeof(TCHAR));
-            // do not use:wsprintf(lpall,"%s%s",lpname,lpdata); !!! strlen limit!
-            _tcscpy(lpall, lpname);
-            if (NULL != lpdata) {
-                _tcscat(lpall, lpdata);
-            }
-            MYFREE(lpname);
-            if (NULL != lpdata) {
-                MYFREE(lpdata);
-            }
-            CreateNewResult(actiontype, lpcount, lpall);
-        } else {
-            lpname = GetWholeFileName(lp, 0);
-            CreateNewResult(actiontype, lpcount, lpname);
-        }
-    }
-}
-
-
-//-------------------------------------------------------------
-// Log all values of registry key
-//-------------------------------------------------------------
-VOID LogAllRegValues(DWORD typevalue, LPDWORD lpcountvalue, LPKEYCONTENT lpKC)
-{
-    LPVALUECONTENT lpVC;
-
-    for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
-        LogToMem(typevalue, lpcountvalue, lpVC);
-    }
-}
-
-
-//-------------------------------------------------------------
-// Log registry key plus sub keys with all values
-// Optionally log all brother keys too
-//-------------------------------------------------------------
-VOID LogRegKeys(
-    BOOL    fIncludeBrothers,
-    DWORD   typekey,
-    DWORD   typevalue,
-    LPDWORD lpcountkey,
-    LPDWORD lpcountvalue,
-    LPKEYCONTENT lpStartKC
-)
-{
-    LPKEYCONTENT lpKC;
-
-    for (lpKC = lpStartKC; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
-        LogToMem(typekey, lpcountkey, lpKC);
-        LogAllRegValues(typevalue, lpcountvalue, lpKC);
-
-        if (NULL != lpKC->lpFirstSubKC) {
-            LogRegKeys(TRUE, typekey, typevalue, lpcountkey, lpcountvalue, lpKC->lpFirstSubKC);
-        }
-
-        if (!fIncludeBrothers) {  // do not include brother keys
-            break;  // exit after processing start key
-        }
+        lpszName = GetWholeFileName(lpContent, 0);
+        CreateNewResult(nActionType, lpszName);
     }
 }
 
@@ -647,62 +564,39 @@ VOID LogRegKeys(
 //-------------------------------------------------------------
 // Routine to free all comparison results (release memory)
 //-------------------------------------------------------------
-VOID FreeAllCom(LPCOMRESULT lpComResult)
+VOID FreeAllComResults(LPCOMRESULT lpStartCR)
 {
-    LPCOMRESULT lp;
-    LPCOMRESULT lpold;
+    LPCOMRESULT lpCR;
+    LPCOMRESULT lpTempCR;
 
-    for (lp = lpComResult; NULL != lp;) {
-        if (NULL != lp->lpszResult) {
-            MYFREE(lp->lpszResult);
+    for (lpCR = lpStartCR; NULL != lpCR;) {
+        if (NULL != lpCR->lpszResult) {
+            MYFREE(lpCR->lpszResult);
         }
-        lpold = lp;
-        lp = lp->lpnextresult;
-        MYFREE(lpold);
+        lpTempCR = lpCR;
+        lpCR = lpCR->lpNextCR;
+        MYFREE(lpTempCR);
     }
-
 }
 
 // ----------------------------------------------------------------------
 // Free all compare results
 // ----------------------------------------------------------------------
-VOID FreeAllCompareResults(void)
+VOID FreeCompareResult(void)
 {
-    FreeAllCom(lpKEYADDHEAD);
-    FreeAllCom(lpKEYDELHEAD);
-    FreeAllCom(lpVALADDHEAD);
-    FreeAllCom(lpVALDELHEAD);
-    FreeAllCom(lpVALMODIHEAD);
-    FreeAllCom(lpFILEADDHEAD);
-    FreeAllCom(lpFILEDELHEAD);
-    FreeAllCom(lpFILEMODIHEAD);
-    FreeAllCom(lpDIRADDHEAD);
-    FreeAllCom(lpDIRDELHEAD);
-    FreeAllCom(lpDIRMODIHEAD);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRKeyAdded);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRKeyDeleted);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRValAdded);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRValDeleted);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRValModified);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRFileAdded);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRFileDeleted);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRFileModified);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRDirAdded);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRDirDeleted);
+    FreeAllComResults(CompareResult.stCRHeads.lpCRDirModified);
 
-
-    nKEYADD = 0;
-    nKEYDEL = 0;
-    nVALADD = 0;
-    nVALDEL = 0;
-    nVALMODI = 0;
-    nFILEADD = 0;
-    nFILEDEL = 0;
-    nFILEMODI = 0;
-    nDIRADD = 0;
-    nDIRDEL = 0;
-    nDIRMODI = 0;
-    lpKEYADDHEAD = NULL;
-    lpKEYDELHEAD = NULL;
-    lpVALADDHEAD = NULL;
-    lpVALDELHEAD = NULL;
-    lpVALMODIHEAD = NULL;
-    lpFILEADDHEAD = NULL;
-    lpFILEDELHEAD = NULL;
-    lpFILEMODIHEAD = NULL;
-    lpDIRADDHEAD = NULL;
-    lpDIRDELHEAD = NULL;
-    lpDIRMODIHEAD = NULL;
+    ZeroMemory(&CompareResult, sizeof(CompareResult));
 }
 
 
@@ -716,6 +610,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 
     // Compare keys
     for (lpKC1 = lpStartKC1; NULL != lpKC1; lpKC1 = lpKC1->lpBrotherKC) {
+        CompareResult.stcCompared.cKeys++;
         // Find a matching key for KC1
         for (lpKC2 = lpStartKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
             // skip KC2 if already matched
@@ -725,7 +620,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
             // skip KC2 if names do *not* match (ATTENTION: test for match, THEN negate)
             if (!(
                         (lpKC1->lpszKeyName == lpKC2->lpszKeyName)
-                        || ((NULL != lpKC1->lpszKeyName) && (NULL != lpKC2->lpszKeyName) && (0 == _tcscmp(lpKC1->lpszKeyName, lpKC2->lpszKeyName)))
+                        || ((NULL != lpKC1->lpszKeyName) && (NULL != lpKC2->lpszKeyName) && (0 == _tcscmp(lpKC1->lpszKeyName, lpKC2->lpszKeyName)))  // TODO: case-insensitive compare?
                     )) {
                 continue;
             }
@@ -733,19 +628,14 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
             // Same key name of KC1 found in KC2! Mark KC2 as matched to skip it for the next KC1, then compare their values and sub keys!
             lpKC2->fKeyMatch = ISMATCH;
 
-            // Compare values
-            if ((NULL == lpKC1->lpFirstVC) && (NULL != lpKC2->lpFirstVC)) {
-                // KC1 has *no* values but KC2, so KC2 values are added! Log all values that belong to KC2!
-                LogAllRegValues(VALADD, &nVALADD, lpKC2);
-            } else if ((NULL != lpKC1->lpFirstVC) && (NULL == lpKC2->lpFirstVC)) {
-                // KC1 *has* values but KC2 none, so KC1 values are deleted! Log all values that belong to KC1!
-                LogAllRegValues(VALDEL, &nVALDEL, lpKC1);
-            } else {
+            // Extra local block to reduce stack usage due to recursive calls
+            {
                 LPVALUECONTENT lpVC1;
                 LPVALUECONTENT lpVC2;
 
-                // Both keys have values, so compare these
+                // Compare values
                 for (lpVC1 = lpKC1->lpFirstVC; NULL != lpVC1; lpVC1 = lpVC1->lpBrotherVC) {
+                    CompareResult.stcCompared.cValues++;
                     // Find a matching value for VC1
                     for (lpVC2 = lpKC2->lpFirstVC; NULL != lpVC2; lpVC2 = lpVC2->lpBrotherVC) {
                         // skip VC2 if already matched
@@ -759,10 +649,11 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                         // skip VC2 if names do *not* match (ATTENTION: test for match, THEN negate)
                         if (!(
                                     (lpVC1->lpszValueName == lpVC2->lpszValueName)
-                                    || ((NULL != lpVC1->lpszValueName) && (NULL != lpVC2->lpszValueName) && (0 == _tcscmp(lpVC1->lpszValueName, lpVC2->lpszValueName)))
+                                    || ((NULL != lpVC1->lpszValueName) && (NULL != lpVC2->lpszValueName) && (0 == _tcscmp(lpVC1->lpszValueName, lpVC2->lpszValueName)))  // TODO: case-insensitive compare?
                                 )) {
                             continue;
                         }
+
                         // Same value type and name of VC1 found in VC2, so compare their size and data
                         if ((lpVC1->cbData == lpVC2->cbData)
                                 && ((lpVC1->lpValueData == lpVC2->lpValueData)
@@ -773,59 +664,99 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                         } else {
                             // Value data differ, so value is modified
                             lpVC2->fValueMatch = ISMODI;
-                            LogToMem(VALMODI, &nVALMODI, lpVC1);
-                            LogToMem(VALMODI, &nVALMODI, lpVC2);
-                            nVALMODI--;  // TODO: better solution to avoid duplicate count
+                            CompareResult.stcChanged.cValues++;
+                            CompareResult.stcModified.cValues++;
+                            LogToMem(VALMODI, lpVC1);
+                            LogToMem(VALMODI, lpVC2);
                         }
                         break;
                     }
                     if (NULL == lpVC2) {
                         // VC1 has no match in KC2, so VC1 is a deleted value
-                        LogToMem(VALDEL, &nVALDEL, lpVC1);
+                        CompareResult.stcChanged.cValues++;
+                        CompareResult.stcDeleted.cValues++;
+                        LogToMem(VALDEL, lpVC1);
                     }
                 }
                 // After looping all values of KC1, do an extra loop over all KC2 values and check previously set match flags to determine added values
                 for (lpVC2 = lpKC2->lpFirstVC; NULL != lpVC2; lpVC2 = lpVC2->lpBrotherVC) {
-                    if (NOMATCH == lpVC2->fValueMatch) {
-                        // VC2 has no match in KC1, so VC2 is an added value
-                        LogToMem(VALADD, &nVALADD, lpVC2);
+                    // skip VC2 if already matched
+                    if (NOMATCH != lpVC2->fValueMatch) {
+                        continue;
                     }
-                }
-            }
 
-            // Compare sub keys
-            if ((NULL == lpKC1->lpFirstSubKC) && (NULL != lpKC2->lpFirstSubKC)) {
-                // KC1 has *no* sub keys but KC2, so KC2 sub keys are added! Log all sub keys that belong to KC2!
-                LogRegKeys(TRUE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2->lpFirstSubKC);
-            } else if ((NULL != lpKC1->lpFirstSubKC) && (NULL == lpKC2->lpFirstSubKC)) {
-                // KC1 *has* sub keys but KC2 none, so KC1 sub keys are deleted! Log all sub keys that belong to KC1!
-                LogRegKeys(TRUE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1->lpFirstSubKC);
-            } else {
-                // Both keys have sub keys, so compare these
+                    CompareResult.stcCompared.cValues++;
+
+                    // VC2 has no match in KC1, so VC2 is an added value
+                    CompareResult.stcChanged.cValues++;
+                    CompareResult.stcAdded.cValues++;
+                    LogToMem(VALADD, lpVC2);
+                }
+            }  // End of extra local block
+
+            // Compare sub keys if any
+            if ((NULL != lpKC1->lpFirstSubKC) || (NULL != lpKC2->lpFirstSubKC)) {
                 CompareRegKeys(lpKC1->lpFirstSubKC, lpKC2->lpFirstSubKC);
             }
             break;
         }
         if (NULL == lpKC2) {
             // KC1 has no matching KC2, so KC1 is a deleted key
-            LogRegKeys(FALSE, KEYDEL, VALDEL, &nKEYDEL, &nVALDEL, lpKC1);
+            CompareResult.stcChanged.cKeys++;
+            CompareResult.stcDeleted.cKeys++;
+            LogToMem(KEYDEL, lpKC1);
+            // Extra local block to reduce stack usage due to recursive calls
+            {
+                LPVALUECONTENT lpVC1;
+
+                for (lpVC1 = lpKC1->lpFirstVC; NULL != lpVC1; lpVC1 = lpVC1->lpBrotherVC) {
+                    CompareResult.stcCompared.cValues++;
+                    CompareResult.stcChanged.cValues++;
+                    CompareResult.stcDeleted.cValues++;
+                    LogToMem(VALDEL, lpVC1);
+                }
+            }  // End of extra local block
+
+            // "Compare"/Log sub keys if any
+            if (NULL != lpKC1->lpFirstSubKC) {
+                CompareRegKeys(lpKC1->lpFirstSubKC, NULL);
+            }
         }
     }
     // After looping all KC1 keys, do an extra loop over all KC2 keys and check previously set match flags to determine added keys
     for (lpKC2 = lpStartKC2; NULL != lpKC2; lpKC2 = lpKC2->lpBrotherKC) {
-        nComparing++;
-        if (NOMATCH == lpKC2->fKeyMatch) {
-            // KC2 has no matching KC1, so KC2 is an added key
-            LogRegKeys(FALSE, KEYADD, VALADD, &nKEYADD, &nVALADD, lpKC2);
+        // skip KC2 if already matched
+        if (NOMATCH != lpKC2->fKeyMatch) {
+            continue;
+        }
+
+        // KC2 has no matching KC1, so KC2 is an added key
+        CompareResult.stcCompared.cKeys++;
+        CompareResult.stcChanged.cKeys++;
+        CompareResult.stcAdded.cKeys++;
+        LogToMem(KEYADD, lpKC2);
+        // Extra local block to reduce stack usage due to recursive calls
+        {
+            LPVALUECONTENT lpVC2;
+
+            for (lpVC2 = lpKC2->lpFirstVC; NULL != lpVC2; lpVC2 = lpVC2->lpBrotherVC) {
+                CompareResult.stcCompared.cValues++;
+                CompareResult.stcChanged.cValues++;
+                CompareResult.stcAdded.cValues++;
+                LogToMem(VALADD, lpVC2);
+            }
+        }  // End of extra local block
+
+        // "Compare"/Log sub keys if any
+        if (NULL != lpKC2->lpFirstSubKC) {
+            CompareRegKeys(NULL, lpKC2->lpFirstSubKC);
         }
     }
 
-    // Progress bar update (TODO)
-    if (0 != nGettingKey) {
-        if ((nComparing % nGettingKey) > nRegStep) {
-            nComparing = 0;
-            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-        }
+    // Update counters display
+    nCurrentTime = GetTickCount();
+    if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 }
 
@@ -835,15 +766,13 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 //------------------------------------------------------------
 BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 {
-    BOOL    fAsHTML;
-    BOOL    bshot2isnewer;
-    //BOOL    bSaveWithCommentName;
-    LPTSTR   lpstrcomp;
-    LPTSTR   lpExt;
-    LPTSTR   lpDestFileName;
-    DWORD   buffersize = 2048;
-    DWORD   nTotal;
-    size_t  nLengthofStr;
+    BOOL   fAsHTML;
+    BOOL   fShot2IsNewer;
+    LPTSTR lpszBuffer;
+    LPTSTR lpszExtension;
+    LPTSTR lpszDestFileName;
+    DWORD  nBufferSize = 2048;
+    size_t cchString;
     FILETIME ftime1;
     FILETIME ftime2;
 
@@ -851,73 +780,133 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         MessageBox(hWnd, TEXT("Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!"), TEXT("Warning"), MB_ICONWARNING);
     }
 
-    InitProgressBar();
+    // Clear counters
+    ZeroMemory(&CompareResult, sizeof(CompareResult));
 
+    // Setup GUI for comparing...
+    InitCounters();
+    nCurrentTime  = 0;
+    nStartTime = GetTickCount();
+    nLastTime = nStartTime;
+
+    // Compare timestamps of shots
     SystemTimeToFileTime(&lpShot1->systemtime, &ftime1);
     SystemTimeToFileTime(&lpShot2->systemtime, &ftime2);
+    fShot2IsNewer = (0 >= CompareFileTime(&ftime1, &ftime2)) ? TRUE : FALSE;
 
-    bshot2isnewer = (0 >= CompareFileTime(&ftime1, &ftime2)) ? TRUE : FALSE;
-    if (bshot2isnewer) {
-        CompareRegKeys(lpShot1->lpHKLM, lpShot2->lpHKLM);
-        CompareRegKeys(lpShot1->lpHKU, lpShot2->lpHKU);
-    } else {
-        CompareRegKeys(lpShot2->lpHKLM, lpShot1->lpHKLM);
-        CompareRegKeys(lpShot2->lpHKU, lpShot1->lpHKU);
+    // Compare HKLM
+    if ((NULL != lpShot1->lpHKLM) || (NULL != lpShot2->lpHKLM)) {
+        if (fShot2IsNewer) {
+            CompareRegKeys(lpShot1->lpHKLM, lpShot2->lpHKLM);
+        } else {
+            CompareRegKeys(lpShot2->lpHKLM, lpShot1->lpHKLM);
+        }
+
+        // Update counters display (keys/values final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 
-    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+    // Compare HKU
+    if ((NULL != lpShot1->lpHKU) || (NULL != lpShot2->lpHKU)) {
+        if (fShot2IsNewer) {
+            CompareRegKeys(lpShot1->lpHKU, lpShot2->lpHKU);
+        } else {
+            CompareRegKeys(lpShot2->lpHKU, lpShot1->lpHKU);
+        }
 
-    // Dir comparison v1.8.1
-    // determine newer
-    if (bshot2isnewer) {
-        CompareHeadFiles(lpShot1->lpHF, lpShot2->lpHF);
-    } else {
-        CompareHeadFiles(lpShot2->lpHF, lpShot1->lpHF);
+        // Update counters display (keys/values final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 
-    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)MAXPBPOSITION, (LPARAM)0);
+    // Compare HEADFILEs v1.8.1
+    if ((NULL != lpShot1->lpHF) || (NULL != lpShot2->lpHF)) {
+        if (fShot2IsNewer) {
+            CompareHeadFiles(lpShot1->lpHF, lpShot2->lpHF);
+        } else {
+            CompareHeadFiles(lpShot2->lpHF, lpShot1->lpHF);
+        }
+
+        // Update counters display (dirs/files final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
+    }
+
+    // Get total count of all items
+    CompareResult.stcCompared.cAll = CompareResult.stcCompared.cKeys
+                                     + CompareResult.stcCompared.cValues
+                                     + CompareResult.stcCompared.cDirs
+                                     + CompareResult.stcCompared.cFiles;
+    CompareResult.stcChanged.cAll = CompareResult.stcChanged.cKeys
+                                    + CompareResult.stcChanged.cValues
+                                    + CompareResult.stcChanged.cDirs
+                                    + CompareResult.stcChanged.cFiles;
+    CompareResult.stcAdded.cAll = CompareResult.stcAdded.cKeys
+                                  + CompareResult.stcAdded.cValues
+                                  + CompareResult.stcAdded.cDirs
+                                  + CompareResult.stcAdded.cFiles;
+    CompareResult.stcDeleted.cAll = CompareResult.stcDeleted.cKeys
+                                    + CompareResult.stcDeleted.cValues
+                                    + CompareResult.stcDeleted.cDirs
+                                    + CompareResult.stcDeleted.cFiles;
+    CompareResult.stcModified.cAll = CompareResult.stcModified.cKeys
+                                     + CompareResult.stcModified.cValues
+                                     + CompareResult.stcModified.cDirs
+                                     + CompareResult.stcModified.cFiles;
+    CompareResult.fFilled = TRUE;
+
+    ShowHideCounters(SW_HIDE);
+
+    // Output
+
+    // Clear counters
+    cCurrent = 0;
+    cEnd = CompareResult.stcChanged.cAll;
+
+    // Setup GUI for saving...
+    InitProgressBar();
 
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
         fAsHTML = FALSE;
-        lpExt = TEXT(".txt");
+        lpszExtension = TEXT(".txt");
     } else {
         fAsHTML = TRUE;
-        lpExt = TEXT(".htm");
+        lpszExtension = TEXT(".htm");
     }
 
-    lpDestFileName = MYALLOC0(EXTDIRLEN * sizeof(TCHAR));
-    lpstrcomp = MYALLOC0(buffersize * sizeof(TCHAR)); // buffersize must > commentlength + 10 .txt 0000
-    GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpstrcomp, COMMENTLENGTH);  // length incl. NULL character
+    lpszDestFileName = MYALLOC0(EXTDIRLEN * sizeof(TCHAR));
+    lpszBuffer = MYALLOC0(nBufferSize * sizeof(TCHAR)); // nBufferSize must > commentlength + 10 .txt 0000
+    GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpszBuffer, COMMENTLENGTH);  // length incl. NULL character
     GetDlgItemText(hWnd, IDC_EDITPATH, lpszOutputPath, MAX_PATH);  // length incl. NULL character
 
-    nLengthofStr = _tcslen(lpszOutputPath);
+    cchString = _tcslen(lpszOutputPath);
 
-    if ((0 < nLengthofStr) && ((TCHAR)'\\' != *(lpszOutputPath + nLengthofStr - 1))) {
-        *(lpszOutputPath + nLengthofStr) = (TCHAR)'\\';
-        *(lpszOutputPath + nLengthofStr + 1) = (TCHAR)'\0';  // bug found by "itschy" <itschy@lycos.de> 1.61d->1.61e
-        nLengthofStr++;
+    if ((0 < cchString) && ((TCHAR)'\\' != *(lpszOutputPath + cchString - 1))) {
+        *(lpszOutputPath + cchString) = (TCHAR)'\\';
+        *(lpszOutputPath + cchString + 1) = (TCHAR)'\0';  // bug found by "itschy" <itschy@lycos.de> 1.61d->1.61e
+        cchString++;
     }
-    _tcscpy(lpDestFileName, lpszOutputPath);
+    _tcscpy(lpszDestFileName, lpszOutputPath);
 
-    //bSaveWithCommentName = TRUE;
-    if (ReplaceInvalidFileNameChars(lpstrcomp)) {
-        _tcscat(lpDestFileName, lpstrcomp);
+    if (ReplaceInvalidFileNameChars(lpszBuffer)) {
+        _tcscat(lpszDestFileName, lpszBuffer);
     } else {
-        _tcscat(lpDestFileName, lpszResultFileBaseName);
+        _tcscat(lpszDestFileName, lpszResultFileBaseName);
     }
 
-    nLengthofStr = _tcslen(lpDestFileName);
-    _tcscat(lpDestFileName, lpExt);
-    hFile = CreateFile(lpDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+    cchString = _tcslen(lpszDestFileName);
+    _tcscat(lpszDestFileName, lpszExtension);
+    hFile = CreateFile(lpszDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFile) {
         DWORD filetail = 0;
 
         for (filetail = 0; MAXAMOUNTOFFILE > filetail; filetail++) {
-            _sntprintf(lpDestFileName + nLengthofStr, 6, TEXT("_%04u\0"), filetail);
-            //*(lpDestFileName+nLengthofStr + 5) = 0x00;
-            _tcscpy(lpDestFileName + nLengthofStr + 5, lpExt);
+            _sntprintf(lpszDestFileName + cchString, 6, TEXT("_%04u\0"), filetail);
+            //*(lpszDestFileName+cchString + 5) = 0x00;
+            _tcscpy(lpszDestFileName + cchString + 5, lpszExtension);
 
-            hFile = CreateFile(lpDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            hFile = CreateFile(lpszDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (INVALID_HANDLE_VALUE == hFile) {
                 if (ERROR_FILE_EXISTS == GetLastError()) {  // My God! I use stupid ERROR_ALREADY_EXISTS first!!
                     continue;
@@ -943,10 +932,10 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     }
 
     //_asm int 3;
-    GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpstrcomp, COMMENTLENGTH);  // length incl. NULL character
-    WriteTitle(asLangTexts[iszTextComments].lpszText, lpstrcomp, fAsHTML);
+    GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpszBuffer, COMMENTLENGTH);  // length incl. NULL character
+    WriteTitle(asLangTexts[iszTextComments].lpszText, lpszBuffer, fAsHTML);
 
-    _sntprintf(lpstrcomp, buffersize, TEXT("%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d\0"),
+    _sntprintf(lpszBuffer, nBufferSize, TEXT("%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d\0"),
                lpShot1->systemtime.wYear, TEXT("/"),
                lpShot1->systemtime.wMonth, TEXT("/"),
                lpShot1->systemtime.wDay,
@@ -960,103 +949,105 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
                lpShot2->systemtime.wMinute, TEXT(":"),
                lpShot2->systemtime.wSecond
               );
-    lpstrcomp[buffersize - 1] = (TCHAR)'\0'; // saftey NULL char
+    lpszBuffer[nBufferSize - 1] = (TCHAR)'\0'; // saftey NULL char
 
-    WriteTitle(asLangTexts[iszTextDateTime].lpszText, lpstrcomp, fAsHTML);
+    WriteTitle(asLangTexts[iszTextDateTime].lpszText, lpszBuffer, fAsHTML);
 
-    lpstrcomp[0] = (TCHAR)'\0';
+    lpszBuffer[0] = (TCHAR)'\0';
     if (NULL != lpShot1->lpszComputerName) {
-        _tcscpy(lpstrcomp, lpShot1->lpszComputerName);
+        _tcscpy(lpszBuffer, lpShot1->lpszComputerName);
     }
-    _tcscat(lpstrcomp, TEXT(" , "));
+    _tcscat(lpszBuffer, TEXT(" , "));
     if (NULL != lpShot2->lpszComputerName) {
-        _tcscat(lpstrcomp, lpShot2->lpszComputerName);
+        _tcscat(lpszBuffer, lpShot2->lpszComputerName);
     }
-    WriteTitle(asLangTexts[iszTextComputer].lpszText, lpstrcomp, fAsHTML);
+    WriteTitle(asLangTexts[iszTextComputer].lpszText, lpszBuffer, fAsHTML);
 
-    lpstrcomp[0] = (TCHAR)'\0';
+    lpszBuffer[0] = (TCHAR)'\0';
     if (NULL != lpShot1->lpszUserName) {
-        _tcscpy(lpstrcomp, lpShot1->lpszUserName);
+        _tcscpy(lpszBuffer, lpShot1->lpszUserName);
     }
-    _tcscat(lpstrcomp, TEXT(" , "));
+    _tcscat(lpszBuffer, TEXT(" , "));
     if (NULL != lpShot2->lpszUserName) {
-        _tcscat(lpstrcomp, lpShot2->lpszUserName);
+        _tcscat(lpszBuffer, lpShot2->lpszUserName);
     }
-    WriteTitle(asLangTexts[iszTextUsername].lpszText, lpstrcomp, fAsHTML);
+    WriteTitle(asLangTexts[iszTextUsername].lpszText, lpszBuffer, fAsHTML);
 
-    MYFREE(lpstrcomp);
+    MYFREE(lpszBuffer);
 
     // Write keydel part
-    if (0 != nKEYDEL) {
-        WriteTableHead(asLangTexts[iszTextKeyDel].lpszText, nKEYDEL, fAsHTML);
-        WritePart(lpKEYDELHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcDeleted.cKeys) {
+        WriteTableHead(asLangTexts[iszTextKeyDel].lpszText, CompareResult.stcDeleted.cKeys, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRKeyDeleted, fAsHTML, FALSE);
     }
     // Write keyadd part
-    if (0 != nKEYADD) {
-        WriteTableHead(asLangTexts[iszTextKeyAdd].lpszText, nKEYADD, fAsHTML);
-        WritePart(lpKEYADDHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcAdded.cKeys) {
+        WriteTableHead(asLangTexts[iszTextKeyAdd].lpszText, CompareResult.stcAdded.cKeys, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRKeyAdded, fAsHTML, FALSE);
     }
     // Write valdel part
-    if (0 != nVALDEL) {
-        WriteTableHead(asLangTexts[iszTextValDel].lpszText, nVALDEL, fAsHTML);
-        WritePart(lpVALDELHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcDeleted.cValues) {
+        WriteTableHead(asLangTexts[iszTextValDel].lpszText, CompareResult.stcDeleted.cValues, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRValDeleted, fAsHTML, FALSE);
     }
     // Write valadd part
-    if (0 != nVALADD) {
-        WriteTableHead(asLangTexts[iszTextValAdd].lpszText, nVALADD, fAsHTML);
-        WritePart(lpVALADDHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcAdded.cValues) {
+        WriteTableHead(asLangTexts[iszTextValAdd].lpszText, CompareResult.stcAdded.cValues, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRValAdded, fAsHTML, FALSE);
     }
     // Write valmodi part
-    if (0 != nVALMODI) {
-        WriteTableHead(asLangTexts[iszTextValModi].lpszText, nVALMODI, fAsHTML);
-        WritePart(lpVALMODIHEAD, fAsHTML, TRUE);
+    if (0 != CompareResult.stcModified.cValues) {
+        WriteTableHead(asLangTexts[iszTextValModi].lpszText, CompareResult.stcModified.cValues, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRValModified, fAsHTML, TRUE);
     }
     // Write file add part
-    if (0 != nFILEADD) {
-        WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, nFILEADD, fAsHTML);
-        WritePart(lpFILEADDHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcAdded.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
     }
     // Write file del part
-    if (0 != nFILEDEL) {
-        WriteTableHead(asLangTexts[iszTextFileDel].lpszText, nFILEDEL, fAsHTML);
-        WritePart(lpFILEDELHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcDeleted.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
     }
     // Write file modi part
-    if (0 != nFILEMODI) {
-        WriteTableHead(asLangTexts[iszTextFileModi].lpszText, nFILEMODI, fAsHTML);
-        WritePart(lpFILEMODIHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcModified.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
     }
     // Write directory add part
-    if (0 != nDIRADD) {
-        WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, nDIRADD, fAsHTML);
-        WritePart(lpDIRADDHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcAdded.cDirs) {
+        WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, CompareResult.stcAdded.cDirs, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, FALSE);
     }
     // Write directory del part
-    if (0 != nDIRDEL) {
-        WriteTableHead(asLangTexts[iszTextDirDel].lpszText, nDIRDEL, fAsHTML);
-        WritePart(lpDIRDELHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcDeleted.cDirs) {
+        WriteTableHead(asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
     }
     // Write directory modi part
-    if (0 != nDIRMODI) {
-        WriteTableHead(asLangTexts[iszTextDirModi].lpszText, nDIRMODI, fAsHTML);
-        WritePart(lpDIRMODIHEAD, fAsHTML, FALSE);
+    if (0 != CompareResult.stcModified.cDirs) {
+        WriteTableHead(asLangTexts[iszTextDirModi].lpszText, CompareResult.stcModified.cDirs, fAsHTML);
+        WritePart(CompareResult.stCRHeads.lpCRDirModified, fAsHTML, FALSE);
     }
 
-    nTotal = nKEYADD + nKEYDEL + nVALADD + nVALDEL + nVALMODI + nFILEADD + nFILEDEL  + nFILEMODI + nDIRADD + nDIRDEL + nDIRMODI;
     if (fAsHTML) {
         WriteHTML_BR();
     }
-    WriteTableHead(asLangTexts[iszTextTotal].lpszText, nTotal, fAsHTML);
+    WriteTableHead(asLangTexts[iszTextTotal].lpszText, CompareResult.stcChanged.cAll, fAsHTML);
     if (fAsHTML) {
         WriteHTMLEnd();
     }
 
+    // Close file
     CloseHandle(hFile);
 
-    if (32 >= (size_t)ShellExecute(hWnd, TEXT("open"), lpDestFileName, NULL, NULL, SW_SHOW)) {
+    if (32 >= (size_t)ShellExecute(hWnd, TEXT("open"), lpszDestFileName, NULL, NULL, SW_SHOW)) {
         ErrMsg(asLangTexts[iszTextErrorExecViewer].lpszText);
     }
-    MYFREE(lpDestFileName);
+    MYFREE(lpszDestFileName);
+
+    ShowHideProgressBar(SW_HIDE);
 
     return TRUE;
 }
@@ -1090,6 +1081,9 @@ VOID FreeAllValueContents(LPVALUECONTENT lpVC)
         // Save pointer in local variable
         lpBrotherVC = lpVC->lpBrotherVC;
 
+        // Increase count
+        cCurrent++;
+
         // Free value name
         if (NULL != lpVC->lpszValueName) {
             MYFREE(lpVC->lpszValueName);
@@ -1116,6 +1110,9 @@ VOID FreeAllKeyContents(LPKEYCONTENT lpKC)
         // Save pointer in local variable
         lpBrotherKC = lpKC->lpBrotherKC;
 
+        // Increase count
+        cCurrent++;
+
         // Free key name
         if (NULL != lpKC->lpszKeyName) {
             if ((NULL != lpKC->lpFatherKC)  // only the top KC can have HKLM/HKU, so ignore the sub KCs
@@ -1130,6 +1127,14 @@ VOID FreeAllKeyContents(LPKEYCONTENT lpKC)
         // If the entry has values, then do a call for the first value
         if (NULL != lpKC->lpFirstVC) {
             FreeAllValueContents(lpKC->lpFirstVC);
+        }
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UpdateProgressBar();
+            }
         }
 
         // If the entry has childs, then do a recursive call for the first child
@@ -1174,7 +1179,7 @@ VOID FreeShot(LPREGSHOT lpShot)
 // ----------------------------------------------------------------------
 // Get registry snap shot
 // ----------------------------------------------------------------------
-LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
+LPKEYCONTENT GetRegistrySnap(LPREGSHOT lpShot, HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
 {
     LPKEYCONTENT lpKC;
     DWORD cSubKeys;
@@ -1237,13 +1242,13 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
             return NULL;
         }
 
-        // Increase key count
-        nGettingKey++;
-
-        // Write pointer to current key into caller's pointer
+        // Copy pointer to current key into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpKC;
         }
+
+        // Increase key count
+        lpShot->stCounts.cKeys++;
 
         // Copy the registry values of the current key
         if (0 < cValues) {
@@ -1327,14 +1332,13 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                     MYFREE(lpszFullName);
                 }
 
-                // Increase value count
-                nGettingValue++;
-
-                // Write pointer to current value into previous value's next value pointer
+                // Copy pointer to current value into previous value's next value pointer
                 if (NULL != lplpVCPrev) {
                     *lplpVCPrev = lpVC;
                 }
-                lplpVCPrev = &lpVC->lpBrotherVC;
+
+                // Increase value count
+                lpShot->stCounts.cValues++;
 
                 // Copy value meta data
                 lpVC->nTypeCode = nValueType;
@@ -1361,14 +1365,17 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
 #endif
+
+                // Set "lpBrotherVC" pointer for storing the next brother's pointer
+                lplpVCPrev = &lpVC->lpBrotherVC;
             }
         }
     }  // End of extra local block
 
     // Update counters display
-    nGettingTime = GetTickCount();
-    if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
+    nCurrentTime = GetTickCount();
+    if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     // Process sub keys
@@ -1447,9 +1454,10 @@ LPKEYCONTENT GetRegistrySnap(HKEY hRegKey, LPTSTR lpszRegKeyName, LPKEYCONTENT l
                 continue;
             }
 
-            lpKCSub = GetRegistrySnap(hRegSubKey, lpszRegSubKeyName, lpKC, lplpKCPrev);
+            lpKCSub = GetRegistrySnap(lpShot, hRegSubKey, lpszRegSubKeyName, lpKC, lplpKCPrev);
             RegCloseKey(hRegSubKey);
 
+            // Set "lpBrotherKC" pointer for storing the next brother's pointer
             if (NULL != lpKCSub) {
                 lplpKCPrev = &lpKCSub->lpBrotherKC;
             }
@@ -1467,8 +1475,21 @@ VOID Shot(LPREGSHOT lpShot)
 {
     DWORD cchString;
 
+    // Clear shot
+    cEnd = 0;
     FreeShot(lpShot);
 
+    // Setup GUI for shot...
+    nCurrentTime  = 0;
+    nStartTime  = GetTickCount();
+    nLastTime = nStartTime;
+    if (&Shot1 == lpShot) {
+        UI_BeforeShot(IDC_1STSHOT);
+    } else {
+        UI_BeforeShot(IDC_2NDSHOT);
+    }
+
+    // New temporary buffers
     lpStringBuffer = NULL;
     lpDataBuffer = NULL;
 
@@ -1485,33 +1506,38 @@ VOID Shot(LPREGSHOT lpShot)
     // Set current system time
     GetSystemTime(&lpShot->systemtime);
 
-    // Initialize counters
-    nGettingKey   = 0;
-    nGettingValue = 0;
-    nGettingTime  = 0;
-    nGettingFile  = 0;
-    nGettingDir   = 0;
-    nBASETIME  = GetTickCount();
-    nBASETIME1 = nBASETIME;
-    if (&Shot1 == lpShot) {
-        UI_BeforeShot(IDC_1STSHOT);
-    } else {
-        UI_BeforeShot(IDC_2NDSHOT);
-    }
-
-    GetRegistrySnap(HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
-    GetRegistrySnap(HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
+    // Take HKLM registry shot
+    GetRegistrySnap(lpShot, HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
 
     // Update counters display (reg keys/values final)
-    nGettingTime = GetTickCount();
-    UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
+    nCurrentTime = GetTickCount();
+    UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
 
+    // Take HKU registry shot
+    GetRegistrySnap(lpShot, HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
+
+    // Update counters display (reg keys/values final)
+    nCurrentTime = GetTickCount();
+    UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+
+    // Take file shot
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
         FileShot(lpShot);
+
+        // Update counters display (dirs/files final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
     }
 
-    // Set flag
+    // Get total count of all items
+    lpShot->stCounts.cAll = lpShot->stCounts.cKeys
+                            + lpShot->stCounts.cValues
+                            + lpShot->stCounts.cDirs
+                            + lpShot->stCounts.cFiles;
+
+    // Set flags
     lpShot->fFilled = TRUE;
+    lpShot->fLoaded = FALSE;
 
     UI_AfterShot();
 
@@ -1532,7 +1558,7 @@ VOID Shot(LPREGSHOT lpShot)
 // This routine is called recursively to store the keys of the Registry tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
+VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
 {
     DWORD nFPKey;
 
@@ -1577,7 +1603,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             if (NULL != lpszKeyName) {
                 sKC.nKeyNameLen = (DWORD)lpKC->cchKeyName;
 
-                if ((bUseLongRegHead) && (0 == nFPFatherKey)) {
+                if ((fUseLongRegHead) && (0 == nFPFatherKey)) {
                     // Adopt to long HKLM/HKU
                     if (lpszHKLMShort == lpszKeyName) {
                         lpszKeyName = lpszHKLMLong;
@@ -1598,6 +1624,9 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
                 }
             }
 
+            // Increase count
+            cCurrent++;
+
             // Write key content to file
             // Make sure that ALL fields have been initialized/set
             WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
@@ -1613,7 +1642,7 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             }
         }  // End of extra local block
 
-        // Save the values of current key
+        // Save the values of the current key
         if (NULL != lpKC->lpFirstVC) {
             LPVALUECONTENT lpVC;
             DWORD nFPValue;
@@ -1666,6 +1695,9 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
                     }
                 }
 
+                // Increase count
+                cCurrent++;
+
                 // Write value content to file
                 // Make sure that ALL fields have been initialized/set
                 WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
@@ -1701,33 +1733,30 @@ VOID SaveRegKeys(LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD nFPCaller)
             }
         }
 
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UpdateProgressBar();
+            }
+        }
+
         // ATTENTION!!! sKC will be INVALID from this point on, due to recursive calls
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "ofsFirstSubKey" position for storing the first child's position
         if (NULL != lpKC->lpFirstSubKC) {
-            SaveRegKeys(lpKC->lpFirstSubKC, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
+            SaveRegKeys(lpShot, lpKC->lpFirstSubKC, nFPKey, nFPKey + offsetof(SAVEKEYCONTENT, ofsFirstSubKey));
         }
 
         // Set "ofsBrotherKey" position for storing the following brother's position
         nFPCaller = nFPKey + offsetof(SAVEKEYCONTENT, ofsBrotherKey);
-
-        // TODO: Need to adjust progress bar para!!
-        nSavingKey++;
-        if (0 != nGettingKey) {
-            if (nSavingKey % nGettingKey > nRegStep) {
-                nSavingKey = 0;
-                SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-                UpdateWindow(hWnd);
-                PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
-            }
-        }
     }
 }
 
 // ----------------------------------------------------------------------
 // Save registry and files to HIVE file
 // ----------------------------------------------------------------------
-VOID SaveHive(LPREGSHOT lpShot)
+VOID SaveShot(LPREGSHOT lpShot)
 {
     OPENFILENAME opfn;
     TCHAR filepath[MAX_PATH];
@@ -1764,7 +1793,14 @@ VOID SaveHive(LPREGSHOT lpShot)
         return;
     }
 
+    // Clear counters
+    cCurrent = 0;
+    cEnd = lpShot->stCounts.cAll;
+
     // Setup GUI for saving...
+    nCurrentTime  = 0;
+    nStartTime  = GetTickCount();
+    nLastTime = nStartTime;
     UI_BeforeClear();
     InitProgressBar();
 
@@ -1872,23 +1908,47 @@ VOID SaveHive(LPREGSHOT lpShot)
 
     // Save HKLM
     if (NULL != lpShot->lpHKLM) {
-        SaveRegKeys(lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
+        SaveRegKeys(lpShot, lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            UpdateProgressBar();
+        }
     }
 
     // Save HKU
     if (NULL != lpShot->lpHKU) {
-        SaveRegKeys(lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
+        SaveRegKeys(lpShot, lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            UpdateProgressBar();
+        }
     }
 
     // Save HEADFILEs
     if (NULL != lpShot->lpHF) {
-        SaveHeadFiles(lpShot->lpHF, offsetof(FILEHEADER, ofsHF));
+        SaveHeadFiles(lpShot, lpShot->lpHF, offsetof(FILEHEADER, ofsHF));
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            UpdateProgressBar();
+        }
     }
 
     // Close file
     CloseHandle(hFileWholeReg);
 
-    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_HIDE);
+    // Update progress bar display
+    if (0 != cEnd) {
+        nCurrentTime = GetTickCount();
+        UpdateProgressBar();
+    }
+
+    ShowHideProgressBar(SW_HIDE);
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 
@@ -1932,7 +1992,7 @@ size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, s
 // ----------------------------------------------------------------------
 // Load registry key with values from HIVE file
 // ----------------------------------------------------------------------
-VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
+VOID LoadRegKeys(LPREGSHOT lpShot, DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller)
 {
     LPKEYCONTENT lpKC;
     DWORD ofsBrotherKey;
@@ -2015,13 +2075,13 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
             MYFREE(lpszFullName);
         }
 
-        // Write pointer to current key into caller's pointer
+        // Copy pointer to current key into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpKC;
         }
 
         // Increase key count
-        nGettingKey++;
+        lpShot->stCounts.cKeys++;
 
         // Copy the value contents of the current key
         if (0 != sKC.ofsFirstValue) {
@@ -2088,10 +2148,13 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
                     MYFREE(lpszFullName);
                 }
 
-                // Write pointer to current value into previous value's next value pointer
+                // Copy pointer to current value into previous value's next value pointer
                 if (NULL != lplpCallerVC) {
                     *lplpCallerVC = lpVC;
                 }
+
+                // Increase value count
+                lpShot->stCounts.cValues++;
 
                 // Copy value meta data
                 lpVC->nTypeCode = sVC.nTypeCode;
@@ -2103,25 +2166,22 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
                     CopyMemory(lpVC->lpValueData, (lpFileBuffer + sVC.ofsValueData), sVC.cbData);
                 }
 
-                // Increase value count
-                nGettingValue++;
-
                 // Set "lpBrotherVC" pointer for storing the next brother's pointer
                 lplpCallerVC = &lpVC->lpBrotherVC;
             }
         }
 
         // Update counters display
-        nGettingTime = GetTickCount();
-        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-            UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, nGettingKey, nGettingValue);
+        nCurrentTime = GetTickCount();
+        if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+            UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
         }
 
         // ATTENTION!!! sKC will be INVALID from this point on, due to recursive calls
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "lpFirstSubKC" pointer for storing the first child's pointer
         if (0 != sKC.ofsFirstSubKey) {
-            LoadRegKeys(sKC.ofsFirstSubKey, lpKC, &lpKC->lpFirstSubKC);
+            LoadRegKeys(lpShot, sKC.ofsFirstSubKey, lpKC, &lpKC->lpFirstSubKC);
         }
 
         // Set "lpBrotherKC" pointer for storing the next brother's pointer
@@ -2132,15 +2192,15 @@ VOID LoadRegKeys(DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYCONTENT *lplpCaller
 // ----------------------------------------------------------------------
 // Load registry and files from HIVE file
 // ----------------------------------------------------------------------
-BOOL LoadHive(LPREGSHOT lpShot)
+BOOL LoadShot(LPREGSHOT lpShot)
 {
     OPENFILENAME opfn;
     TCHAR filepath[MAX_PATH];  // length incl. NULL character
 
-    DWORD nFileSize;
-    DWORD i, j;
-    DWORD nRemain;
-    DWORD nReadSize;
+    DWORD cbFileSize;
+    DWORD cbFileRemain;
+    DWORD cbReadSize;
+    DWORD cbFileRead;
 
     // Clear Get File Name result buffer
     ZeroMemory(filepath, sizeof(filepath));
@@ -2168,8 +2228,8 @@ BOOL LoadHive(LPREGSHOT lpShot)
         return FALSE;
     }
 
-    nFileSize = GetFileSize(hFileWholeReg, NULL);
-    if (sizeof(fileheader) > nFileSize) {
+    cbFileSize = GetFileSize(hFileWholeReg, NULL);
+    if (sizeof(fileheader) > cbFileSize) {
         CloseHandle(hFileWholeReg);
         ErrMsg(TEXT("wrong filesize"));
         return FALSE;
@@ -2200,18 +2260,14 @@ BOOL LoadHive(LPREGSHOT lpShot)
         return FALSE;
     }
 
-
     // Clear shot
+    cEnd = 0;
     FreeShot(lpShot);
 
     // Setup GUI for loading...
-    nGettingKey   = 0;
-    nGettingValue = 0;
-    nGettingTime  = 0;
-    nGettingFile  = 0;
-    nGettingDir   = 0;
-    nBASETIME  = GetTickCount();
-    nBASETIME1 = nBASETIME;
+    nCurrentTime  = 0;
+    nStartTime  = GetTickCount();
+    nLastTime = nStartTime;
     if (&Shot1 == lpShot) {
         UI_BeforeShot(IDC_1STSHOT);
     } else {
@@ -2219,48 +2275,59 @@ BOOL LoadHive(LPREGSHOT lpShot)
     }
 
     // Allocate memory to hold the complete file
-    lpFileBuffer = MYALLOC(nFileSize);
+    lpFileBuffer = MYALLOC(cbFileSize);
 
     // Read file blockwise for progress bar
+    cCurrent = 0;
+    cEnd = cbFileSize;
     InitProgressBar();
-    nFileStep = nFileSize / REGSHOT_READ_BLOCK_SIZE / MAXPBPOSITION;  // TODO: does look wrong!?! PBM_SETSTEP message was in InitProgressBar()
 
     SetFilePointer(hFileWholeReg, 0, NULL, FILE_BEGIN);
-    nRemain = nFileSize;  // 100% to go
-    nReadSize = REGSHOT_READ_BLOCK_SIZE;  // next block length to read
-    for (i = 0, j = 0; 0 < nRemain; i += nReadSize, j++) {
+    cbFileRemain = cbFileSize;  // 100% to go
+    cbReadSize = REGSHOT_READ_BLOCK_SIZE;  // next block length to read
+    for (cbFileRead = 0; 0 < cbFileRemain; cbFileRead += cbReadSize) {
         // If the rest is smaller than a block, then use the rest length
-        if (REGSHOT_READ_BLOCK_SIZE > nRemain) {
-            nReadSize = nRemain;
+        if (REGSHOT_READ_BLOCK_SIZE > cbFileRemain) {
+            cbReadSize = cbFileRemain;
         }
 
         // Read the next block
-        ReadFile(hFileWholeReg, lpFileBuffer + i, nReadSize, &NBW, NULL);
-        if (NBW != nReadSize) {
+        ReadFile(hFileWholeReg, lpFileBuffer + cbFileRead, cbReadSize, &NBW, NULL);
+        if (NBW != cbReadSize) {
             CloseHandle(hFileWholeReg);
             ErrMsg(TEXT("Reading ERROR!"));
             return FALSE;
         }
 
-        // Determine how much to go, if zero leave the for loop
-        nRemain -= nReadSize;
-        if (0 == nRemain) {
+        // Determine how much to go, if zero leave the for-loop
+        cbFileRemain -= cbReadSize;
+        if (0 == cbFileRemain) {
             break;
         }
 
-        // Handle progress bar
-        if (j % (nFileSize / REGSHOT_READ_BLOCK_SIZE) > nFileStep) {  // TODO: does look wrong!?!
-            j = 0;
-            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-            UpdateWindow(hWnd);
-            PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                cCurrent = cbFileRead;
+                UpdateProgressBar();
+            }
         }
     }
 
+    // Close file
     CloseHandle(hFileWholeReg);
 
-    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_HIDE);  // Hide progress bar
-    ShowHideCounters(SW_SHOW);
+    // Update progress bar display
+    if (0 != cEnd) {
+        nCurrentTime = GetTickCount();
+        UpdateProgressBar();
+    }
+
+    // Setup GUI for parsing loaded file...
+    cEnd = 0;
+    _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
+    InitCounters();
 
     // Check size for copying file header
     nSourceSize = fileheader.nFHSize;
@@ -2467,18 +2534,36 @@ BOOL LoadHive(LPREGSHOT lpShot)
     ZeroMemory(&sVC, sizeof(sVC));
 
     if (0 != fileheader.ofsHKLM) {
-        LoadRegKeys(fileheader.ofsHKLM, NULL, &lpShot->lpHKLM);
+        LoadRegKeys(lpShot, fileheader.ofsHKLM, NULL, &lpShot->lpHKLM);
+
+        // Update counters display (keys/values final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     if (0 != fileheader.ofsHKU) {
-        LoadRegKeys(fileheader.ofsHKU, NULL, &lpShot->lpHKU);
+        LoadRegKeys(lpShot, fileheader.ofsHKU, NULL, &lpShot->lpHKU);
+
+        // Update counters display (keys/values final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     if (0 != fileheader.ofsHF) {
-        LoadHeadFiles(fileheader.ofsHF, &lpShot->lpHF);
+        LoadHeadFiles(lpShot, fileheader.ofsHF, &lpShot->lpHF);
+
+        // Update counters display (dirs/files final)
+        nCurrentTime = GetTickCount();
+        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
     }
 
-    // Setup GUI for loading...
+    // Get total count of all items
+    lpShot->stCounts.cAll = lpShot->stCounts.cKeys
+                            + lpShot->stCounts.cValues
+                            + lpShot->stCounts.cDirs
+                            + lpShot->stCounts.cFiles;
+
+    // Set GUI fields after loading...
     if (NULL != lpShot->lpHF) {
         SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
         SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
@@ -2499,7 +2584,7 @@ BOOL LoadHive(LPREGSHOT lpShot)
         lpFileBuffer = NULL;
     }
 
-    // Set flag
+    // Set flags
     lpShot->fFilled = TRUE;
     lpShot->fLoaded = TRUE;
 

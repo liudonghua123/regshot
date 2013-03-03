@@ -113,6 +113,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             ZeroMemory(&Shot1, sizeof(Shot1));
             ZeroMemory(&Shot2, sizeof(Shot2));
+            ZeroMemory(&CompareResult, sizeof(CompareResult));
 
             GetWindowsDirectory(lpszWindowsDirName, MAX_PATH);  // length incl. NULL character
             lpszWindowsDirName[MAX_PATH] = (TCHAR)'\0';
@@ -182,11 +183,11 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_SHOTSAVE:  // Shot Popup Menu: "Shot and Save..."
                     Shot(lpMenuShot);
-                    SaveHive(lpMenuShot);
+                    SaveShot(lpMenuShot);
                     return(TRUE);
 
                 case IDM_LOAD:  // Shot Popup Menu: "Load..."
-                    LoadHive(lpMenuShot);
+                    LoadShot(lpMenuShot);
                     return(TRUE);
 
                     /*case IDC_SAVEREG:
@@ -197,7 +198,6 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
                     UI_BeforeClear();
                     CompareShots(&Shot1, &Shot2);
-                    ShowWindow(GetDlgItem(hDlg, IDC_PROGBAR), SW_HIDE);
                     EnableWindow(GetDlgItem(hDlg, IDC_CLEAR1), TRUE);
                     SetFocus(GetDlgItem(hDlg, IDC_CLEAR1));
                     SendMessage(hDlg, DM_SETDEFID, (WPARAM)IDC_CLEAR1, (LPARAM)0);
@@ -215,17 +215,25 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_CLEARALL:  // Clear Popup Menu: "Clear All"
                     UI_BeforeClear();
+                    cCurrent = 0;
+                    cEnd = Shot1.stCounts.cAll + Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
+                    InitProgressBar();
                     FreeShot(&Shot1);
                     FreeShot(&Shot2);
-                    FreeAllCompareResults();
+                    FreeCompareResult();
+                    ShowHideProgressBar(SW_HIDE);
                     UI_AfterClear();
                     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
                     return(TRUE);
 
                 case IDM_CLEARSHOT1:  // Clear Popup Menu: "Clear 1st Shot"
                     UI_BeforeClear();
+                    cCurrent = 0;
+                    cEnd = Shot1.stCounts.cAll + CompareResult.stcChanged.cAll;
+                    InitProgressBar();
                     FreeShot(&Shot1);
-                    FreeAllCompareResults();
+                    FreeCompareResult();
+                    ShowHideProgressBar(SW_HIDE);
                     ClearRegKeyMatchFlags(Shot2.lpHKLM);  // we clear Shot2's tag
                     ClearRegKeyMatchFlags(Shot2.lpHKU);
                     ClearHeadFileMatchFlags(Shot2.lpHF);
@@ -234,8 +242,12 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_CLEARSHOT2:  // Clear Popup Menu: "Clear 2nd Shot"
                     UI_BeforeClear();
+                    cCurrent = 0;
+                    cEnd = Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
+                    InitProgressBar();
                     FreeShot(&Shot2);
-                    FreeAllCompareResults();
+                    FreeCompareResult();
+                    ShowHideProgressBar(SW_HIDE);
                     ClearRegKeyMatchFlags(Shot1.lpHKLM);  // we clear Shot1's tag
                     ClearRegKeyMatchFlags(Shot1.lpHKU);
                     ClearHeadFileMatchFlags(Shot1.lpHF);
@@ -244,7 +256,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     /*case IDM_CLEARRESULT:
                         UI_BeforeClear();
-                        FreeAllCompareResults();
+                        FreeCompareResult();
                         ClearRegKeyMatchFlags(Shot1.lpHKLM);
                         ClearRegKeyMatchFlags(Shot2.lpHKLM);
                         ClearRegKeyMatchFlags(Shot1.lpHKU);

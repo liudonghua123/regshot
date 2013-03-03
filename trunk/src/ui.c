@@ -1,7 +1,7 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007 TiANWEi
     Copyright 2004 tulipfan
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -27,6 +27,9 @@ HCURSOR hHourGlass;   // Handle of cursor
 HCURSOR hSaveCursor;  // Handle of cursor
 
 
+// ----------------------------------------------------------------------
+// Displays/Hides counters in the "status bar" of the window
+// ----------------------------------------------------------------------
 VOID ShowHideCounters(int nCmdShow)  // 1.8.2
 {
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT1), nCmdShow);
@@ -35,18 +38,37 @@ VOID ShowHideCounters(int nCmdShow)  // 1.8.2
 }
 
 
+// ----------------------------------------------------------------------
+// Displays/Hides progress bar in the "status bar" of the window
+// ----------------------------------------------------------------------
+VOID ShowHideProgressBar(int nCmdShow)
+{
+    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), nCmdShow);
+}
+
+
+// ----------------------------------------------------------------------
+// Resets and displays counters in the "status bar" of the window
+// ----------------------------------------------------------------------
+VOID InitCounters(VOID)
+{
+    ShowHideProgressBar(SW_HIDE);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+    ShowHideCounters(SW_SHOW);
+}
+
+
+// ----------------------------------------------------------------------
+// Resets and displays progress bar in the "status bar" of the window
+// ----------------------------------------------------------------------
 VOID InitProgressBar(VOID)
 {
-    // The following are not so good, but they work
-    nSavingKey = 0;
-    nComparing = 0;
-    nRegStep = nGettingKey / MAXPBPOSITION;
-    nFileStep = nGettingFile / MAXPBPOSITION;
     ShowHideCounters(SW_HIDE);  // 1.8.2
-    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETRANGE, (WPARAM)0, MAKELPARAM(0, MAXPBPOSITION));
+    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETRANGE32, (WPARAM)0, (LPARAM)MAXPBPOSITION);
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
-    SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETSTEP, (WPARAM)1, (LPARAM)0);
-    ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), SW_SHOW);
+    ShowHideProgressBar(SW_SHOW);
 }
 
 
@@ -55,21 +77,47 @@ VOID InitProgressBar(VOID)
 // ----------------------------------------------------------------------
 VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2)
 {
-    //nGettingTime = GetTickCount();
-    nBASETIME1 = nGettingTime;
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s\0"), asLangTexts[iszTextTime].lpszText, (nGettingTime - nBASETIME) / 1000, TEXT("s"), (nGettingTime - nBASETIME) % 1000, TEXT("ms"));
+    // Remember current time for next update interval
+    nLastTime = nCurrentTime;
+
+    // Update "status bar"
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s\0"), asLangTexts[iszTextTime].lpszText, (nCurrentTime - nStartTime) / 1000, TEXT("s"), (nCurrentTime - nStartTime) % 1000, TEXT("ms"));
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+
     _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle1, nCount1);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+
     _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle2, nCount2);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
+    // Refresh window display
     UpdateWindow(hWnd);
     PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
-    //SetForegroundWindow(hWnd);
+}
+
+
+// ----------------------------------------------------------------------
+// Update progress bar in the "status bar" of the window
+// ----------------------------------------------------------------------
+VOID UpdateProgressBar(VOID)
+{
+    DWORD nPBPos;
+
+    // Remember current time for next update interval
+    nLastTime = nCurrentTime;
+
+    // Update "status bar"
+    if (0 != cEnd) {
+        nPBPos = cCurrent * (__int64)MAXPBPOSITION / cEnd;
+        SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)nPBPos, (LPARAM)0);
+
+        // Refresh window display
+        UpdateWindow(hWnd);
+        PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+    }
 }
 
 
@@ -83,10 +131,7 @@ VOID UI_BeforeShot(DWORD nID)
     EnableWindow(GetDlgItem(hWnd, nID), FALSE);
     // Added in 1.8.2
     _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    ShowHideCounters(SW_SHOW);
+    InitCounters();
 }
 
 
