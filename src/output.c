@@ -1,7 +1,7 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2007 Belogorokhov Youri
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -88,34 +88,34 @@ VOID WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML)
 }
 
 // ----------------------------------------------------------------------
-VOID WritePart(LPCOMRESULT lpComResultStart, BOOL fAsHTML, BOOL fUseColor)
+VOID WritePart(LPCOMRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor)
 {
-    size_t fColor;  // color flip-flop flag
     size_t nCharsToWrite;
     size_t nCharsToGo;
     LPTSTR lpszResult;
-    LPCOMRESULT lpComResult;
+    LPCOMRESULT lpCR;
+    BOOL fColor;  // color flip-flop flag
 
     if (fAsHTML) {
         WriteFile(hFile, lpszHTMLTableBegin, (DWORD)(_tcslen(lpszHTMLTableBegin) * sizeof(TCHAR)), &NBW, NULL);
         WriteFile(hFile, lpszHTMLTd2Begin, (DWORD)(_tcslen(lpszHTMLTd2Begin) * sizeof(TCHAR)), &NBW, NULL);
     }
 
-    fColor = 0;
-    for (lpComResult = lpComResultStart; NULL != lpComResult; lpComResult = lpComResult->lpnextresult) {
+    fColor = FALSE;
+    for (lpCR = lpStartCR; NULL != lpCR; lpCR = lpCR->lpNextCR) {
         if (fAsHTML) {
             // 1.8.0: zebra/flip-flop colors
             if (fUseColor) {
-                if (0 == fColor) {
+                if (!fColor) {
                     WriteFile(hFile, lpszHTMLSpan1, (DWORD)(_tcslen(lpszHTMLSpan1) * sizeof(TCHAR)), &NBW, NULL);
                 } else {
                     WriteFile(hFile, lpszHTMLSpan2, (DWORD)(_tcslen(lpszHTMLSpan2) * sizeof(TCHAR)), &NBW, NULL);
                 }
-                fColor = 1 - fColor;
+                fColor = !fColor;
             }
         }
 
-        lpszResult = lpComResult->lpszResult;
+        lpszResult = lpCR->lpszResult;
         for (nCharsToGo = _tcslen(lpszResult); 0 < nCharsToGo;) {
             nCharsToWrite = nCharsToGo;
             if (HTMLWRAPLENGTH < nCharsToWrite) {
@@ -144,6 +144,17 @@ VOID WritePart(LPCOMRESULT lpComResultStart, BOOL fAsHTML, BOOL fUseColor)
             WriteFile(hFile, lpszHTML_BR, (DWORD)(_tcslen(lpszHTML_BR) * sizeof(TCHAR)), &NBW, NULL);
         } else {
             WriteFile(hFile, lpszCRLF, (DWORD)(_tcslen(lpszCRLF) * sizeof(TCHAR)), &NBW, NULL);
+        }
+
+        // Increase count
+        cCurrent++;
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UpdateProgressBar();
+            }
         }
     }
 

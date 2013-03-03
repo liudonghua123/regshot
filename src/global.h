@@ -106,7 +106,7 @@ extern HANDLE hHeap;
 
 #define ESTIMATE_VALUEDATA_LENGTH 1024*1024 //Define estimated value data in scan
 #define REFRESHINTERVAL 110          // Define progress refresh rate
-#define MAXPBPOSITION   100          // Define progress bar length
+#define MAXPBPOSITION   128          // Define progress bar length
 #define COMMENTLENGTH   51           // Define commentfield length on the MainForm in TCHARs incl. NULL
 #define HTMLWRAPLENGTH  1000         // Define html output wrap length
 #define MAXAMOUNTOFFILE 10000        // Define output file counts
@@ -121,17 +121,15 @@ extern HANDLE hHeap;
 #define SIZEOF_ABOUTBOX                     4096
 
 
-// Struct used for Windows Registry Key
-struct _KEYCONTENT {
-    LPTSTR lpszKeyName;                     // Pointer to key's name
-    size_t cchKeyName;                      // Length of key's name in chars
-    struct _VALUECONTENT FAR *lpFirstVC;    // Pointer to key's first value
-    struct _KEYCONTENT FAR *lpFirstSubKC;   // Pointer to key's first sub key
-    struct _KEYCONTENT FAR *lpBrotherKC;    // Pointer to key's brother
-    struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to key's father
-    DWORD  fKeyMatch;                       // Flags used when comparing, until 1.8.2 was byte
+// Struct used for counts of keys, values, dirs and files
+struct _COUNTS {
+    DWORD cAll;
+    DWORD cKeys;
+    DWORD cValues;
+    DWORD cDirs;
+    DWORD cFiles;
 };
-typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
+typedef struct _COUNTS COUNTS, FAR *LPCOUNTS;
 
 
 // Struct used for Windows Registry Value
@@ -146,6 +144,19 @@ struct _VALUECONTENT {
     DWORD  fValueMatch;                     // Flags used when comparing, until 1.8.2 was byte
 };
 typedef struct _VALUECONTENT VALUECONTENT, FAR *LPVALUECONTENT;
+
+
+// Struct used for Windows Registry Key
+struct _KEYCONTENT {
+    LPTSTR lpszKeyName;                     // Pointer to key's name
+    size_t cchKeyName;                      // Length of key's name in chars
+    LPVALUECONTENT lpFirstVC;               // Pointer to key's first value
+    struct _KEYCONTENT FAR *lpFirstSubKC;   // Pointer to key's first sub key
+    struct _KEYCONTENT FAR *lpBrotherKC;    // Pointer to key's brother
+    struct _KEYCONTENT FAR *lpFatherKC;     // Pointer to key's father
+    DWORD  fKeyMatch;                       // Flags used when comparing, until 1.8.2 was byte
+};
+typedef struct _KEYCONTENT KEYCONTENT, FAR *LPKEYCONTENT;
 
 
 // Struct used for Windows File System
@@ -168,31 +179,65 @@ typedef struct _FILECONTENT FILECONTENT, FAR *LPFILECONTENT;
 
 // Adjusted for filecontent saving. 1.8
 struct _HEADFILE {
+    LPFILECONTENT lpFirstFC;                // Pointer to head file's first file
     struct _HEADFILE FAR *lpBrotherHF;      // Pointer to head file's brother
-    LPFILECONTENT   lpFirstFC;              // Pointer to head file's first file
+    DWORD  fHeadFileMatch;                  // Flags used when comparing
 };
 typedef struct  _HEADFILE HEADFILE, FAR *LPHEADFILE;
 
 
-// Struct used for comparing result output
+// Struct for shot,2012.
+struct _REGSHOT {
+    LPKEYCONTENT  lpHKLM;                   // Pointer to Shot's HKLM registry keys
+    LPKEYCONTENT  lpHKU;                    // Pointer to Shot's HKU registry keys
+    LPHEADFILE    lpHF;                     // Pointer to Shot's head files
+    LPTSTR        lpszComputerName;         // Pointer to Shot's computer name
+    LPTSTR        lpszUserName;             // Pointer to Shot's user name
+    SYSTEMTIME    systemtime;
+    COUNTS        stCounts;
+    BOOL          fFilled;                  // Flag if Shot was done/loaded (even if result is empty)
+    BOOL          fLoaded;                  // Flag if Shot was loaded from a file
+};
+typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
+
+
+// Struct for chaining compare result output
 struct _COMRESULT {
     LPTSTR  lpszResult;                     // Pointer to result string
-    struct _COMRESULT FAR *lpnextresult;    // Pointer to next _COMRESULT
+    struct _COMRESULT FAR *lpNextCR;        // Pointer to next _COMRESULT
 };
 typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
 
-// Struct for shot,2012.
-struct _REGSHOT {
-    LPKEYCONTENT  lpHKLM;            // Pointer to Shot's HKLM registry keys
-    LPKEYCONTENT  lpHKU;             // Pointer to Shot's HKU registry keys
-    LPHEADFILE    lpHF;              // Pointer to Shot's head files
-    LPTSTR        lpszComputerName;  // Pointer to Shot's computer name
-    LPTSTR        lpszUserName;      // Pointer to Shot's user name
-    SYSTEMTIME    systemtime;
-    BOOL          fFilled;           // Flag if Shot was done/loaded (even if result is empty)
-    BOOL          fLoaded;           // Flag if Shot was loaded from a file
+
+// Struct for compare result pointers
+struct _COMPPOINTERS {
+    LPCOMRESULT  lpCRKeyAdded;
+    LPCOMRESULT  lpCRKeyDeleted;
+    LPCOMRESULT  lpCRValAdded;
+    LPCOMRESULT  lpCRValDeleted;
+    LPCOMRESULT  lpCRValModified;
+    LPCOMRESULT  lpCRDirAdded;
+    LPCOMRESULT  lpCRDirDeleted;
+    LPCOMRESULT  lpCRDirModified;
+    LPCOMRESULT  lpCRFileAdded;
+    LPCOMRESULT  lpCRFileDeleted;
+    LPCOMRESULT  lpCRFileModified;
 };
-typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
+typedef struct _COMPPOINTERS COMPPOINTERS, FAR *LPCOMPPOINTERS;
+
+
+// Struct for compare result
+struct _COMPRESULT {
+    COUNTS        stcCompared;
+    COUNTS        stcChanged;
+    COUNTS        stcAdded;
+    COUNTS        stcDeleted;
+    COUNTS        stcModified;
+    COMPPOINTERS  stCRHeads;
+    COMPPOINTERS  stCRCurrent;
+    BOOL          fFilled;                  // Flag if comparison was done (even if result is empty)
+};
+typedef struct _COMPRESULT COMPRESULT, FAR *LPCOMPRESULT;
 
 
 // Struct for file header, used in saving and loading
@@ -368,30 +413,19 @@ typedef struct  _SAVEHEADFILE SAVEHEADFILE, FAR *LPSAVEHEADFILE;
 #define HEADFILE_VERSION_CURRENT HEADFILE_VERSION_1
 
 
-// Number of Modification detected
-extern DWORD nFILEADD;
-extern DWORD nFILEDEL;
-extern DWORD nFILEMODI;
-extern DWORD nDIRADD;
-extern DWORD nDIRDEL;
-extern DWORD nDIRMODI;
+// Compare result
+extern COMPRESULT CompareResult;
 
+// Variables used for time intervals to update the "status bar"
+extern DWORD nCurrentTime;
+extern DWORD nStartTime;
+extern DWORD nLastTime;
 
-// Some DWORDs used to show the progress bar and etc
-extern DWORD nGettingValue;
-extern DWORD nGettingKey;
-extern DWORD nComparing;
-extern DWORD nRegStep;
-extern DWORD nFileStep;
-extern DWORD nSavingKey;
-extern DWORD nGettingTime;
-extern DWORD nBASETIME;
-extern DWORD nBASETIME1;
-extern DWORD nGettingFile;
-extern DWORD nGettingDir;
-extern DWORD nSavingFile;
-extern DWORD NBW;                // that is: NumberOfBytesWritten;
+// Variables used to update the progress bar
+extern DWORD cCurrent;
+extern DWORD cEnd;
 
+extern DWORD NBW;                // that is: NumberOfBytesWritten
 
 extern REGSHOT Shot1;
 extern REGSHOT Shot2;
@@ -431,9 +465,9 @@ extern HANDLE    hFile;            // Handle of file regshot use
 extern HANDLE    hFileWholeReg;    // Handle of file regshot use
 extern HCURSOR   hSaveCursor;      // Handle of cursor
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
-extern BOOL      bUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
-VOID    LogToMem(DWORD actiontype, LPDWORD lpcount, LPVOID lp);
+VOID    LogToMem(DWORD nActionType, LPVOID lpContent);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
 BOOL    IsInSkipList(LPTSTR lpszString, LPTSTR rgszSkipList[]);
@@ -450,22 +484,25 @@ VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);
 VOID    ShowHideCounters(int nCmdShow);
+VOID    ShowHideProgressBar(int nCmdShow);
 
 VOID    Shot(LPREGSHOT lpShot);
 BOOL    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);
-VOID    SaveHive(LPREGSHOT lpShot);
-BOOL    LoadHive(LPREGSHOT lpShot);
-VOID    FreeAllCompareResults(void);
+VOID    SaveShot(LPREGSHOT lpShot);
+BOOL    LoadShot(LPREGSHOT lpShot);
+VOID    FreeCompareResult(void);
 VOID    FreeShot(LPREGSHOT lpShot);
 VOID    FreeAllHeadFiles(LPHEADFILE lpHF);
 VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
+VOID    InitCounters(VOID);
 VOID    InitProgressBar(VOID);
+VOID    UpdateProgressBar(VOID);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
 VOID    ErrMsg(LPTSTR lpszErrMsg);
 VOID    WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML);
-VOID    WritePart(LPCOMRESULT lpComResultStart, BOOL fAsHTML, BOOL fUseColor);
+VOID    WritePart(LPCOMRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor);
 VOID    WriteTitle(LPTSTR lpszTitle, LPTSTR lpszValue, BOOL fAsHTML);
 VOID    WriteHTMLBegin(void);
 VOID    WriteHTMLEnd(void);
@@ -556,8 +593,8 @@ extern LPTSTR lpszEmpty;
 #endif
 
 size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, size_t nAlign);
-VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller);
-VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
+VOID SaveHeadFiles(LPREGSHOT lpShot, LPHEADFILE lpHF, DWORD nFPCaller);
+VOID LoadHeadFiles(LPREGSHOT lpShot, DWORD ofsHeadFile, LPHEADFILE *lplpCaller);
 
 #ifdef DEBUGLOG
 #define REGSHOT_DEBUG_MESSAGE_LENGTH 101

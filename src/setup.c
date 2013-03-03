@@ -1,6 +1,6 @@
 /*
+    Copyright 2011-2013 Regshot Team
     Copyright 2004 tulipfan
-    Copyright 2011-2012 Regshot Team
 
     This file is part of Regshot.
 
@@ -43,7 +43,7 @@ LPTSTR lpgrszFileSkipStrings;
 LPTSTR *lprgszRegSkipStrings;
 LPTSTR *lprgszFileSkipStrings;
 
-BOOL bUseLongRegHead;  // since 1.8.1 tianwei: Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+BOOL fUseLongRegHead;  // since 1.8.1 tianwei: Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
 
 BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
@@ -100,7 +100,7 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
     */
 
     // UseLongRegHead
-    bUseLongRegHead = GetPrivateProfileInt(lpszIniSetup, lpszIniUseLongRegHead, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+    fUseLongRegHead = GetPrivateProfileInt(lpszIniSetup, lpszIniUseLongRegHead, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
 
     // Scan Dirs
     if (0 != GetPrivateProfileString(lpszIniSetup, lpszIniExtDir, NULL, lpszExtDir, MAX_PATH, lpszRegshotIni)) {  // length incl. NULL character
@@ -152,7 +152,7 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx save settings to ini
     lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
     WritePrivateProfileString(lpszIniSetup, lpszIniFlag, lpszValue, lpszRegshotIni);
 
-    _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), bUseLongRegHead);
+    _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), fUseLongRegHead);
     lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
     WritePrivateProfileString(lpszIniSetup, lpszIniUseLongRegHead, lpszValue, lpszRegshotIni);
 

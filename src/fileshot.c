@@ -33,11 +33,6 @@
 SAVEFILECONTENT sFC;
 SAVEHEADFILE sHF;
 
-// Some DWORDs used to show the progress bar and etc
-DWORD nGettingFile;
-DWORD nGettingDir;
-DWORD nSavingFile;
-
 WIN32_FIND_DATA FindData;
 
 
@@ -82,52 +77,18 @@ LPTSTR GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra)
 //--------------------------------------------------
 // Walkthrough lpHF chain and find lpszName matches
 //--------------------------------------------------
-LPFILECONTENT SearchDirChain(LPTSTR lpszName, LPHEADFILE lpHF)
+LPHEADFILE SearchDirChain(LPTSTR lpszName, LPHEADFILE lpHF)
 {
     if (NULL != lpszName) {
         for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
             if ((NULL != lpHF->lpFirstFC)
                     && (NULL != lpHF->lpFirstFC->lpszFileName)
                     && (0 == _tcsicmp(lpszName, lpHF->lpFirstFC->lpszFileName))) {
-                return lpHF->lpFirstFC;
+                return lpHF;
             }
         }
     }
     return NULL;
-}
-
-
-//-------------------------------------------------------------
-// Routine to walk through all sub tree of current directory [File system]
-//-------------------------------------------------------------
-VOID LogAllFiles(
-    BOOL    fIncludeBrothers,
-    DWORD   typedir,
-    DWORD   typefile,
-    LPDWORD lpcountdir,
-    LPDWORD lpcountfile,
-    LPFILECONTENT lpStartFC
-)
-{
-    LPFILECONTENT lpFC;
-
-    for (lpFC = lpStartFC; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
-        if (ISDIR(lpFC->nFileAttributes)) {
-            if ((NULL != lpFC->lpszFileName) && (0 != _tcscmp(lpFC->lpszFileName, TEXT("."))) && (0 != _tcscmp(lpFC->lpszFileName, TEXT(".."))))  { // tfx   added in 1.7.3 fixed at 1.8.0 we should add here 1.8.0
-                LogToMem(typedir, lpcountdir, lpFC);
-            }
-        } else {
-            LogToMem(typefile, lpcountfile, lpFC);
-        }
-
-        if (NULL != lpFC->lpFirstSubFC)    {
-            LogAllFiles(TRUE, typedir, typefile, lpcountdir, lpcountfile, lpFC->lpFirstSubFC);
-        }
-
-        if (!fIncludeBrothers) {
-            break;
-        }
-    }
 }
 
 
@@ -142,9 +103,20 @@ VOID FreeAllFileContents(LPFILECONTENT lpFC)
         // Save pointer in local variable
         lpBrotherFC = lpFC->lpBrotherFC;
 
+        // Increase count
+        cCurrent++;
+
         // Free file name
         if (NULL != lpFC->lpszFileName) {
             MYFREE(lpFC->lpszFileName);
+        }
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UpdateProgressBar();
+            }
         }
 
         // If the entry has childs, then do a recursive call for the first child
@@ -181,19 +153,28 @@ VOID FreeAllHeadFiles(LPHEADFILE lpHF)
 
 
 //-------------------------------------------------------------
-// File comparison engine (lp1 and lp2 run parallel)
+// File comparison engine
 //-------------------------------------------------------------
 VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
 {
     LPFILECONTENT lpFC1;
     LPFILECONTENT lpFC2;
 
-    // Compare files
+    // Compare files/dirs
     for (lpFC1 = lpStartFC1; NULL != lpFC1; lpFC1 = lpFC1->lpBrotherFC) {
-        // Find a matching file for FC1
+        if (ISFILE(lpFC1->nFileAttributes)) {
+            CompareResult.stcCompared.cFiles++;
+        } else {
+            CompareResult.stcCompared.cDirs++;
+        }
+        // Find a matching file/dir for FC1
         for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
             // skip FC2 if already matched
             if (NOMATCH != lpFC2->fFileMatch) {
+                continue;
+            }
+            // skip FC2 if types do *not* match (even if same name then interpret as deleted+added)
+            if (ISFILE(lpFC1->nFileAttributes) != ISFILE(lpFC2->nFileAttributes)) {
                 continue;
             }
             // skip FC2 if names do *not* match
@@ -201,78 +182,92 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
                 continue;
             }
 
-            // Two files have the same (non-case-sensitive) name, but we are not sure they are the same, so we compare them!
-            if (ISFILE(lpFC1->nFileAttributes) && ISFILE(lpFC2->nFileAttributes)) {
+            // Same file type and (case-insensitive) name of FC1 found in FC2, so compare their attributes and if applicable their dates and sizes
+            if (ISFILE(lpFC1->nFileAttributes)) {
                 // Both are files
                 if ((lpFC1->nWriteDateTimeLow == lpFC2->nWriteDateTimeLow)
                         && (lpFC1->nWriteDateTimeHigh == lpFC2->nWriteDateTimeHigh)
                         && (lpFC1->nFileSizeLow == lpFC2->nFileSizeLow)
                         && (lpFC1->nFileSizeHigh == lpFC2->nFileSizeHigh)
                         && (lpFC1->nFileAttributes == lpFC2->nFileAttributes)) {
-                    // We found a match file!
+                    // Same file of FC1 found in FC2
                     lpFC2->fFileMatch = ISMATCH;
                 } else {
-                    // We found a dismatch file, they will be logged
+                    // File data differ, so file is modified
                     lpFC2->fFileMatch = ISMODI;
-                    LogToMem(FILEMODI, &nFILEMODI, lpFC1);
+                    CompareResult.stcChanged.cFiles++;
+                    CompareResult.stcModified.cFiles++;
+                    LogToMem(FILEMODI, lpFC1);
                 }
-            } else if (ISDIR(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes)) {
+            } else {
                 // Both are dirs
                 if (lpFC1->nFileAttributes == lpFC2->nFileAttributes) {
-                    // Same dir attributes, we compare their subfiles
+                    // Same dir of FC1 found in FC2
                     lpFC2->fFileMatch = ISMATCH;
                 } else {
-                    // Dir attributes changed, they will be logged
+                    // Dir data differ, so dir is modified
                     lpFC2->fFileMatch = ISMODI;
-                    LogToMem(DIRMODI, &nDIRMODI, lpFC1);
+                    CompareResult.stcChanged.cDirs++;
+                    CompareResult.stcModified.cDirs++;
+                    LogToMem(DIRMODI, lpFC1);
                 }
-                CompareFiles(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
-            } else {
-                // At least one file of the pair is directory, so we try to determine
-                if (ISFILE(lpFC1->nFileAttributes) && ISDIR(lpFC2->nFileAttributes)) {
-                    // lpFC1 is file, lpFC2 is dir
-                    lpFC1->fFileMatch = ISDEL;
-                    LogToMem(FILEDEL, &nFILEDEL, lpFC1);
-                    LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
-                } else {
-                    // lpFC1 is dir, lpFC2 is file
-                    LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
-                    lpFC2->fFileMatch = ISADD;
-                    LogToMem(FILEADD, &nFILEADD, lpFC2);
+
+                // Compare sub files if any
+                if ((NULL != lpFC1->lpFirstSubFC) || (NULL != lpFC2->lpFirstSubFC)) {
+                    CompareFiles(lpFC1->lpFirstSubFC, lpFC2->lpFirstSubFC);
                 }
             }
             break;
         }
-
         if (NULL == lpFC2) {
-            // lpFC2 looped to the end, that is, we cannot find a lpFC2 matches lpFC1, so lpFC1 is deleted!
-            if (ISDIR(lpFC1->nFileAttributes)) {
-                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1); // if lpFC1 is dir
+            // FC1 has no matching FC2, so FC1 is a deleted file/dir
+            if (ISFILE(lpFC1->nFileAttributes)) {
+                CompareResult.stcChanged.cFiles++;
+                CompareResult.stcDeleted.cFiles++;
+                LogToMem(FILEDEL, lpFC1);
             } else {
-                LogToMem(FILEDEL, &nFILEDEL, lpFC1);  // if lpFC1 is file
+                CompareResult.stcChanged.cDirs++;
+                CompareResult.stcDeleted.cDirs++;
+                LogToMem(DIRDEL, lpFC1);
+
+                // "Compare"/Log sub files if any
+                if (NULL != lpFC1->lpFirstSubFC) {
+                    CompareFiles(lpFC1->lpFirstSubFC, NULL);
+                }
             }
         }
     }
-
-    // We loop to the end, then we do an extra loop of lpFC2 use flag we previous made
+    // After looping all FC1 files, do an extra loop over all FC2 files and check previously set match flags to determine added files/dirs
     for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
-        nComparing++;
-        if (NOMATCH == lpFC2->fFileMatch) {
-            // We did not find a lpFC1 matches a lpFC2, so lpFC2 is added!
-            if (ISDIR(lpFC2->nFileAttributes)) {
-                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
-            } else {
-                LogToMem(FILEADD, &nFILEADD, lpFC2);
+        // skip FC2 if already matched
+        if (NOMATCH != lpFC2->fFileMatch) {
+            continue;
+        }
+
+        // FC2 has no matching FC1, so FC2 is an added file/dir
+        if (ISFILE(lpFC2->nFileAttributes)) {
+            CompareResult.stcCompared.cFiles++;
+            CompareResult.stcChanged.cFiles++;
+            CompareResult.stcAdded.cFiles++;
+            LogToMem(FILEADD, lpFC2);
+        } else {
+            CompareResult.stcCompared.cDirs++;
+            CompareResult.stcChanged.cDirs++;
+            CompareResult.stcAdded.cDirs++;
+            LogToMem(DIRADD, lpFC2);
+
+            // "Compare"/Log sub files if any
+            if (NULL != lpFC2->lpFirstSubFC) {
+                CompareFiles(NULL, lpFC2->lpFirstSubFC);
             }
         }
     }
 
-    // Progress bar update
-    if (0 != nGettingFile)
-        if (nComparing % nGettingFile > nFileStep) {
-            nComparing = 0;
-            SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-        }
+    // Update counters display
+    nCurrentTime = GetTickCount();
+    if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
+    }
 }
 
 //-------------------------------------------------------------
@@ -282,28 +277,46 @@ VOID CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2)
 {
     LPHEADFILE lpHF1;
     LPHEADFILE lpHF2;
-    LPFILECONTENT lpFC1;
-    LPFILECONTENT lpFC2;
+    LPFILECONTENT lpFC;
 
     // first loop
     for (lpHF1 = lpStartHF1; NULL != lpHF1; lpHF1 = lpHF1->lpBrotherHF) {
-        lpFC1 = lpHF1->lpFirstFC;
-        if (NULL != lpFC1) {
-            if (NULL != (lpFC2 = SearchDirChain(lpFC1->lpszFileName, lpStartHF2))) {   // note lpHF2 should not changed here!
-                CompareFiles(lpFC1, lpFC2);                              // if found, we do compare
-            } else {    // cannot find matched lpFC1 in lpHF2 chain.
-                LogAllFiles(FALSE, DIRDEL, FILEDEL, &nDIRDEL, &nFILEDEL, lpFC1);
-            }
+        // Check that first file name present
+        if (NULL == lpHF1->lpFirstFC) {
+            continue;
         }
+        if (NULL == lpHF1->lpFirstFC->lpszFileName) {
+            continue;
+        }
+
+        // Get corresponding headfile in second shot
+        lpHF2 = SearchDirChain(lpHF1->lpFirstFC->lpszFileName, lpStartHF2);
+        lpFC = NULL;
+        if (NULL != lpHF2) {
+            lpHF2->fHeadFileMatch = ISMATCH;
+            lpFC = lpHF2->lpFirstFC;
+        }
+        CompareFiles(lpHF1->lpFirstFC, lpFC);
     }
 
-    // second loop
+    // second loop, only those that did not match before
     for (lpHF2 = lpStartHF2; NULL != lpHF2; lpHF2 = lpHF2->lpBrotherHF) {
-        lpFC2 = lpHF2->lpFirstFC;
-        if (NULL != lpFC2) {
-            if (NULL == (lpFC1 = SearchDirChain(lpFC2->lpszFileName, lpStartHF1))) {   // in the second loop we only find those do not match
-                LogAllFiles(FALSE, DIRADD, FILEADD, &nDIRADD, &nFILEADD, lpFC2);
-            }
+        // Check that not compared in first loop
+        if (NOMATCH != lpHF2->fHeadFileMatch) {
+            continue;
+        }
+        // Check that first file name present
+        if (NULL == lpHF2->lpFirstFC) {
+            continue;
+        }
+        if (NULL == lpHF2->lpFirstFC->lpszFileName) {
+            continue;
+        }
+
+        // Check that there's no corresponding headfile in first shot
+        lpHF1 = SearchDirChain(lpHF2->lpFirstFC->lpszFileName, lpStartHF1);
+        if (NULL == lpHF1) {
+            CompareFiles(NULL, lpHF2->lpFirstFC);
         }
     }
 }
@@ -312,10 +325,12 @@ VOID CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2)
 // ----------------------------------------------------------------------
 // Get file snap shot
 // ----------------------------------------------------------------------
-VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
+VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
 {
     LPFILECONTENT lpFC;
     HANDLE hFile;
+
+    // Full file/dir name is already given
 
     // Extra local block to reduce stack usage due to recursive calls
     {
@@ -323,7 +338,7 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
 
         lpszFindFileName = NULL;
 
-        // Get father file data if not already provided
+        // Get father file data if not already provided (=called from FileShot)
         if (NULL == lpFatherFC) {
             // Check if file is to be generic excluded
             if ((NULL == lpszFullName)
@@ -401,9 +416,16 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
                 }
             }
 
-            // Write pointer to current file into caller's pointer
+            // Copy pointer to current file into caller's pointer
             if (NULL != lplpCaller) {
                 *lplpCaller = lpFatherFC;
+            }
+
+            // Increase file/dir count
+            if (ISFILE(FindData.dwFileAttributes)) {
+                lpShot->stCounts.cFiles++;
+            } else {
+                lpShot->stCounts.cDirs++;
             }
 
             // Copy file name
@@ -417,19 +439,6 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
             lpFatherFC->nFileSizeHigh = FindData.nFileSizeHigh;
             lpFatherFC->nFileAttributes = FindData.dwFileAttributes;
 
-            // Increase file/dir count
-            if (ISDIR(lpFatherFC->nFileAttributes)) {
-                nGettingDir++;
-            } else {
-                nGettingFile++;
-            }
-
-            // Update counters display
-            nGettingTime = GetTickCount();
-            if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-                UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
-            }
-
             // Set "lpFirstSubFC" pointer for storing the first child's pointer
             lplpCaller = &lpFatherFC->lpFirstSubFC;
 
@@ -438,7 +447,7 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
             _tcscpy(lpszFindFileName, lpszFullName);
         }
 
-        // If the father is a file, then leave
+        // If father is a file, then leave (=special case when called from FileShot)
         if (ISFILE(lpFatherFC->nFileAttributes)) {
             if (NULL != lpszFindFileName) {
                 MYFREE(lpszFindFileName);
@@ -457,7 +466,7 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
             MYFREE(lpszFindFileName);
         }
     }  // End of extra local block
-    if (INVALID_HANDLE_VALUE == hFile) {
+    if (INVALID_HANDLE_VALUE == hFile) {  // error: nothing in dir, no access, etc.
 #ifdef _DEBUG
         DWORD nError;
         LPTSTR lpszMessage;
@@ -491,7 +500,7 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
         // Set file name length
         lpFC->cchFileName = _tcslen(FindData.cFileName);
 
-        // Check if file is to be excluded
+        // Check if file/dir is to be excluded
         if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
             if (IsInSkipList(FindData.cFileName, lprgszFileSkipStrings)) {
                 FreeAllFileContents(lpFC);
@@ -508,9 +517,16 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
             }
         }
 
-        // Write pointer to current file into caller's pointer
+        // Copy pointer to current file into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpFC;
+        }
+
+        // Increase file/dir count
+        if (ISFILE(FindData.dwFileAttributes)) {
+            lpShot->stCounts.cFiles++;
+        } else {
+            lpShot->stCounts.cDirs++;
         }
 
         // Copy file name
@@ -524,17 +540,10 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
         lpFC->nFileSizeHigh = FindData.nFileSizeHigh;
         lpFC->nFileAttributes = FindData.dwFileAttributes;
 
-        // Increase file/dir count
-        if (ISDIR(lpFC->nFileAttributes)) {
-            nGettingDir++;
-        } else {
-            nGettingFile++;
-        }
-
         // Update counters display
-        nGettingTime = GetTickCount();
-        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
+        nCurrentTime = GetTickCount();
+        if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
         }
 
         // ATTENTION!!! FindData will be INVALID from this point on, due to recursive calls
@@ -544,7 +553,7 @@ VOID GetFilesSnap(LPTSTR lpszFullName, LPFILECONTENT lpFatherFC, LPFILECONTENT *
             if (NULL == lpszFullName) {
                 lpszFullName = GetWholeFileName(lpFC, 4);  // +4 for "\*.*" search (in recursive call)
             }
-            GetFilesSnap(lpszFullName, lpFC, &lpFC->lpFirstSubFC);
+            GetFilesSnap(lpShot, lpszFullName, lpFC, &lpFC->lpFirstSubFC);
         }
 
         if (NULL != lpszFullName) {
@@ -594,17 +603,13 @@ VOID FileShot(LPREGSHOT lpShot)
                     *lplpHFPrev = lpHF;
                     lplpHFPrev = &lpHF->lpBrotherHF;
 
-                    GetFilesSnap(lpszSubExtDir, NULL, &lpHF->lpFirstFC);
+                    GetFilesSnap(lpShot, lpszSubExtDir, NULL, &lpHF->lpFirstFC);
                 }
 
                 lpszSubExtDir = &lpszExtDir[i + 1];
             }
         }
     }
-
-    // Update counters display (dirs/files final)
-    nGettingTime = GetTickCount();
-    UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
 }
 
 
@@ -627,6 +632,7 @@ VOID ClearFileMatchFlags(LPFILECONTENT lpFC)
 VOID ClearHeadFileMatchFlags(LPHEADFILE lpHF)
 {
     for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
+        lpHF->fHeadFileMatch = NOMATCH;
         if (NULL != lpHF->lpFirstFC) {
             ClearFileMatchFlags(lpHF->lpFirstFC);
         }
@@ -640,7 +646,7 @@ VOID ClearHeadFileMatchFlags(LPHEADFILE lpHF)
 // This routine is called recursively to store the entries of the file/dir tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
-VOID SaveFiles(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
+VOID SaveFiles(LPREGSHOT lpShot, LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
 {
     DWORD nFPFile;
 
@@ -694,6 +700,9 @@ VOID SaveFiles(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
             }
         }
 
+        // Increase count
+        cCurrent++;
+
         // Write file content to file
         // Make sure that ALL fields have been initialized/set
         WriteFile(hFileWholeReg, &sFC, sizeof(sFC), &NBW, NULL);
@@ -708,33 +717,30 @@ VOID SaveFiles(LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
 #endif
         }
 
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UpdateProgressBar();
+            }
+        }
+
         // ATTENTION!!! sFC is INVALID from this point on, due to recursive calls
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "ofsFirstSubFile" position for storing the first child's position
         if (NULL != lpFC->lpFirstSubFC) {
-            SaveFiles(lpFC->lpFirstSubFC, nFPFile, nFPFile + offsetof(SAVEFILECONTENT, ofsFirstSubFile));
+            SaveFiles(lpShot, lpFC->lpFirstSubFC, nFPFile, nFPFile + offsetof(SAVEFILECONTENT, ofsFirstSubFile));
         }
 
         // Set "ofsBrotherFile" position for storing the following brother's position
         nFPCaller = nFPFile + offsetof(SAVEFILECONTENT, ofsBrotherFile);
-
-        // Update progress bar
-        nSavingFile++;
-        if (0 != nGettingFile) {
-            if (nSavingFile % nGettingFile > nFileStep) {
-                nSavingFile = 0;
-                SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_STEPIT, (WPARAM)0, (LPARAM)0);
-                UpdateWindow(hWnd);
-                PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
-            }
-        }
     }
 }
 
 //--------------------------------------------------
 // Save head file to HIVE file
 //--------------------------------------------------
-VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller)
+VOID SaveHeadFiles(LPREGSHOT lpShot, LPHEADFILE lpHF, DWORD nFPCaller)
 {
     DWORD nFPHF;
 
@@ -764,7 +770,7 @@ VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller)
 
         // Write all file contents of head file
         if (NULL != lpHF->lpFirstFC) {
-            SaveFiles(lpHF->lpFirstFC, 0, nFPHF + offsetof(SAVEHEADFILE, ofsFirstFileContent));
+            SaveFiles(lpShot, lpHF->lpFirstFC, 0, nFPHF + offsetof(SAVEHEADFILE, ofsFirstFileContent));
         }
 
         // Set "ofsBrotherHeadFile" position for storing the following brother's position
@@ -776,7 +782,7 @@ VOID SaveHeadFiles(LPHEADFILE lpHF, DWORD nFPCaller)
 // ----------------------------------------------------------------------
 // Load file from HIVE file
 // ----------------------------------------------------------------------
-VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
+VOID LoadFiles(LPREGSHOT lpShot, DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCaller)
 {
     LPFILECONTENT lpFC;
     DWORD ofsBrotherFile;
@@ -853,9 +859,16 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
             MYFREE(lpszFullName);
         }
 
-        // Write pointer to current file into caller's pointer
+        // Copy pointer to current file into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpFC;
+        }
+
+        // Increase file/dir count
+        if (ISFILE(sFC.nFileAttributes)) {
+            lpShot->stCounts.cFiles++;
+        } else {
+            lpShot->stCounts.cDirs++;
         }
 
         // Copy file data
@@ -866,24 +879,17 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
         lpFC->nFileAttributes = sFC.nFileAttributes;
         lpFC->nChkSum = sFC.nChkSum;
 
-        // Increase file/dir count
-        if (ISDIR(lpFC->nFileAttributes)) {
-            nGettingDir++;
-        } else {
-            nGettingFile++;
-        }
-
         // Update counters display
-        nGettingTime = GetTickCount();
-        if (REFRESHINTERVAL < (nGettingTime - nBASETIME1)) {
-            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, nGettingDir, nGettingFile);
+        nCurrentTime = GetTickCount();
+        if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
         }
 
         // ATTENTION!!! sFC will be INVALID from this point on, due to recursive calls
         // If the entry has childs, then do a recursive call for the first child
         // Pass this entry as father and "lpFirstSubFC" pointer for storing the first child's pointer
         if (0 != sFC.ofsFirstSubFile) {
-            LoadFiles(sFC.ofsFirstSubFile, lpFC, &lpFC->lpFirstSubFC);
+            LoadFiles(lpShot, sFC.ofsFirstSubFile, lpFC, &lpFC->lpFirstSubFC);
         }
 
         // Set "lpBrotherFC" pointer for storing the next brother's pointer
@@ -895,7 +901,7 @@ VOID LoadFiles(DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILECONTENT *lplpCalle
 //--------------------------------------------------
 // Load head file from HIVE file
 //--------------------------------------------------
-VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
+VOID LoadHeadFiles(LPREGSHOT lpShot, DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
 {
     LPHEADFILE lpHF;
 
@@ -912,14 +918,14 @@ VOID LoadHeadFiles(DWORD ofsHeadFile, LPHEADFILE *lplpCaller)
         // put in a separate var for later use
         lpHF = MYALLOC0(sizeof(HEADFILE));
 
-        // Write pointer to current head file into caller's pointer
+        // Copy pointer to current head file into caller's pointer
         if (NULL != lplpCaller) {
             *lplpCaller = lpHF;
         }
 
         // If the entry has file contents, then do a call for the first file content
         if (0 != sHF.ofsFirstFileContent) {
-            LoadFiles(sHF.ofsFirstFileContent, NULL, &lpHF->lpFirstFC);
+            LoadFiles(lpShot, sHF.ofsFirstFileContent, NULL, &lpHF->lpFirstFC);
         }
 
         // Set "lpBrotherHF" pointer for storing the next brother's pointer
@@ -971,7 +977,7 @@ BOOL FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen)
             }
         }
     }
-    return TRUE;  // exit for loop and routine
+    return TRUE;
 }
 
 
