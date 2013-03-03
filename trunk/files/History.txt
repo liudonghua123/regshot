@@ -11,8 +11,11 @@ http://sourceforge.net/projects/regshot/
 -: Function deleted
 -------------------------------------------------
 
-V1.9.0 beta 2013-01-24
-! Testing purpose only (there may be some bugs left in it due to Unicode and x64 changes)
+V1.9.1 development snapshot
++ Support for QWORDs
++ Support for DWORDs and QWORDs with different endiannes than CPU
+
+V1.9.0 2013-02-02
 + Add 64-Bit builds
 + Add Unicode builds with .hivu files (not compatible with ANSI .hiv files)
 + Structure of hive files enhanced, while keeping backwards compatibility for ANSI builds
