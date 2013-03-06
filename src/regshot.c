@@ -232,7 +232,11 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
     LPDWORD lpDword;
     LPQWORD lpQword;
     DWORD nDwordCpu;
+#if 1 == __LITTLE_ENDIAN__
+    // no REG_QWORD_BIG_ENDIAN yet
+#elif
     QWORD nQwordCpu;
+#endif
 
     lpszValueData = NULL;
     lpDword = NULL;
@@ -337,6 +341,10 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
                 //case REG_QWORD_BIG_ENDIAN:
 #elif
             case REG_QWORD_LITTLE_ENDIAN:
+#endif
+#if 1 == __LITTLE_ENDIAN__
+                // no REG_QWORD_BIG_ENDIAN yet
+#elif
                 // convert QWORD with different endianness
                 lpQword = &nQwordCpu;
                 for (ibCurrent = 0; ibCurrent < sizeof(QWORD); i++) {
