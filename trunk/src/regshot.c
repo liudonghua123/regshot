@@ -99,6 +99,22 @@ LPTSTR lpszHKULong   = TEXT("HKEY_USERS");
 LONG nErrNo;
 
 
+// VS 6 fix, may depend on PSDK/WSDK too
+#ifndef _tcsnlen
+size_t _tcsnlen(const TCHAR *str, size_t numberOfElements)
+{
+    size_t i;
+
+    for (i = 0; i < numberOfElements; i++, str++) {
+        if ((TCHAR)'\0' == *str) {
+            break;
+        }
+    }
+
+    return i;
+}
+#endif
+
 // ----------------------------------------------------------------------
 // Get whole registry key name from KEYCONTENT
 // ----------------------------------------------------------------------
