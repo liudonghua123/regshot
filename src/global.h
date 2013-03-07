@@ -44,6 +44,9 @@
 #if !defined(LONG_PTR)
 typedef long LONG_PTR;
 #endif
+#ifndef REG_QWORD_LITTLE_ENDIAN
+#define REG_QWORD_LITTLE_ENDIAN     ( 11 )  // 64-bit number
+#endif
 #endif  // _MSC_VER && (_MSC_VER < 1300)
 
 #if defined(_MSC_VER) && (_MSC_VER < 1400)  // before VS 2005 (e.g. VS 6)
