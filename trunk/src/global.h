@@ -34,8 +34,10 @@
 #include <tchar.h>
 #include "resource.h"
 
-#if defined(_MSC_VER) && (_MSC_VER < 1300)  // before VS 2002 .NET (e.g. VS 6)
+#if defined(_MSC_VER) && (_MSC_VER < 1300)  // before VS 2002 .NET (e.g. VS 6), may depend on PSDK/WSDK too
+#ifndef SetClassLongPtr
 #define SetClassLongPtr SetClassLong
+#endif
 #ifndef GCLP_HICON
 #define GCLP_HICON GCL_HICON
 #endif

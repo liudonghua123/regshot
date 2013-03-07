@@ -111,7 +111,7 @@ VOID UpdateProgressBar(VOID)
 
     // Update "status bar"
     if (0 != cEnd) {
-        nPBPos = cCurrent * (__int64)MAXPBPOSITION / cEnd;
+        nPBPos = (DWORD)(cCurrent * (__int64)MAXPBPOSITION / cEnd);
         SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)nPBPos, (LPARAM)0);
 
         // Refresh window display
