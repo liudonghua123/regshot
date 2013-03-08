@@ -585,6 +585,8 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
     } else if ((FILEDEL == nActionType) || (FILEADD == nActionType) || (FILEMODI == nActionType)) {
         lpszName = GetWholeFileName(lpContent, 0);
         return lpszName;
+    } else {
+        return NULL;
     }
 }
 

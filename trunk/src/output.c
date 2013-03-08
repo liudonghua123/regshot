@@ -138,6 +138,9 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
                 }
                 lpszResult = ResultToString(nActionType, lpCR->lpContentNew);
             }
+            if (NULL == lpszResult) {
+                continue;
+            }
 
             if (fAsHTML) {
                 // 1.8.0: zebra/flip-flop colors
