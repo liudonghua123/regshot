@@ -88,62 +88,104 @@ VOID WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML)
 }
 
 // ----------------------------------------------------------------------
-VOID WritePart(LPCOMRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor)
+VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor)
 {
     size_t nCharsToWrite;
     size_t nCharsToGo;
     LPTSTR lpszResult;
-    LPCOMRESULT lpCR;
+    LPTSTR lpszResultTemp;
+    LPCOMPRESULT lpCR;
     BOOL fColor;  // color flip-flop flag
+    DWORD cbHTMLSpan1;
+    DWORD cbHTMLSpan2;
+    DWORD cbHTMLSpanEnd;
+    DWORD cbHTML_BR;
+    DWORD cbCRLF;
+    int i;
+
+    cbHTMLSpan1 = 0;
+    cbHTMLSpan2 = 0;
+    cbHTMLSpanEnd = 0;
+    cbHTML_BR = 0;
+    cbCRLF = 0;
 
     if (fAsHTML) {
         WriteFile(hFile, lpszHTMLTableBegin, (DWORD)(_tcslen(lpszHTMLTableBegin) * sizeof(TCHAR)), &NBW, NULL);
         WriteFile(hFile, lpszHTMLTd2Begin, (DWORD)(_tcslen(lpszHTMLTd2Begin) * sizeof(TCHAR)), &NBW, NULL);
+        if (fUseColor) {
+            cbHTMLSpan1 = (DWORD)(_tcslen(lpszHTMLSpan1) * sizeof(TCHAR));
+            cbHTMLSpan2 = (DWORD)(_tcslen(lpszHTMLSpan2) * sizeof(TCHAR));
+            cbHTMLSpanEnd = (DWORD)(_tcslen(lpszHTMLSpanEnd) * sizeof(TCHAR));
+        }
+        cbHTML_BR = (DWORD)(_tcslen(lpszHTML_BR) * sizeof(TCHAR));
+    } else {
+        cbCRLF = (DWORD)(_tcslen(lpszCRLF) * sizeof(TCHAR));
     }
 
     fColor = FALSE;
     for (lpCR = lpStartCR; NULL != lpCR; lpCR = lpCR->lpNextCR) {
-        if (fAsHTML) {
-            // 1.8.0: zebra/flip-flop colors
-            if (fUseColor) {
-                if (!fColor) {
-                    WriteFile(hFile, lpszHTMLSpan1, (DWORD)(_tcslen(lpszHTMLSpan1) * sizeof(TCHAR)), &NBW, NULL);
-                } else {
-                    WriteFile(hFile, lpszHTMLSpan2, (DWORD)(_tcslen(lpszHTMLSpan2) * sizeof(TCHAR)), &NBW, NULL);
+        for (i = 0; i < 2; i++) {
+            lpszResult = NULL;
+            if (0 == i) {
+                if (NULL == lpCR->lpContentOld) {
+                    continue;
                 }
-                fColor = !fColor;
+                lpszResult = ResultToString(nActionType, lpCR->lpContentOld);
             }
-        }
-
-        lpszResult = lpCR->lpszResult;
-        for (nCharsToGo = _tcslen(lpszResult); 0 < nCharsToGo;) {
-            nCharsToWrite = nCharsToGo;
-            if (HTMLWRAPLENGTH < nCharsToWrite) {
-                nCharsToWrite = HTMLWRAPLENGTH;
-            }
-
-            WriteFile(hFile, lpszResult, (DWORD)(nCharsToWrite * sizeof(TCHAR)), &NBW, NULL);
-            lpszResult += nCharsToWrite;
-            nCharsToGo -= nCharsToWrite;
-
-            if (0 == nCharsToGo) {
-                break;  // skip newline
+            if (1 == i) {
+                if (NULL == lpCR->lpContentNew) {
+                    continue;
+                }
+                lpszResult = ResultToString(nActionType, lpCR->lpContentNew);
             }
 
             if (fAsHTML) {
-                WriteFile(hFile, lpszHTML_BR, (DWORD)(_tcslen(lpszHTML_BR) * sizeof(TCHAR)), &NBW, NULL);
+                // 1.8.0: zebra/flip-flop colors
+                if (fUseColor) {
+                    if (!fColor) {
+                        WriteFile(hFile, lpszHTMLSpan1, cbHTMLSpan1, &NBW, NULL);
+                    } else {
+                        WriteFile(hFile, lpszHTMLSpan2, cbHTMLSpan2, &NBW, NULL);
+                    }
+                }
+            }
+
+            lpszResultTemp = lpszResult;
+            for (nCharsToGo = _tcslen(lpszResult); 0 < nCharsToGo;) {
+                nCharsToWrite = nCharsToGo;
+                if (HTMLWRAPLENGTH < nCharsToWrite) {
+                    nCharsToWrite = HTMLWRAPLENGTH;
+                }
+
+                WriteFile(hFile, lpszResultTemp, (DWORD)(nCharsToWrite * sizeof(TCHAR)), &NBW, NULL);
+                lpszResultTemp += nCharsToWrite;
+                nCharsToGo -= nCharsToWrite;
+
+                if (0 == nCharsToGo) {
+                    break;  // skip newline
+                }
+
+                if (fAsHTML) {
+                    WriteFile(hFile, lpszHTML_BR, cbHTML_BR, &NBW, NULL);
+                } else {
+                    WriteFile(hFile, lpszCRLF, cbCRLF, &NBW, NULL);
+                }
+            }
+            MYFREE(lpszResult);
+
+            if (fAsHTML) {
+                if (fUseColor) {
+                    WriteFile(hFile, lpszHTMLSpanEnd, cbHTMLSpanEnd, &NBW, NULL);
+                }
+                WriteFile(hFile, lpszHTML_BR, cbHTML_BR, &NBW, NULL);
             } else {
-                WriteFile(hFile, lpszCRLF, (DWORD)(_tcslen(lpszCRLF) * sizeof(TCHAR)), &NBW, NULL);
+                WriteFile(hFile, lpszCRLF, cbCRLF, &NBW, NULL);
             }
         }
 
-        if (fAsHTML) {
-            if (fUseColor) {
-                WriteFile(hFile, lpszHTMLSpanEnd, (DWORD)(_tcslen(lpszHTMLSpanEnd) * sizeof(TCHAR)), &NBW, NULL);
-            }
-            WriteFile(hFile, lpszHTML_BR, (DWORD)(_tcslen(lpszHTML_BR) * sizeof(TCHAR)), &NBW, NULL);
-        } else {
-            WriteFile(hFile, lpszCRLF, (DWORD)(_tcslen(lpszCRLF) * sizeof(TCHAR)), &NBW, NULL);
+        // 1.8.0: zebra/flip-flop colors
+        if (fUseColor) {
+            fColor = !fColor;
         }
 
         // Increase count
