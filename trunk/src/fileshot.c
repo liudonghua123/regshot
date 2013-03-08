@@ -160,14 +160,14 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     LPFILECONTENT lpFC1;
     LPFILECONTENT lpFC2;
 
-    // Compare files/dirs
+    // Compare dirs/files
     for (lpFC1 = lpStartFC1; NULL != lpFC1; lpFC1 = lpFC1->lpBrotherFC) {
         if (ISFILE(lpFC1->nFileAttributes)) {
             CompareResult.stcCompared.cFiles++;
         } else {
             CompareResult.stcCompared.cDirs++;
         }
-        // Find a matching file/dir for FC1
+        // Find a matching dir/file for FC1
         for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
             // skip FC2 if already matched
             if (NOMATCH != lpFC2->fFileMatch) {
@@ -220,7 +220,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
             break;
         }
         if (NULL == lpFC2) {
-            // FC1 has no matching FC2, so FC1 is a deleted file/dir
+            // FC1 has no matching FC2, so FC1 is a deleted dir/file
             if (ISFILE(lpFC1->nFileAttributes)) {
                 CompareResult.stcChanged.cFiles++;
                 CompareResult.stcDeleted.cFiles++;
@@ -237,14 +237,14 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
             }
         }
     }
-    // After looping all FC1 files, do an extra loop over all FC2 files and check previously set match flags to determine added files/dirs
+    // After looping all FC1 files, do an extra loop over all FC2 files and check previously set match flags to determine added dirs/files
     for (lpFC2 = lpStartFC2; NULL != lpFC2; lpFC2 = lpFC2->lpBrotherFC) {
         // skip FC2 if already matched
         if (NOMATCH != lpFC2->fFileMatch) {
             continue;
         }
 
-        // FC2 has no matching FC1, so FC2 is an added file/dir
+        // FC2 has no matching FC1, so FC2 is an added dir/file
         if (ISFILE(lpFC2->nFileAttributes)) {
             CompareResult.stcCompared.cFiles++;
             CompareResult.stcChanged.cFiles++;
@@ -330,7 +330,7 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
     LPFILECONTENT lpFC;
     HANDLE hFile;
 
-    // Full file/dir name is already given
+    // Full dir/file name is already given
 
     // Extra local block to reduce stack usage due to recursive calls
     {
@@ -421,7 +421,7 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
                 *lplpCaller = lpFatherFC;
             }
 
-            // Increase file/dir count
+            // Increase dir/file count
             if (ISFILE(FindData.dwFileAttributes)) {
                 lpShot->stCounts.cFiles++;
             } else {
@@ -500,7 +500,7 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
         // Set file name length
         lpFC->cchFileName = _tcslen(FindData.cFileName);
 
-        // Check if file/dir is to be excluded
+        // Check if dir/file is to be excluded
         if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
             if (IsInSkipList(FindData.cFileName, lprgszFileSkipStrings)) {
                 FreeAllFileContents(lpFC);
@@ -522,7 +522,7 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
             *lplpCaller = lpFC;
         }
 
-        // Increase file/dir count
+        // Increase dir/file count
         if (ISFILE(FindData.dwFileAttributes)) {
             lpShot->stCounts.cFiles++;
         } else {
@@ -643,7 +643,7 @@ VOID ClearHeadFileMatchFlags(LPHEADFILE lpHF)
 // ----------------------------------------------------------------------
 // Save file to HIVE File
 //
-// This routine is called recursively to store the entries of the file/dir tree
+// This routine is called recursively to store the entries of the dir/file tree
 // Therefore temporary vars are put in a local block to reduce stack usage
 // ----------------------------------------------------------------------
 VOID SaveFiles(LPREGSHOT lpShot, LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD nFPCaller)
@@ -864,7 +864,7 @@ VOID LoadFiles(LPREGSHOT lpShot, DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILE
             *lplpCaller = lpFC;
         }
 
-        // Increase file/dir count
+        // Increase dir/file count
         if (ISFILE(sFC.nFileAttributes)) {
             lpShot->stCounts.cFiles++;
         } else {

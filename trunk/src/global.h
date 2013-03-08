@@ -97,19 +97,19 @@ extern HANDLE hHeap;
 #define ISADD           3
 #define ISMODI          4
 
-#define KEYADD          1
-#define KEYDEL          2
-#define VALADD          3
-#define VALDEL          4
+#define KEYDEL          1
+#define KEYADD          2
+#define VALDEL          3
+#define VALADD          4
 #define VALMODI         5
-#define FILEADD         6
-#define FILEDEL         7
-#define FILEMODI        8
-#define DIRADD          9
-#define DIRDEL          10
-#define DIRMODI         11
+#define DIRDEL          6
+#define DIRADD          7
+#define DIRMODI         8
+#define FILEDEL         9
+#define FILEADD         10
+#define FILEMODI        11
 
-#define ESTIMATE_VALUEDATA_LENGTH 1024*1024 //Define estimated value data in scan
+#define ESTIMATE_VALUEDATA_LENGTH 1024*1024 // Define estimated value data in scan
 #define REFRESHINTERVAL 110          // Define progress refresh rate
 #define MAXPBPOSITION   128          // Define progress bar length
 #define COMMENTLENGTH   51           // Define commentfield length on the MainForm in TCHARs incl. NULL
@@ -217,16 +217,16 @@ typedef struct _COMPRESULT COMPRESULT, FAR *LPCOMPRESULT;
 
 // Struct for all compare result lists
 struct _COMPPOINTERS {
-    LPCOMPRESULT  lpCRKeyAdded;
     LPCOMPRESULT  lpCRKeyDeleted;
-    LPCOMPRESULT  lpCRValAdded;
+    LPCOMPRESULT  lpCRKeyAdded;
     LPCOMPRESULT  lpCRValDeleted;
+    LPCOMPRESULT  lpCRValAdded;
     LPCOMPRESULT  lpCRValModified;
-    LPCOMPRESULT  lpCRDirAdded;
     LPCOMPRESULT  lpCRDirDeleted;
+    LPCOMPRESULT  lpCRDirAdded;
     LPCOMPRESULT  lpCRDirModified;
-    LPCOMPRESULT  lpCRFileAdded;
     LPCOMPRESULT  lpCRFileDeleted;
+    LPCOMPRESULT  lpCRFileAdded;
     LPCOMPRESULT  lpCRFileModified;
 };
 typedef struct _COMPPOINTERS COMPPOINTERS, FAR *LPCOMPPOINTERS;
@@ -236,8 +236,8 @@ typedef struct _COMPPOINTERS COMPPOINTERS, FAR *LPCOMPPOINTERS;
 struct _COMPRESULTS {
     COUNTS        stcCompared;
     COUNTS        stcChanged;
-    COUNTS        stcAdded;
     COUNTS        stcDeleted;
+    COUNTS        stcAdded;
     COUNTS        stcModified;
     COMPPOINTERS  stCRHeads;
     COMPPOINTERS  stCRCurrent;

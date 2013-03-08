@@ -500,49 +500,49 @@ VOID CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew
     lpCR->lpContentNew = lpContentNew;
 
     switch (nActionType) {
-        case KEYADD:
-            (NULL == CompareResult.stCRHeads.lpCRKeyAdded) ? (CompareResult.stCRHeads.lpCRKeyAdded = lpCR) : (CompareResult.stCRCurrent.lpCRKeyAdded->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRKeyAdded = lpCR;
-            break;
         case KEYDEL:
             (NULL == CompareResult.stCRHeads.lpCRKeyDeleted) ? (CompareResult.stCRHeads.lpCRKeyDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRKeyDeleted->lpNextCR = lpCR);
             CompareResult.stCRCurrent.lpCRKeyDeleted = lpCR;
             break;
-        case VALADD:
-            (NULL == CompareResult.stCRHeads.lpCRValAdded) ? (CompareResult.stCRHeads.lpCRValAdded = lpCR) : (CompareResult.stCRCurrent.lpCRValAdded->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRValAdded = lpCR;
+        case KEYADD:
+            (NULL == CompareResult.stCRHeads.lpCRKeyAdded) ? (CompareResult.stCRHeads.lpCRKeyAdded = lpCR) : (CompareResult.stCRCurrent.lpCRKeyAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRKeyAdded = lpCR;
             break;
         case VALDEL:
             (NULL == CompareResult.stCRHeads.lpCRValDeleted) ? (CompareResult.stCRHeads.lpCRValDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRValDeleted->lpNextCR = lpCR);
             CompareResult.stCRCurrent.lpCRValDeleted = lpCR;
             break;
+        case VALADD:
+            (NULL == CompareResult.stCRHeads.lpCRValAdded) ? (CompareResult.stCRHeads.lpCRValAdded = lpCR) : (CompareResult.stCRCurrent.lpCRValAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRValAdded = lpCR;
+            break;
         case VALMODI:
             (NULL == CompareResult.stCRHeads.lpCRValModified) ? (CompareResult.stCRHeads.lpCRValModified = lpCR) : (CompareResult.stCRCurrent.lpCRValModified->lpNextCR = lpCR);
             CompareResult.stCRCurrent.lpCRValModified = lpCR;
-            break;
-        case FILEADD:
-            (NULL == CompareResult.stCRHeads.lpCRFileAdded) ? (CompareResult.stCRHeads.lpCRFileAdded = lpCR) : (CompareResult.stCRCurrent.lpCRFileAdded->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRFileAdded = lpCR;
-            break;
-        case FILEDEL:
-            (NULL == CompareResult.stCRHeads.lpCRFileDeleted) ? (CompareResult.stCRHeads.lpCRFileDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRFileDeleted->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRFileDeleted = lpCR;
-            break;
-        case FILEMODI:
-            (NULL == CompareResult.stCRHeads.lpCRFileModified) ? (CompareResult.stCRHeads.lpCRFileModified = lpCR) : (CompareResult.stCRCurrent.lpCRFileModified->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRFileModified = lpCR;
-            break;
-        case DIRADD:
-            (NULL == CompareResult.stCRHeads.lpCRDirAdded) ? (CompareResult.stCRHeads.lpCRDirAdded = lpCR) : (CompareResult.stCRCurrent.lpCRDirAdded->lpNextCR = lpCR);
-            CompareResult.stCRCurrent.lpCRDirAdded = lpCR;
             break;
         case DIRDEL:
             (NULL == CompareResult.stCRHeads.lpCRDirDeleted) ? (CompareResult.stCRHeads.lpCRDirDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRDirDeleted->lpNextCR = lpCR);
             CompareResult.stCRCurrent.lpCRDirDeleted = lpCR;
             break;
+        case DIRADD:
+            (NULL == CompareResult.stCRHeads.lpCRDirAdded) ? (CompareResult.stCRHeads.lpCRDirAdded = lpCR) : (CompareResult.stCRCurrent.lpCRDirAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRDirAdded = lpCR;
+            break;
         case DIRMODI:
             (NULL == CompareResult.stCRHeads.lpCRDirModified) ? (CompareResult.stCRHeads.lpCRDirModified = lpCR) : (CompareResult.stCRCurrent.lpCRDirModified->lpNextCR = lpCR);
             CompareResult.stCRCurrent.lpCRDirModified = lpCR;
+            break;
+        case FILEDEL:
+            (NULL == CompareResult.stCRHeads.lpCRFileDeleted) ? (CompareResult.stCRHeads.lpCRFileDeleted = lpCR) : (CompareResult.stCRCurrent.lpCRFileDeleted->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileDeleted = lpCR;
+            break;
+        case FILEADD:
+            (NULL == CompareResult.stCRHeads.lpCRFileAdded) ? (CompareResult.stCRHeads.lpCRFileAdded = lpCR) : (CompareResult.stCRCurrent.lpCRFileAdded->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileAdded = lpCR;
+            break;
+        case FILEMODI:
+            (NULL == CompareResult.stCRHeads.lpCRFileModified) ? (CompareResult.stCRHeads.lpCRFileModified = lpCR) : (CompareResult.stCRCurrent.lpCRFileModified->lpNextCR = lpCR);
+            CompareResult.stCRCurrent.lpCRFileModified = lpCR;
             break;
     }
 }
@@ -555,10 +555,10 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
 {
     LPTSTR lpszName;
 
-    if ((KEYADD == nActionType) || (KEYDEL == nActionType)) {
+    if ((KEYDEL == nActionType) || (KEYADD == nActionType)) {
         lpszName = GetWholeKeyName(lpContent, fUseLongRegHead);
         return lpszName;
-    } else if ((VALADD == nActionType) || (VALDEL == nActionType) || (VALMODI == nActionType)) {
+    } else if ((VALDEL == nActionType) || (VALADD == nActionType) || (VALMODI == nActionType)) {
         LPTSTR lpszData;
         LPTSTR lpszAll;
         size_t cchData;
@@ -579,7 +579,10 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
             MYFREE(lpszData);
         }
         return lpszAll;
-    } else {
+    } else if ((DIRDEL == nActionType) || (DIRADD == nActionType) || (DIRMODI == nActionType)) {
+        lpszName = GetWholeFileName(lpContent, 0);
+        return lpszName;
+    } else if ((FILEDEL == nActionType) || (FILEADD == nActionType) || (FILEMODI == nActionType)) {
         lpszName = GetWholeFileName(lpContent, 0);
         return lpszName;
     }
@@ -606,17 +609,17 @@ VOID FreeAllCompResults(LPCOMPRESULT lpStartCR)
 // ----------------------------------------------------------------------
 VOID FreeCompareResult(void)
 {
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRKeyAdded);
     FreeAllCompResults(CompareResult.stCRHeads.lpCRKeyDeleted);
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRValAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRKeyAdded);
     FreeAllCompResults(CompareResult.stCRHeads.lpCRValDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRValAdded);
     FreeAllCompResults(CompareResult.stCRHeads.lpCRValModified);
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileAdded);
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileDeleted);
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileModified);
-    FreeAllCompResults(CompareResult.stCRHeads.lpCRDirAdded);
     FreeAllCompResults(CompareResult.stCRHeads.lpCRDirDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRDirAdded);
     FreeAllCompResults(CompareResult.stCRHeads.lpCRDirModified);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileModified);
 
     ZeroMemory(&CompareResult, sizeof(CompareResult));
 }
@@ -863,14 +866,14 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
                                     + CompareResult.stcChanged.cValues
                                     + CompareResult.stcChanged.cDirs
                                     + CompareResult.stcChanged.cFiles;
-    CompareResult.stcAdded.cAll = CompareResult.stcAdded.cKeys
-                                  + CompareResult.stcAdded.cValues
-                                  + CompareResult.stcAdded.cDirs
-                                  + CompareResult.stcAdded.cFiles;
     CompareResult.stcDeleted.cAll = CompareResult.stcDeleted.cKeys
                                     + CompareResult.stcDeleted.cValues
                                     + CompareResult.stcDeleted.cDirs
                                     + CompareResult.stcDeleted.cFiles;
+    CompareResult.stcAdded.cAll = CompareResult.stcAdded.cKeys
+                                  + CompareResult.stcAdded.cValues
+                                  + CompareResult.stcAdded.cDirs
+                                  + CompareResult.stcAdded.cFiles;
     CompareResult.stcModified.cAll = CompareResult.stcModified.cKeys
                                      + CompareResult.stcModified.cValues
                                      + CompareResult.stcModified.cDirs
@@ -1021,35 +1024,35 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
         WriteTableHead(asLangTexts[iszTextValModi].lpszText, CompareResult.stcModified.cValues, fAsHTML);
         WritePart(VALMODI, CompareResult.stCRHeads.lpCRValModified, fAsHTML, TRUE);
     }
-    // Write file add part
-    if (0 != CompareResult.stcAdded.cFiles) {
-        WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles, fAsHTML);
-        WritePart(FILEADD, CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
-    }
-    // Write file del part
-    if (0 != CompareResult.stcDeleted.cFiles) {
-        WriteTableHead(asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles, fAsHTML);
-        WritePart(FILEDEL, CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
-    }
-    // Write file modi part
-    if (0 != CompareResult.stcModified.cFiles) {
-        WriteTableHead(asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles, fAsHTML);
-        WritePart(FILEMODI, CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
+    // Write directory del part
+    if (0 != CompareResult.stcDeleted.cDirs) {
+        WriteTableHead(asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs, fAsHTML);
+        WritePart(DIRDEL, CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
     }
     // Write directory add part
     if (0 != CompareResult.stcAdded.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, CompareResult.stcAdded.cDirs, fAsHTML);
         WritePart(DIRADD, CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, FALSE);
     }
-    // Write directory del part
-    if (0 != CompareResult.stcDeleted.cDirs) {
-        WriteTableHead(asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs, fAsHTML);
-        WritePart(DIRDEL, CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
-    }
     // Write directory modi part
     if (0 != CompareResult.stcModified.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirModi].lpszText, CompareResult.stcModified.cDirs, fAsHTML);
         WritePart(DIRMODI, CompareResult.stCRHeads.lpCRDirModified, fAsHTML, FALSE);
+    }
+    // Write file del part
+    if (0 != CompareResult.stcDeleted.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles, fAsHTML);
+        WritePart(FILEDEL, CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
+    }
+    // Write file add part
+    if (0 != CompareResult.stcAdded.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles, fAsHTML);
+        WritePart(FILEADD, CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
+    }
+    // Write file modi part
+    if (0 != CompareResult.stcModified.cFiles) {
+        WriteTableHead(asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles, fAsHTML);
+        WritePart(FILEMODI, CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
     }
 
     if (fAsHTML) {
