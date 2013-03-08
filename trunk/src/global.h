@@ -206,33 +206,34 @@ struct _REGSHOT {
 typedef struct _REGSHOT REGSHOT, FAR *LPREGSHOT;
 
 
-// Struct for chaining compare result output
-struct _COMRESULT {
-    LPTSTR  lpszResult;                     // Pointer to result string
-    struct _COMRESULT FAR *lpNextCR;        // Pointer to next _COMRESULT
+// Struct for a single compare result list
+struct _COMPRESULT {
+    LPVOID lpContentOld;                    // Pointer to old content
+    LPVOID lpContentNew;                    // Pointer to new content
+    struct _COMPRESULT FAR *lpNextCR;       // Pointer to next _COMPRESULT
 };
-typedef struct _COMRESULT COMRESULT, FAR *LPCOMRESULT;
+typedef struct _COMPRESULT COMPRESULT, FAR *LPCOMPRESULT;
 
 
-// Struct for compare result pointers
+// Struct for all compare result lists
 struct _COMPPOINTERS {
-    LPCOMRESULT  lpCRKeyAdded;
-    LPCOMRESULT  lpCRKeyDeleted;
-    LPCOMRESULT  lpCRValAdded;
-    LPCOMRESULT  lpCRValDeleted;
-    LPCOMRESULT  lpCRValModified;
-    LPCOMRESULT  lpCRDirAdded;
-    LPCOMRESULT  lpCRDirDeleted;
-    LPCOMRESULT  lpCRDirModified;
-    LPCOMRESULT  lpCRFileAdded;
-    LPCOMRESULT  lpCRFileDeleted;
-    LPCOMRESULT  lpCRFileModified;
+    LPCOMPRESULT  lpCRKeyAdded;
+    LPCOMPRESULT  lpCRKeyDeleted;
+    LPCOMPRESULT  lpCRValAdded;
+    LPCOMPRESULT  lpCRValDeleted;
+    LPCOMPRESULT  lpCRValModified;
+    LPCOMPRESULT  lpCRDirAdded;
+    LPCOMPRESULT  lpCRDirDeleted;
+    LPCOMPRESULT  lpCRDirModified;
+    LPCOMPRESULT  lpCRFileAdded;
+    LPCOMPRESULT  lpCRFileDeleted;
+    LPCOMPRESULT  lpCRFileModified;
 };
 typedef struct _COMPPOINTERS COMPPOINTERS, FAR *LPCOMPPOINTERS;
 
 
-// Struct for compare result
-struct _COMPRESULT {
+// Struct for complete compare result
+struct _COMPRESULTS {
     COUNTS        stcCompared;
     COUNTS        stcChanged;
     COUNTS        stcAdded;
@@ -242,7 +243,7 @@ struct _COMPRESULT {
     COMPPOINTERS  stCRCurrent;
     BOOL          fFilled;                  // Flag if comparison was done (even if result is empty)
 };
-typedef struct _COMPRESULT COMPRESULT, FAR *LPCOMPRESULT;
+typedef struct _COMPRESULTS COMPRESULTS, FAR *LPCOMPRESULTS;
 
 
 // Struct for file header, used in saving and loading
@@ -419,7 +420,7 @@ typedef struct  _SAVEHEADFILE SAVEHEADFILE, FAR *LPSAVEHEADFILE;
 
 
 // Compare result
-extern COMPRESULT CompareResult;
+extern COMPRESULTS CompareResult;
 
 // Variables used for time intervals to update the "status bar"
 extern DWORD nCurrentTime;
@@ -472,7 +473,8 @@ extern HCURSOR   hSaveCursor;      // Handle of cursor
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
 extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
-VOID    LogToMem(DWORD nActionType, LPVOID lpContent);
+VOID    CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew);
+LPTSTR  ResultToString(DWORD nActionType, LPVOID lpContent);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
 BOOL    IsInSkipList(LPTSTR lpszString, LPTSTR rgszSkipList[]);
@@ -507,7 +509,7 @@ VOID    UpdateProgressBar(VOID);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
 VOID    ErrMsg(LPTSTR lpszErrMsg);
 VOID    WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML);
-VOID    WritePart(LPCOMRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor);
+VOID    WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUseColor);
 VOID    WriteTitle(LPTSTR lpszTitle, LPTSTR lpszValue, BOOL fAsHTML);
 VOID    WriteHTMLBegin(void);
 VOID    WriteHTMLEnd(void);

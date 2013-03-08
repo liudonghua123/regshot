@@ -70,7 +70,7 @@ size_t nSourceSize;
 #define REGSHOT_READ_BLOCK_SIZE 8192
 
 // Compare result
-COMPRESULT CompareResult;
+COMPRESULTS CompareResult;
 
 // Some vars used to update the "status bar"
 DWORD nCurrentTime;
@@ -491,12 +491,13 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
 //-------------------------------------------------------------
 // Routine to create new comparison result, distribute to different pointers
 //-------------------------------------------------------------
-VOID CreateNewResult(DWORD nActionType, LPTSTR lpszResult)
+VOID CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew)
 {
-    LPCOMRESULT lpCR;
+    LPCOMPRESULT lpCR;
 
-    lpCR = (LPCOMRESULT)MYALLOC0(sizeof(COMRESULT));
-    lpCR->lpszResult = lpszResult;
+    lpCR = (LPCOMPRESULT)MYALLOC0(sizeof(COMPRESULT));
+    lpCR->lpContentOld = lpContentOld;
+    lpCR->lpContentNew = lpContentNew;
 
     switch (nActionType) {
         case KEYADD:
@@ -550,13 +551,13 @@ VOID CreateNewResult(DWORD nActionType, LPTSTR lpszResult)
 //-------------------------------------------------------------
 // Write comparison results into memory and call CreateNewResult()
 //-------------------------------------------------------------
-VOID LogToMem(DWORD nActionType, LPVOID lpContent)
+LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
 {
     LPTSTR lpszName;
 
     if ((KEYADD == nActionType) || (KEYDEL == nActionType)) {
         lpszName = GetWholeKeyName(lpContent, fUseLongRegHead);
-        CreateNewResult(nActionType, lpszName);
+        return lpszName;
     } else if ((VALADD == nActionType) || (VALDEL == nActionType) || (VALMODI == nActionType)) {
         LPTSTR lpszData;
         LPTSTR lpszAll;
@@ -577,10 +578,10 @@ VOID LogToMem(DWORD nActionType, LPVOID lpContent)
         if (NULL != lpszData) {
             MYFREE(lpszData);
         }
-        CreateNewResult(nActionType, lpszAll);
+        return lpszAll;
     } else {
         lpszName = GetWholeFileName(lpContent, 0);
-        CreateNewResult(nActionType, lpszName);
+        return lpszName;
     }
 }
 
@@ -588,15 +589,12 @@ VOID LogToMem(DWORD nActionType, LPVOID lpContent)
 //-------------------------------------------------------------
 // Routine to free all comparison results (release memory)
 //-------------------------------------------------------------
-VOID FreeAllComResults(LPCOMRESULT lpStartCR)
+VOID FreeAllCompResults(LPCOMPRESULT lpStartCR)
 {
-    LPCOMRESULT lpCR;
-    LPCOMRESULT lpTempCR;
+    LPCOMPRESULT lpCR;
+    LPCOMPRESULT lpTempCR;
 
     for (lpCR = lpStartCR; NULL != lpCR;) {
-        if (NULL != lpCR->lpszResult) {
-            MYFREE(lpCR->lpszResult);
-        }
         lpTempCR = lpCR;
         lpCR = lpCR->lpNextCR;
         MYFREE(lpTempCR);
@@ -608,17 +606,17 @@ VOID FreeAllComResults(LPCOMRESULT lpStartCR)
 // ----------------------------------------------------------------------
 VOID FreeCompareResult(void)
 {
-    FreeAllComResults(CompareResult.stCRHeads.lpCRKeyAdded);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRKeyDeleted);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRValAdded);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRValDeleted);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRValModified);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRFileAdded);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRFileDeleted);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRFileModified);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRDirAdded);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRDirDeleted);
-    FreeAllComResults(CompareResult.stCRHeads.lpCRDirModified);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRKeyAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRKeyDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRValAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRValDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRValModified);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRFileModified);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRDirAdded);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRDirDeleted);
+    FreeAllCompResults(CompareResult.stCRHeads.lpCRDirModified);
 
     ZeroMemory(&CompareResult, sizeof(CompareResult));
 }
@@ -690,8 +688,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                             lpVC2->fValueMatch = ISMODI;
                             CompareResult.stcChanged.cValues++;
                             CompareResult.stcModified.cValues++;
-                            LogToMem(VALMODI, lpVC1);
-                            LogToMem(VALMODI, lpVC2);
+                            CreateNewResult(VALMODI, lpVC1, lpVC2);
                         }
                         break;
                     }
@@ -699,7 +696,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                         // VC1 has no match in KC2, so VC1 is a deleted value
                         CompareResult.stcChanged.cValues++;
                         CompareResult.stcDeleted.cValues++;
-                        LogToMem(VALDEL, lpVC1);
+                        CreateNewResult(VALDEL, lpVC1, NULL);
                     }
                 }
                 // After looping all values of KC1, do an extra loop over all KC2 values and check previously set match flags to determine added values
@@ -714,7 +711,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                     // VC2 has no match in KC1, so VC2 is an added value
                     CompareResult.stcChanged.cValues++;
                     CompareResult.stcAdded.cValues++;
-                    LogToMem(VALADD, lpVC2);
+                    CreateNewResult(VALADD, NULL, lpVC2);
                 }
             }  // End of extra local block
 
@@ -728,7 +725,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
             // KC1 has no matching KC2, so KC1 is a deleted key
             CompareResult.stcChanged.cKeys++;
             CompareResult.stcDeleted.cKeys++;
-            LogToMem(KEYDEL, lpKC1);
+            CreateNewResult(KEYDEL, lpKC1, NULL);
             // Extra local block to reduce stack usage due to recursive calls
             {
                 LPVALUECONTENT lpVC1;
@@ -737,7 +734,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                     CompareResult.stcCompared.cValues++;
                     CompareResult.stcChanged.cValues++;
                     CompareResult.stcDeleted.cValues++;
-                    LogToMem(VALDEL, lpVC1);
+                    CreateNewResult(VALDEL, lpVC1, NULL);
                 }
             }  // End of extra local block
 
@@ -758,7 +755,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
         CompareResult.stcCompared.cKeys++;
         CompareResult.stcChanged.cKeys++;
         CompareResult.stcAdded.cKeys++;
-        LogToMem(KEYADD, lpKC2);
+        CreateNewResult(KEYADD, NULL, lpKC2);
         // Extra local block to reduce stack usage due to recursive calls
         {
             LPVALUECONTENT lpVC2;
@@ -767,7 +764,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
                 CompareResult.stcCompared.cValues++;
                 CompareResult.stcChanged.cValues++;
                 CompareResult.stcAdded.cValues++;
-                LogToMem(VALADD, lpVC2);
+                CreateNewResult(VALADD, NULL, lpVC2);
             }
         }  // End of extra local block
 
@@ -1002,57 +999,57 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     // Write keydel part
     if (0 != CompareResult.stcDeleted.cKeys) {
         WriteTableHead(asLangTexts[iszTextKeyDel].lpszText, CompareResult.stcDeleted.cKeys, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRKeyDeleted, fAsHTML, FALSE);
+        WritePart(KEYDEL, CompareResult.stCRHeads.lpCRKeyDeleted, fAsHTML, FALSE);
     }
     // Write keyadd part
     if (0 != CompareResult.stcAdded.cKeys) {
         WriteTableHead(asLangTexts[iszTextKeyAdd].lpszText, CompareResult.stcAdded.cKeys, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRKeyAdded, fAsHTML, FALSE);
+        WritePart(KEYADD, CompareResult.stCRHeads.lpCRKeyAdded, fAsHTML, FALSE);
     }
     // Write valdel part
     if (0 != CompareResult.stcDeleted.cValues) {
         WriteTableHead(asLangTexts[iszTextValDel].lpszText, CompareResult.stcDeleted.cValues, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRValDeleted, fAsHTML, FALSE);
+        WritePart(VALDEL, CompareResult.stCRHeads.lpCRValDeleted, fAsHTML, FALSE);
     }
     // Write valadd part
     if (0 != CompareResult.stcAdded.cValues) {
         WriteTableHead(asLangTexts[iszTextValAdd].lpszText, CompareResult.stcAdded.cValues, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRValAdded, fAsHTML, FALSE);
+        WritePart(VALADD, CompareResult.stCRHeads.lpCRValAdded, fAsHTML, FALSE);
     }
     // Write valmodi part
     if (0 != CompareResult.stcModified.cValues) {
         WriteTableHead(asLangTexts[iszTextValModi].lpszText, CompareResult.stcModified.cValues, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRValModified, fAsHTML, TRUE);
+        WritePart(VALMODI, CompareResult.stCRHeads.lpCRValModified, fAsHTML, TRUE);
     }
     // Write file add part
     if (0 != CompareResult.stcAdded.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
+        WritePart(FILEADD, CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
     }
     // Write file del part
     if (0 != CompareResult.stcDeleted.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
+        WritePart(FILEDEL, CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
     }
     // Write file modi part
     if (0 != CompareResult.stcModified.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
+        WritePart(FILEMODI, CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
     }
     // Write directory add part
     if (0 != CompareResult.stcAdded.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, CompareResult.stcAdded.cDirs, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, FALSE);
+        WritePart(DIRADD, CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, FALSE);
     }
     // Write directory del part
     if (0 != CompareResult.stcDeleted.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
+        WritePart(DIRDEL, CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
     }
     // Write directory modi part
     if (0 != CompareResult.stcModified.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirModi].lpszText, CompareResult.stcModified.cDirs, fAsHTML);
-        WritePart(CompareResult.stCRHeads.lpCRDirModified, fAsHTML, FALSE);
+        WritePart(DIRMODI, CompareResult.stCRHeads.lpCRDirModified, fAsHTML, FALSE);
     }
 
     if (fAsHTML) {

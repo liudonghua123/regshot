@@ -197,7 +197,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
                     lpFC2->fFileMatch = ISMODI;
                     CompareResult.stcChanged.cFiles++;
                     CompareResult.stcModified.cFiles++;
-                    LogToMem(FILEMODI, lpFC1);
+                    CreateNewResult(FILEMODI, lpFC1, lpFC2);
                 }
             } else {
                 // Both are dirs
@@ -209,7 +209,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
                     lpFC2->fFileMatch = ISMODI;
                     CompareResult.stcChanged.cDirs++;
                     CompareResult.stcModified.cDirs++;
-                    LogToMem(DIRMODI, lpFC1);
+                    CreateNewResult(DIRMODI, lpFC1, lpFC2);
                 }
 
                 // Compare sub files if any
@@ -224,11 +224,11 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
             if (ISFILE(lpFC1->nFileAttributes)) {
                 CompareResult.stcChanged.cFiles++;
                 CompareResult.stcDeleted.cFiles++;
-                LogToMem(FILEDEL, lpFC1);
+                CreateNewResult(FILEDEL, lpFC1, NULL);
             } else {
                 CompareResult.stcChanged.cDirs++;
                 CompareResult.stcDeleted.cDirs++;
-                LogToMem(DIRDEL, lpFC1);
+                CreateNewResult(DIRDEL, lpFC1, NULL);
 
                 // "Compare"/Log sub files if any
                 if (NULL != lpFC1->lpFirstSubFC) {
@@ -249,12 +249,12 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
             CompareResult.stcCompared.cFiles++;
             CompareResult.stcChanged.cFiles++;
             CompareResult.stcAdded.cFiles++;
-            LogToMem(FILEADD, lpFC2);
+            CreateNewResult(FILEADD, NULL, lpFC2);
         } else {
             CompareResult.stcCompared.cDirs++;
             CompareResult.stcChanged.cDirs++;
             CompareResult.stcAdded.cDirs++;
-            LogToMem(DIRADD, lpFC2);
+            CreateNewResult(DIRADD, NULL, lpFC2);
 
             // "Compare"/Log sub files if any
             if (NULL != lpFC2->lpFirstSubFC) {

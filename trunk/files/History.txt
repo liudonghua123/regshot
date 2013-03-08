@@ -14,6 +14,8 @@ http://sourceforge.net/projects/regshot/
 V1.9.1 development snapshot
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
+! Reduce memory footprint for comparison and output by 95%
+* Internal rework of comparison and output logic for future UI rework
 
 V1.9.0 2013-02-02
 + Add 64-Bit builds
