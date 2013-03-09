@@ -549,45 +549,83 @@ VOID CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew
 
 
 //-------------------------------------------------------------
-// Write comparison results into memory and call CreateNewResult()
+// Convert content to a string
 //-------------------------------------------------------------
 LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
 {
+    LPTSTR lpszResult;
     LPTSTR lpszName;
+    LPTSTR lpszData;
+    size_t cchData;
+
+    lpszResult = NULL;
 
     if ((KEYDEL == nActionType) || (KEYADD == nActionType)) {
-        lpszName = GetWholeKeyName(lpContent, fUseLongRegHead);
-        return lpszName;
+        // name
+        lpszResult = GetWholeKeyName(lpContent, fUseLongRegHead);
     } else if ((VALDEL == nActionType) || (VALADD == nActionType) || (VALMODI == nActionType)) {
-        LPTSTR lpszData;
-        LPTSTR lpszAll;
-        size_t cchData;
-
+        // name
         lpszName = GetWholeValueName(lpContent, fUseLongRegHead);
+        // data
         lpszData = GetWholeValueData(lpContent);
         cchData = 0;
         if (NULL != lpszData) {
             cchData = _tcslen(lpszData);
         }
-        lpszAll = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
-        _tcscpy(lpszAll, lpszName);
+        // create result
+        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
+        _tcscpy(lpszResult, lpszName);
         if (NULL != lpszData) {
-            _tcscat(lpszAll, lpszData);
+            _tcscat(lpszResult, lpszData);
         }
         MYFREE(lpszName);
         if (NULL != lpszData) {
             MYFREE(lpszData);
         }
-        return lpszAll;
     } else if ((DIRDEL == nActionType) || (DIRADD == nActionType) || (DIRMODI == nActionType)) {
+        // name
         lpszName = GetWholeFileName(lpContent, 0);
-        return lpszName;
+        // attributes
+        cchData = 512;
+        lpszData = MYALLOC0(cchData * sizeof(TCHAR));
+        cchData = _sntprintf(lpszData, cchData, TEXT("|0x%08X\0"), ((LPFILECONTENT)lpContent)->nFileAttributes);
+        // create result
+        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
+        _tcscpy(lpszResult, lpszName);
+        _tcscat(lpszResult, lpszData);
+        MYFREE(lpszName);
+        MYFREE(lpszData);
     } else if ((FILEDEL == nActionType) || (FILEADD == nActionType) || (FILEMODI == nActionType)) {
+        SYSTEMTIME stFile;
+        FILETIME ftFile;
+        LARGE_INTEGER cbFile;
+        // name
         lpszName = GetWholeFileName(lpContent, 0);
-        return lpszName;
+        // last write time, attributes, size
+        ZeroMemory(&ftFile, sizeof(ftFile));
+        ftFile.dwLowDateTime = ((LPFILECONTENT)lpContent)->nWriteDateTimeLow;
+        ftFile.dwHighDateTime = ((LPFILECONTENT)lpContent)->nWriteDateTimeHigh;
+        ZeroMemory(&stFile, sizeof(stFile));
+        FileTimeToSystemTime(&ftFile, &stFile);
+        ZeroMemory(&cbFile, sizeof(cbFile));
+        cbFile.LowPart = ((LPFILECONTENT)lpContent)->nFileSizeLow;
+        cbFile.HighPart = ((LPFILECONTENT)lpContent)->nFileSizeHigh;
+        cchData = 512;
+        lpszData = MYALLOC0(cchData * sizeof(TCHAR));
+        cchData = _sntprintf(lpszData, cchData, TEXT("|%04d-%02d-%02d %02d:%02d:%02d|0x%08X|%ld\0"),
+                             stFile.wYear, stFile.wMonth, stFile.wDay,
+                             stFile.wHour, stFile.wMinute, stFile.wSecond,
+                             ((LPFILECONTENT)lpContent)->nFileAttributes, cbFile);
+        // create result
+        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
+        _tcscpy(lpszResult, lpszName);
+        _tcscat(lpszResult, lpszData);
+        MYFREE(lpszName);
+        MYFREE(lpszData);
     } else {
-        return NULL;
+        // TODO: error message and handling
     }
+    return lpszResult;
 }
 
 
@@ -961,20 +999,11 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpszBuffer, COMMENTLENGTH);  // length incl. NULL character
     WriteTitle(asLangTexts[iszTextComments].lpszText, lpszBuffer, fAsHTML);
 
-    _sntprintf(lpszBuffer, nBufferSize, TEXT("%d%s%d%s%d %02d%s%02d%s%02d %s %d%s%d%s%d %02d%s%02d%s%02d\0"),
-               lpShot1->systemtime.wYear, TEXT("/"),
-               lpShot1->systemtime.wMonth, TEXT("/"),
-               lpShot1->systemtime.wDay,
-               lpShot1->systemtime.wHour, TEXT(":"),
-               lpShot1->systemtime.wMinute, TEXT(":"),
-               lpShot1->systemtime.wSecond, TEXT(" , "),
-               lpShot2->systemtime.wYear, TEXT("/"),
-               lpShot2->systemtime.wMonth, TEXT("/"),
-               lpShot2->systemtime.wDay,
-               lpShot2->systemtime.wHour, TEXT(":"),
-               lpShot2->systemtime.wMinute, TEXT(":"),
-               lpShot2->systemtime.wSecond
-              );
+    _sntprintf(lpszBuffer, nBufferSize, TEXT("%04d-%02d-%02d %02d:%02d:%02d, %04d-%02d-%02d %02d:%02d:%02d\0"),
+               lpShot1->systemtime.wYear, lpShot1->systemtime.wMonth, lpShot1->systemtime.wDay,
+               lpShot1->systemtime.wHour, lpShot1->systemtime.wMinute, lpShot1->systemtime.wSecond,
+               lpShot2->systemtime.wYear, lpShot2->systemtime.wMonth, lpShot2->systemtime.wDay,
+               lpShot2->systemtime.wHour, lpShot2->systemtime.wMinute, lpShot2->systemtime.wSecond);
     lpszBuffer[nBufferSize - 1] = (TCHAR)'\0'; // saftey NULL char
 
     WriteTitle(asLangTexts[iszTextDateTime].lpszText, lpszBuffer, fAsHTML);
@@ -983,7 +1012,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (NULL != lpShot1->lpszComputerName) {
         _tcscpy(lpszBuffer, lpShot1->lpszComputerName);
     }
-    _tcscat(lpszBuffer, TEXT(" , "));
+    _tcscat(lpszBuffer, TEXT(", "));
     if (NULL != lpShot2->lpszComputerName) {
         _tcscat(lpszBuffer, lpShot2->lpszComputerName);
     }
@@ -993,7 +1022,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     if (NULL != lpShot1->lpszUserName) {
         _tcscpy(lpszBuffer, lpShot1->lpszUserName);
     }
-    _tcscat(lpszBuffer, TEXT(" , "));
+    _tcscat(lpszBuffer, TEXT(", "));
     if (NULL != lpShot2->lpszUserName) {
         _tcscat(lpszBuffer, lpShot2->lpszUserName);
     }
