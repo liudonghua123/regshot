@@ -77,6 +77,7 @@ VOID WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML)
     }
 
     WriteFile(hFile, lpszText, (DWORD)(_tcslen(lpszText) * sizeof(TCHAR)), &NBW, NULL);
+    WriteFile(hFile, TEXT(" "), (DWORD)(1 * sizeof(TCHAR)), &NBW, NULL);
     WriteFile(hFile, szCount, (DWORD)(_tcslen(szCount) * sizeof(TCHAR)), &NBW, NULL);
 
     if (fAsHTML) {
@@ -218,6 +219,7 @@ VOID WriteTitle(LPTSTR lpszTitle, LPTSTR lpszValue, BOOL fAsHTML)
     }
 
     WriteFile(hFile, lpszTitle, (DWORD)(_tcslen(lpszTitle) * sizeof(TCHAR)), &NBW, NULL);
+    WriteFile(hFile, TEXT(" "), (DWORD)(1 * sizeof(TCHAR)), &NBW, NULL);
     WriteFile(hFile, lpszValue, (DWORD)(_tcslen(lpszValue) * sizeof(TCHAR)), &NBW, NULL);
 
     if (fAsHTML) {

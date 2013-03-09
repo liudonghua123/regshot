@@ -81,15 +81,15 @@ VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD n
     nLastTime = nCurrentTime;
 
     // Update "status bar"
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u%s%u%s\0"), asLangTexts[iszTextTime].lpszText, (nCurrentTime - nStartTime) / 1000, TEXT("s"), (nCurrentTime - nStartTime) % 1000, TEXT("ms"));
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s %us%03ums\0"), asLangTexts[iszTextTime].lpszText, (nCurrentTime - nStartTime) / 1000, (nCurrentTime - nStartTime) % 1000);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle1, nCount1);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s %u\0"), lpszTitle1, nCount1);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
-    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s%u\0"), lpszTitle2, nCount2);
+    _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s %u\0"), lpszTitle2, nCount2);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
 
