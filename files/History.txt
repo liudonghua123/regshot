@@ -14,6 +14,7 @@ http://sourceforge.net/projects/regshot/
 V1.9.1 development snapshot
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
++ Output attributes/date/site for dirs/file (feature request #6)
 ! Reduce memory footprint for comparison and output by 95%
 * Internal rework of comparison and output logic for future UI rework
 
