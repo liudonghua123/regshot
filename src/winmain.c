@@ -163,7 +163,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam)) {
                 case IDC_1STSHOT:  // Button: 1st Shot
                     lpMenuShot = &Shot1;  // Popup window messages are for 1st Shot
-                    CreateShotPopupMenu();
+                    UI_CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_1STSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
@@ -171,7 +171,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_2NDSHOT:  // Button: 2nd Shot
                     lpMenuShot = &Shot2;  // Popup window messages are for 2nd Shot
-                    CreateShotPopupMenu();
+                    UI_CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_2NDSHOT), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
@@ -207,7 +207,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_CLEAR1:  // Button: Clear
                     lpMenuShot = NULL;
-                    CreateClearPopupMenu();
+                    UI_CreateClearPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_CLEAR1), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
@@ -217,11 +217,11 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_BeforeClear();
                     cCurrent = 0;
                     cEnd = Shot1.stCounts.cAll + Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
-                    InitProgressBar();
+                    UI_InitProgressBar();
                     FreeShot(&Shot1);
                     FreeShot(&Shot2);
                     FreeCompareResult();
-                    ShowHideProgressBar(SW_HIDE);
+                    UI_ShowHideProgressBar(SW_HIDE);
                     UI_AfterClear();
                     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
                     return(TRUE);
@@ -230,10 +230,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_BeforeClear();
                     cCurrent = 0;
                     cEnd = Shot1.stCounts.cAll + CompareResult.stcChanged.cAll;
-                    InitProgressBar();
+                    UI_InitProgressBar();
                     FreeShot(&Shot1);
                     FreeCompareResult();
-                    ShowHideProgressBar(SW_HIDE);
+                    UI_ShowHideProgressBar(SW_HIDE);
                     ClearRegKeyMatchFlags(Shot2.lpHKLM);  // we clear Shot2's tag
                     ClearRegKeyMatchFlags(Shot2.lpHKU);
                     ClearHeadFileMatchFlags(Shot2.lpHF);
@@ -244,10 +244,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_BeforeClear();
                     cCurrent = 0;
                     cEnd = Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
-                    InitProgressBar();
+                    UI_InitProgressBar();
                     FreeShot(&Shot2);
                     FreeCompareResult();
-                    ShowHideProgressBar(SW_HIDE);
+                    UI_ShowHideProgressBar(SW_HIDE);
                     ClearRegKeyMatchFlags(Shot1.lpHKLM);  // we clear Shot1's tag
                     ClearRegKeyMatchFlags(Shot1.lpHKU);
                     ClearHeadFileMatchFlags(Shot1.lpHF);

@@ -424,7 +424,6 @@ extern COMPRESULTS CompareResult;
 
 // Variables used for time intervals to update the "status bar"
 extern DWORD nCurrentTime;
-extern DWORD nStartTime;
 extern DWORD nLastTime;
 
 // Variables used to update the progress bar
@@ -478,20 +477,23 @@ LPTSTR  ResultToString(DWORD nActionType, LPVOID lpContent);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
 BOOL    IsInSkipList(LPTSTR lpszString, LPTSTR rgszSkipList[]);
-VOID    UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
 LPTSTR  FindKeyInIniSection(LPTSTR lpgrszSection, LPTSTR lpszSearch, size_t cchSectionLen, size_t cchSearchLen);
 VOID    SetTextsToDefaultLanguage(VOID);
 VOID    LoadAvailableLanguagesFromIni(HWND hDlg);
 BOOL    LoadLanguageFromIni(HWND hDlg);
 VOID    SetTextsToSelectedLanguage(HWND hDlg);
-VOID    CreateShotPopupMenu(VOID);
-VOID    CreateClearPopupMenu(VOID);
+VOID    UI_ShowHideCounters(int nCmdShow);
+VOID    UI_ShowHideProgressBar(int nCmdShow);
+VOID    UI_InitCounters(VOID);
+VOID    UI_InitProgressBar(VOID);
+VOID    UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
+VOID    UI_UpdateProgressBar(VOID);
 VOID    UI_BeforeShot(DWORD nID);
 VOID    UI_AfterShot(VOID);
 VOID    UI_BeforeClear(VOID);
 VOID    UI_AfterClear(VOID);
-VOID    ShowHideCounters(int nCmdShow);
-VOID    ShowHideProgressBar(int nCmdShow);
+VOID    UI_CreateShotPopupMenu(VOID);
+VOID    UI_CreateClearPopupMenu(VOID);
 
 VOID    Shot(LPREGSHOT lpShot);
 BOOL    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);
@@ -503,9 +505,6 @@ VOID    FreeAllHeadFiles(LPHEADFILE lpHF);
 VOID    ClearRegKeyMatchFlags(LPKEYCONTENT lpKC);
 VOID    FileShot(LPREGSHOT lpShot);
 LPTSTR  GetWholeFileName(LPFILECONTENT lpStartFC, size_t cchExtra);
-VOID    InitCounters(VOID);
-VOID    InitProgressBar(VOID);
-VOID    UpdateProgressBar(VOID);
 BOOL    ReplaceInvalidFileNameChars(LPTSTR lpszFileName);
 VOID    ErrMsg(LPTSTR lpszErrMsg);
 VOID    WriteTableHead(LPTSTR lpszText, DWORD nCount, BOOL fAsHTML);

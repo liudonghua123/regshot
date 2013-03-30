@@ -199,7 +199,7 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
     }
