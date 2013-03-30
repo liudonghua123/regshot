@@ -115,7 +115,7 @@ VOID FreeAllFileContents(LPFILECONTENT lpFC)
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
 
@@ -266,7 +266,7 @@ VOID CompareFiles(LPFILECONTENT lpStartFC1, LPFILECONTENT lpStartFC2)
     // Update counters display
     nCurrentTime = GetTickCount();
     if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
+        UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
     }
 }
 
@@ -543,7 +543,7 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
         // Update counters display
         nCurrentTime = GetTickCount();
         if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
+            UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
         }
 
         // ATTENTION!!! FindData will be INVALID from this point on, due to recursive calls
@@ -721,7 +721,7 @@ VOID SaveFiles(LPREGSHOT lpShot, LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD 
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
 
@@ -882,7 +882,7 @@ VOID LoadFiles(LPREGSHOT lpShot, DWORD ofsFile, LPFILECONTENT lpFatherFC, LPFILE
         // Update counters display
         nCurrentTime = GetTickCount();
         if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-            UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
+            UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
         }
 
         // ATTENTION!!! sFC will be INVALID from this point on, due to recursive calls

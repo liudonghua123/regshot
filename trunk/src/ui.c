@@ -23,59 +23,80 @@
 
 LPTSTR lpszMessage;
 
-HCURSOR hHourGlass;   // Handle of cursor
-HCURSOR hSaveCursor;  // Handle of cursor
+HCURSOR hHourGlass = NULL;   // Handle of cursor
+HCURSOR hSaveCursor = NULL;  // Handle of cursor
+
+// Some vars used to update the "status bar"
+DWORD nCurrentTime;
+DWORD nStartTime;
+DWORD nLastTime;
+
+// Some vars used to update the progress bar
+DWORD cCurrent;
+DWORD cEnd;
 
 
 // ----------------------------------------------------------------------
 // Displays/Hides counters in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID ShowHideCounters(int nCmdShow)  // 1.8.2
+VOID UI_ShowHideCounters(int nCmdShow)  // 1.8.2
 {
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT1), nCmdShow);
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT2), nCmdShow);
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT3), nCmdShow);
+    UpdateWindow(hWnd);
 }
 
 
 // ----------------------------------------------------------------------
 // Displays/Hides progress bar in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID ShowHideProgressBar(int nCmdShow)
+VOID UI_ShowHideProgressBar(int nCmdShow)
 {
     ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), nCmdShow);
+    UpdateWindow(hWnd);
 }
 
 
 // ----------------------------------------------------------------------
 // Resets and displays counters in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID InitCounters(VOID)
+VOID UI_InitCounters(VOID)
 {
-    ShowHideProgressBar(SW_HIDE);
+    nCurrentTime = 0;
+    nStartTime = GetTickCount();
+    nLastTime = nStartTime;
+
+    UI_ShowHideProgressBar(SW_HIDE);
+    _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
-    ShowHideCounters(SW_SHOW);
+    UI_ShowHideCounters(SW_SHOW);
 }
 
 
 // ----------------------------------------------------------------------
 // Resets and displays progress bar in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID InitProgressBar(VOID)
+VOID UI_InitProgressBar(VOID)
 {
-    ShowHideCounters(SW_HIDE);  // 1.8.2
+    cCurrent = 0;
+    nCurrentTime = 0;
+    nStartTime = GetTickCount();
+    nLastTime = nStartTime;
+
+    UI_ShowHideCounters(SW_HIDE);  // 1.8.2
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETRANGE32, (WPARAM)0, (LPARAM)MAXPBPOSITION);
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
-    ShowHideProgressBar(SW_SHOW);
+    UI_ShowHideProgressBar(SW_SHOW);
 }
 
 
 // ----------------------------------------------------------------------
 // Update counters in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2)
+VOID UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2)
 {
     // Remember current time for next update interval
     nLastTime = nCurrentTime;
@@ -102,7 +123,7 @@ VOID UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD n
 // ----------------------------------------------------------------------
 // Update progress bar in the "status bar" of the window
 // ----------------------------------------------------------------------
-VOID UpdateProgressBar(VOID)
+VOID UI_UpdateProgressBar(VOID)
 {
     DWORD nPBPos;
 
@@ -129,9 +150,6 @@ VOID UI_BeforeShot(DWORD nID)
     hHourGlass = LoadCursor(NULL, IDC_WAIT);
     hSaveCursor = SetCursor(hHourGlass);
     EnableWindow(GetDlgItem(hWnd, nID), FALSE);
-    // Added in 1.8.2
-    _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
-    InitCounters();
 }
 
 
@@ -140,19 +158,19 @@ VOID UI_BeforeShot(DWORD nID)
 //--------------------------------------------------
 VOID UI_AfterShot(VOID)
 {
-    DWORD nIDDef;
+    DWORD nIDDefault;
 
     if (!Shot1.fFilled) {
-        nIDDef = IDC_1STSHOT;
+        nIDDefault = IDC_1STSHOT;
     } else if (!Shot2.fFilled) {
-        nIDDef = IDC_2NDSHOT;
+        nIDDefault = IDC_2NDSHOT;
     } else {
-        nIDDef = IDC_COMPARE;
+        nIDDefault = IDC_COMPARE;
     }
     EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), TRUE);
-    EnableWindow(GetDlgItem(hWnd, nIDDef), TRUE);
-    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDef, (LPARAM)0);
-    SetFocus(GetDlgItem(hWnd, nIDDef));
+    EnableWindow(GetDlgItem(hWnd, nIDDefault), TRUE);
+    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDefault, (LPARAM)0);
+    SetFocus(GetDlgItem(hWnd, nIDDefault));
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 }
@@ -166,7 +184,7 @@ VOID UI_BeforeClear(VOID)
     //EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
     hHourGlass = LoadCursor(NULL, IDC_WAIT);
     hSaveCursor = SetCursor(hHourGlass);
-    ShowHideCounters(SW_HIDE);
+    UI_ShowHideCounters(SW_HIDE);
     UpdateWindow(hWnd);
 }
 
@@ -176,16 +194,16 @@ VOID UI_BeforeClear(VOID)
 //--------------------------------------------------
 VOID UI_AfterClear(VOID)
 {
-    DWORD nIDDef;
+    DWORD nIDDefault;
     //BOOL fChk;  // used for file scan disable
 
-    nIDDef = 0;
+    nIDDefault = 0;
     if (!Shot1.fFilled) {
-        nIDDef = IDC_1STSHOT;
+        nIDDefault = IDC_1STSHOT;
     } else if (!Shot2.fFilled) {
-        nIDDef = IDC_2NDSHOT;
+        nIDDefault = IDC_2NDSHOT;
     }
-    EnableWindow(GetDlgItem(hWnd, nIDDef), TRUE);
+    EnableWindow(GetDlgItem(hWnd, nIDDefault), TRUE);
     EnableWindow(GetDlgItem(hWnd, IDC_COMPARE), FALSE);
 
     //fChk = FALSE;
@@ -198,8 +216,8 @@ VOID UI_AfterClear(VOID)
     //EnableWindow(GetDlgItem(hWnd, IDC_CHECKDIR), fChk);  // Not used in 1.8; we only enable fChk when clear all
     //SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
 
-    SetFocus(GetDlgItem(hWnd, nIDDef));
-    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDef, (LPARAM)0);
+    SetFocus(GetDlgItem(hWnd, nIDDefault));
+    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDefault, (LPARAM)0);
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 }
@@ -208,7 +226,7 @@ VOID UI_AfterClear(VOID)
 //--------------------------------------------------
 // Show popup menu for Shot buttons
 //--------------------------------------------------
-VOID CreateShotPopupMenu(VOID)
+VOID UI_CreateShotPopupMenu(VOID)
 {
     hMenu = CreatePopupMenu();
 
@@ -224,7 +242,7 @@ VOID CreateShotPopupMenu(VOID)
 //--------------------------------------------------
 // Show popup menu for Clear button
 //--------------------------------------------------
-VOID CreateClearPopupMenu(VOID)
+VOID UI_CreateClearPopupMenu(VOID)
 {
     hMenu = CreatePopupMenu();
 

@@ -72,15 +72,6 @@ size_t nSourceSize;
 // Compare result
 COMPRESULTS CompareResult;
 
-// Some vars used to update the "status bar"
-DWORD nCurrentTime;
-DWORD nStartTime;
-DWORD nLastTime;
-
-// Some vars used to update the progress bar
-DWORD cCurrent;
-DWORD cEnd;
-
 DWORD NBW;               // that is: NumberOfBytesWritten
 
 HANDLE   hFileWholeReg;  // Handle of file regshot use
@@ -632,15 +623,27 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
 //-------------------------------------------------------------
 // Routine to free all comparison results (release memory)
 //-------------------------------------------------------------
-VOID FreeAllCompResults(LPCOMPRESULT lpStartCR)
+VOID FreeAllCompResults(LPCOMPRESULT lpCR)
 {
-    LPCOMPRESULT lpCR;
-    LPCOMPRESULT lpTempCR;
+    LPCOMPRESULT lpNextCR;
 
-    for (lpCR = lpStartCR; NULL != lpCR;) {
-        lpTempCR = lpCR;
-        lpCR = lpCR->lpNextCR;
-        MYFREE(lpTempCR);
+    for (; NULL != lpCR; lpCR = lpNextCR) {
+        // Save pointer in local variable
+        lpNextCR = lpCR->lpNextCR;
+
+        // Increase count
+        cCurrent++;
+
+        // Update progress bar display
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
+                UI_UpdateProgressBar();
+            }
+        }
+
+        // Free compare result itself
+        MYFREE(lpCR);
     }
 }
 
@@ -820,7 +823,7 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
     // Update counters display
     nCurrentTime = GetTickCount();
     if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 }
 
@@ -848,10 +851,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     ZeroMemory(&CompareResult, sizeof(CompareResult));
 
     // Setup GUI for comparing...
-    InitCounters();
-    nCurrentTime  = 0;
-    nStartTime = GetTickCount();
-    nLastTime = nStartTime;
+    UI_InitCounters();
 
     // Compare timestamps of shots
     SystemTimeToFileTime(&lpShot1->systemtime, &ftime1);
@@ -868,7 +868,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 
     // Compare HKU
@@ -881,7 +881,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, CompareResult.stcCompared.cKeys, CompareResult.stcCompared.cValues);
     }
 
     // Compare HEADFILEs v1.8.1
@@ -894,7 +894,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
         // Update counters display (dirs/files final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
+        UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, CompareResult.stcCompared.cDirs, CompareResult.stcCompared.cFiles);
     }
 
     // Get total count of all items
@@ -920,16 +920,13 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
                                      + CompareResult.stcModified.cFiles;
     CompareResult.fFilled = TRUE;
 
-    ShowHideCounters(SW_HIDE);
+    UI_ShowHideCounters(SW_HIDE);
 
     // Output
 
-    // Clear counters
-    cCurrent = 0;
-    cEnd = CompareResult.stcChanged.cAll;
-
     // Setup GUI for saving...
-    InitProgressBar();
+    cEnd = CompareResult.stcChanged.cAll;
+    UI_InitProgressBar();
 
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
         fAsHTML = FALSE;
@@ -1102,7 +1099,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     }
     MYFREE(lpszDestFileName);
 
-    ShowHideProgressBar(SW_HIDE);
+    UI_ShowHideProgressBar(SW_HIDE);
 
     return TRUE;
 }
@@ -1188,7 +1185,7 @@ VOID FreeAllKeyContents(LPKEYCONTENT lpKC)
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
 
@@ -1430,7 +1427,7 @@ LPKEYCONTENT GetRegistrySnap(LPREGSHOT lpShot, HKEY hRegKey, LPTSTR lpszRegKeyNa
     // Update counters display
     nCurrentTime = GetTickCount();
     if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     // Process sub keys
@@ -1535,14 +1532,12 @@ VOID Shot(LPREGSHOT lpShot)
     FreeShot(lpShot);
 
     // Setup GUI for shot...
-    nCurrentTime  = 0;
-    nStartTime  = GetTickCount();
-    nLastTime = nStartTime;
     if (&Shot1 == lpShot) {
         UI_BeforeShot(IDC_1STSHOT);
     } else {
         UI_BeforeShot(IDC_2NDSHOT);
     }
+    UI_InitCounters();
 
     // New temporary buffers
     lpStringBuffer = NULL;
@@ -1566,14 +1561,14 @@ VOID Shot(LPREGSHOT lpShot)
 
     // Update counters display (reg keys/values final)
     nCurrentTime = GetTickCount();
-    UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+    UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
 
     // Take HKU registry shot
     GetRegistrySnap(lpShot, HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
 
     // Update counters display (reg keys/values final)
     nCurrentTime = GetTickCount();
-    UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+    UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
 
     // Take file shot
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
@@ -1581,7 +1576,7 @@ VOID Shot(LPREGSHOT lpShot)
 
         // Update counters display (dirs/files final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
+        UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
     }
 
     // Get total count of all items
@@ -1595,6 +1590,7 @@ VOID Shot(LPREGSHOT lpShot)
     lpShot->fLoaded = FALSE;
 
     UI_AfterShot();
+    UI_ShowHideCounters(SW_HIDE);
 
     if (NULL != lpStringBuffer) {
         MYFREE(lpStringBuffer);
@@ -1792,7 +1788,7 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
 
@@ -1848,16 +1844,10 @@ VOID SaveShot(LPREGSHOT lpShot)
         return;
     }
 
-    // Clear counters
-    cCurrent = 0;
-    cEnd = lpShot->stCounts.cAll;
-
     // Setup GUI for saving...
-    nCurrentTime  = 0;
-    nStartTime  = GetTickCount();
-    nLastTime = nStartTime;
     UI_BeforeClear();
-    InitProgressBar();
+    cEnd = lpShot->stCounts.cAll;
+    UI_InitProgressBar();
 
     // Initialize file header
     ZeroMemory(&fileheader, sizeof(fileheader));
@@ -1965,10 +1955,10 @@ VOID SaveShot(LPREGSHOT lpShot)
     if (NULL != lpShot->lpHKLM) {
         SaveRegKeys(lpShot, lpShot->lpHKLM, 0, offsetof(FILEHEADER, ofsHKLM));
 
-        // Update progress bar display
+        // Update progress bar display (keys/values final)
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
-            UpdateProgressBar();
+            UI_UpdateProgressBar();
         }
     }
 
@@ -1976,10 +1966,10 @@ VOID SaveShot(LPREGSHOT lpShot)
     if (NULL != lpShot->lpHKU) {
         SaveRegKeys(lpShot, lpShot->lpHKU, 0, offsetof(FILEHEADER, ofsHKU));
 
-        // Update progress bar display
+        // Update progress bar display (keys/values final)
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
-            UpdateProgressBar();
+            UI_UpdateProgressBar();
         }
     }
 
@@ -1987,23 +1977,23 @@ VOID SaveShot(LPREGSHOT lpShot)
     if (NULL != lpShot->lpHF) {
         SaveHeadFiles(lpShot, lpShot->lpHF, offsetof(FILEHEADER, ofsHF));
 
-        // Update progress bar display
+        // Update progress bar display (dirs/files final)
         if (0 != cEnd) {
             nCurrentTime = GetTickCount();
-            UpdateProgressBar();
+            UI_UpdateProgressBar();
         }
     }
 
     // Close file
     CloseHandle(hFileWholeReg);
 
-    // Update progress bar display
+    // Update progress bar display (final)
     if (0 != cEnd) {
         nCurrentTime = GetTickCount();
-        UpdateProgressBar();
+        UI_UpdateProgressBar();
     }
 
-    ShowHideProgressBar(SW_HIDE);
+    UI_ShowHideProgressBar(SW_HIDE);
     SetCursor(hSaveCursor);
     MessageBeep(0xffffffff);
 
@@ -2229,7 +2219,7 @@ VOID LoadRegKeys(LPREGSHOT lpShot, DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYC
         // Update counters display
         nCurrentTime = GetTickCount();
         if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
-            UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+            UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
         }
 
         // ATTENTION!!! sKC will be INVALID from this point on, due to recursive calls
@@ -2319,24 +2309,19 @@ BOOL LoadShot(LPREGSHOT lpShot)
     cEnd = 0;
     FreeShot(lpShot);
 
+    // Allocate memory to hold the complete file
+    lpFileBuffer = MYALLOC(cbFileSize);
+
     // Setup GUI for loading...
-    nCurrentTime  = 0;
-    nStartTime  = GetTickCount();
-    nLastTime = nStartTime;
     if (&Shot1 == lpShot) {
         UI_BeforeShot(IDC_1STSHOT);
     } else {
         UI_BeforeShot(IDC_2NDSHOT);
     }
-
-    // Allocate memory to hold the complete file
-    lpFileBuffer = MYALLOC(cbFileSize);
+    cEnd = cbFileSize;
+    UI_InitProgressBar();
 
     // Read file blockwise for progress bar
-    cCurrent = 0;
-    cEnd = cbFileSize;
-    InitProgressBar();
-
     SetFilePointer(hFileWholeReg, 0, NULL, FILE_BEGIN);
     cbFileRemain = cbFileSize;  // 100% to go
     cbReadSize = REGSHOT_READ_BLOCK_SIZE;  // next block length to read
@@ -2365,7 +2350,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
             nCurrentTime = GetTickCount();
             if (REFRESHINTERVAL < (nCurrentTime - nLastTime)) {
                 cCurrent = cbFileRead;
-                UpdateProgressBar();
+                UI_UpdateProgressBar();
             }
         }
     }
@@ -2373,16 +2358,17 @@ BOOL LoadShot(LPREGSHOT lpShot)
     // Close file
     CloseHandle(hFileWholeReg);
 
-    // Update progress bar display
+    // Update progress bar display (load final)
     if (0 != cEnd) {
         nCurrentTime = GetTickCount();
-        UpdateProgressBar();
+        UI_UpdateProgressBar();
     }
 
-    // Setup GUI for parsing loaded file...
     cEnd = 0;
-    _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
-    InitCounters();
+    UI_ShowHideProgressBar(SW_HIDE);
+
+    // Setup GUI for parsing loaded file...
+    UI_InitCounters();
 
     // Check size for copying file header
     nSourceSize = fileheader.nFHSize;
@@ -2593,7 +2579,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     if (0 != fileheader.ofsHKU) {
@@ -2601,7 +2587,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+        UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
     }
 
     if (0 != fileheader.ofsHF) {
@@ -2609,7 +2595,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
 
         // Update counters display (dirs/files final)
         nCurrentTime = GetTickCount();
-        UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
+        UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
     }
 
     // Get total count of all items
@@ -2643,6 +2629,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
     lpShot->fFilled = TRUE;
     lpShot->fLoaded = TRUE;
 
+    UI_ShowHideCounters(SW_HIDE);
     UI_AfterShot();
 
     // overwrite first letter of file name with NULL character to get path only, then create backup for initialization on next call
