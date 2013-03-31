@@ -50,9 +50,10 @@ LPTSTR lpszRegshotFileDefExt =
 
 LPTSTR lpszValueDataIsNULL = TEXT(": (NULL!)");
 
-#ifndef _UNICODE
 LPTSTR lpszEmpty = TEXT("");
-#endif
+
+REGSHOT Shot1;
+REGSHOT Shot2;
 
 FILEHEADER fileheader;
 FILEEXTRADATA fileextradata;
@@ -831,15 +832,9 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 //------------------------------------------------------------
 // Routine to call registry/file comparison engine
 //------------------------------------------------------------
-BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
+VOID CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 {
-    BOOL   fAsHTML;
     BOOL   fShot2IsNewer;
-    LPTSTR lpszBuffer;
-    LPTSTR lpszExtension;
-    LPTSTR lpszDestFileName;
-    DWORD  nBufferSize = 2048;
-    size_t cchString;
     FILETIME ftime1;
     FILETIME ftime2;
 
@@ -857,14 +852,17 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     SystemTimeToFileTime(&lpShot1->systemtime, &ftime1);
     SystemTimeToFileTime(&lpShot2->systemtime, &ftime2);
     fShot2IsNewer = (0 >= CompareFileTime(&ftime1, &ftime2)) ? TRUE : FALSE;
+    if (fShot2IsNewer) {
+        CompareResult.lpShot1 = lpShot1;
+        CompareResult.lpShot2 = lpShot2;
+    } else {
+        CompareResult.lpShot1 = lpShot2;
+        CompareResult.lpShot2 = lpShot1;
+    }
 
     // Compare HKLM
     if ((NULL != lpShot1->lpHKLM) || (NULL != lpShot2->lpHKLM)) {
-        if (fShot2IsNewer) {
-            CompareRegKeys(lpShot1->lpHKLM, lpShot2->lpHKLM);
-        } else {
-            CompareRegKeys(lpShot2->lpHKLM, lpShot1->lpHKLM);
-        }
+        CompareRegKeys(CompareResult.lpShot1->lpHKLM, CompareResult.lpShot2->lpHKLM);
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
@@ -873,11 +871,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     // Compare HKU
     if ((NULL != lpShot1->lpHKU) || (NULL != lpShot2->lpHKU)) {
-        if (fShot2IsNewer) {
-            CompareRegKeys(lpShot1->lpHKU, lpShot2->lpHKU);
-        } else {
-            CompareRegKeys(lpShot2->lpHKU, lpShot1->lpHKU);
-        }
+        CompareRegKeys(CompareResult.lpShot1->lpHKU, CompareResult.lpShot2->lpHKU);
 
         // Update counters display (keys/values final)
         nCurrentTime = GetTickCount();
@@ -886,11 +880,7 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
 
     // Compare HEADFILEs v1.8.1
     if ((NULL != lpShot1->lpHF) || (NULL != lpShot2->lpHF)) {
-        if (fShot2IsNewer) {
-            CompareHeadFiles(lpShot1->lpHF, lpShot2->lpHF);
-        } else {
-            CompareHeadFiles(lpShot2->lpHF, lpShot1->lpHF);
-        }
+        CompareHeadFiles(CompareResult.lpShot1->lpHF, CompareResult.lpShot2->lpHF);
 
         // Update counters display (dirs/files final)
         nCurrentTime = GetTickCount();
@@ -921,8 +911,19 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     CompareResult.fFilled = TRUE;
 
     UI_ShowHideCounters(SW_HIDE);
+}
 
-    // Output
+//------------------------------------------------------------
+// Routine to output comparison result
+//------------------------------------------------------------
+BOOL OutputComparisonResult(VOID)
+{
+    BOOL   fAsHTML;
+    LPTSTR lpszBuffer;
+    LPTSTR lpszExtension;
+    LPTSTR lpszDestFileName;
+    DWORD  nBufferSize = 2048;
+    size_t cchString;
 
     // Setup GUI for saving...
     cEnd = CompareResult.stcChanged.cAll;
@@ -997,31 +998,31 @@ BOOL CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     WriteTitle(asLangTexts[iszTextComments].lpszText, lpszBuffer, fAsHTML);
 
     _sntprintf(lpszBuffer, nBufferSize, TEXT("%04d-%02d-%02d %02d:%02d:%02d, %04d-%02d-%02d %02d:%02d:%02d\0"),
-               lpShot1->systemtime.wYear, lpShot1->systemtime.wMonth, lpShot1->systemtime.wDay,
-               lpShot1->systemtime.wHour, lpShot1->systemtime.wMinute, lpShot1->systemtime.wSecond,
-               lpShot2->systemtime.wYear, lpShot2->systemtime.wMonth, lpShot2->systemtime.wDay,
-               lpShot2->systemtime.wHour, lpShot2->systemtime.wMinute, lpShot2->systemtime.wSecond);
+               CompareResult.lpShot1->systemtime.wYear, CompareResult.lpShot1->systemtime.wMonth, CompareResult.lpShot1->systemtime.wDay,
+               CompareResult.lpShot1->systemtime.wHour, CompareResult.lpShot1->systemtime.wMinute, CompareResult.lpShot1->systemtime.wSecond,
+               CompareResult.lpShot2->systemtime.wYear, CompareResult.lpShot2->systemtime.wMonth, CompareResult.lpShot2->systemtime.wDay,
+               CompareResult.lpShot2->systemtime.wHour, CompareResult.lpShot2->systemtime.wMinute, CompareResult.lpShot2->systemtime.wSecond);
     lpszBuffer[nBufferSize - 1] = (TCHAR)'\0'; // saftey NULL char
 
     WriteTitle(asLangTexts[iszTextDateTime].lpszText, lpszBuffer, fAsHTML);
 
     lpszBuffer[0] = (TCHAR)'\0';
-    if (NULL != lpShot1->lpszComputerName) {
-        _tcscpy(lpszBuffer, lpShot1->lpszComputerName);
+    if (NULL != CompareResult.lpShot1->lpszComputerName) {
+        _tcscpy(lpszBuffer, CompareResult.lpShot1->lpszComputerName);
     }
     _tcscat(lpszBuffer, TEXT(", "));
-    if (NULL != lpShot2->lpszComputerName) {
-        _tcscat(lpszBuffer, lpShot2->lpszComputerName);
+    if (NULL != CompareResult.lpShot2->lpszComputerName) {
+        _tcscat(lpszBuffer, CompareResult.lpShot2->lpszComputerName);
     }
     WriteTitle(asLangTexts[iszTextComputer].lpszText, lpszBuffer, fAsHTML);
 
     lpszBuffer[0] = (TCHAR)'\0';
-    if (NULL != lpShot1->lpszUserName) {
-        _tcscpy(lpszBuffer, lpShot1->lpszUserName);
+    if (NULL != CompareResult.lpShot1->lpszUserName) {
+        _tcscpy(lpszBuffer, CompareResult.lpShot1->lpszUserName);
     }
     _tcscat(lpszBuffer, TEXT(", "));
-    if (NULL != lpShot2->lpszUserName) {
-        _tcscat(lpszBuffer, lpShot2->lpszUserName);
+    if (NULL != CompareResult.lpShot2->lpszUserName) {
+        _tcscat(lpszBuffer, CompareResult.lpShot2->lpszUserName);
     }
     WriteTitle(asLangTexts[iszTextUsername].lpszText, lpszBuffer, fAsHTML);
 
@@ -1532,11 +1533,6 @@ VOID Shot(LPREGSHOT lpShot)
     FreeShot(lpShot);
 
     // Setup GUI for shot...
-    if (&Shot1 == lpShot) {
-        UI_BeforeShot(IDC_1STSHOT);
-    } else {
-        UI_BeforeShot(IDC_2NDSHOT);
-    }
     UI_InitCounters();
 
     // New temporary buffers
@@ -1589,7 +1585,6 @@ VOID Shot(LPREGSHOT lpShot)
     lpShot->fFilled = TRUE;
     lpShot->fLoaded = FALSE;
 
-    UI_AfterShot();
     UI_ShowHideCounters(SW_HIDE);
 
     if (NULL != lpStringBuffer) {
@@ -1845,7 +1840,6 @@ VOID SaveShot(LPREGSHOT lpShot)
     }
 
     // Setup GUI for saving...
-    UI_BeforeClear();
     cEnd = lpShot->stCounts.cAll;
     UI_InitProgressBar();
 
@@ -1994,8 +1988,6 @@ VOID SaveShot(LPREGSHOT lpShot)
     }
 
     UI_ShowHideProgressBar(SW_HIDE);
-    SetCursor(hSaveCursor);
-    MessageBeep(0xffffffff);
 
     // overwrite first letter of file name with NULL character to get path only, then create backup for initialization on next call
     *(opfn.lpstrFile + opfn.nFileOffset) = (TCHAR)'\0';  // TODO: check
@@ -2313,11 +2305,6 @@ BOOL LoadShot(LPREGSHOT lpShot)
     lpFileBuffer = MYALLOC(cbFileSize);
 
     // Setup GUI for loading...
-    if (&Shot1 == lpShot) {
-        UI_BeforeShot(IDC_1STSHOT);
-    } else {
-        UI_BeforeShot(IDC_2NDSHOT);
-    }
     cEnd = cbFileSize;
     UI_InitProgressBar();
 
@@ -2444,7 +2431,6 @@ BOOL LoadShot(LPREGSHOT lpShot)
             MYFREE(lpFileBuffer);
             lpFileBuffer = NULL;
         }
-        UI_AfterShot();
         return FALSE;
     }
 
@@ -2462,7 +2448,6 @@ BOOL LoadShot(LPREGSHOT lpShot)
             MYFREE(lpFileBuffer);
             lpFileBuffer = NULL;
         }
-        UI_AfterShot();
         return FALSE;
     }
 
@@ -2630,11 +2615,91 @@ BOOL LoadShot(LPREGSHOT lpShot)
     lpShot->fLoaded = TRUE;
 
     UI_ShowHideCounters(SW_HIDE);
-    UI_AfterShot();
 
     // overwrite first letter of file name with NULL character to get path only, then create backup for initialization on next call
     *(opfn.lpstrFile + opfn.nFileOffset) = 0x00;
     _tcscpy(lpszLastOpenDir, opfn.lpstrFile);
 
     return TRUE;
+}
+
+// ----------------------------------------------------------------------
+// Display details of shot in message box
+// ----------------------------------------------------------------------
+VOID DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot)
+{
+    LPTSTR lpszInfoBox;
+    LPTSTR lpszComputerName;
+    LPTSTR lpszUserName;
+    LPTSTR lpszLoaded;
+    LPTSTR lpszTitle;
+
+    lpszComputerName = lpShot->lpszComputerName;
+    if (NULL == lpszComputerName) {
+        lpszComputerName = lpszEmpty;
+    }
+    lpszUserName = lpShot->lpszUserName;
+    if (NULL == lpszUserName) {
+        lpszUserName = lpszEmpty;
+    }
+    lpszLoaded = lpszEmpty;
+    if (lpShot->fFilled) {
+        lpszLoaded = asLangTexts[iszTextLoadedFromFile].lpszText;
+    }
+
+    lpszInfoBox = MYALLOC0(SIZEOF_INFOBOX * sizeof(TCHAR));
+    _sntprintf(lpszInfoBox, SIZEOF_INFOBOX, TEXT("%s %04d-%02d-%02d %02d:%02d:%02d\n%s %s\n%s %s\n%s %u\n%s %u\n%s %u\n%s %u\n%s\0"),
+               asLangTexts[iszTextDateTime].lpszText,
+               lpShot->systemtime.wYear, lpShot->systemtime.wMonth, lpShot->systemtime.wDay,
+               lpShot->systemtime.wHour, lpShot->systemtime.wMinute, lpShot->systemtime.wSecond,
+               asLangTexts[iszTextComputer].lpszText, lpszComputerName,
+               asLangTexts[iszTextUsername].lpszText, lpszUserName,
+               asLangTexts[iszTextKey].lpszText, lpShot->stCounts.cKeys,
+               asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cValues,
+               asLangTexts[iszTextDir].lpszText, lpShot->stCounts.cDirs,
+               asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cFiles,
+               lpszLoaded
+              );
+    lpszInfoBox[SIZEOF_INFOBOX - 1] = (TCHAR)'\0';  // safety NULL char
+
+    lpszTitle = asLangTexts[iszTextMenuInfo].lpszText;
+    if (&Shot1 == lpShot) {
+        lpszTitle = asLangTexts[iszTextButtonShot1].lpszText;
+    } else if (&Shot2 == lpShot) {
+        lpszTitle = asLangTexts[iszTextButtonShot2].lpszText;
+    }
+
+    MessageBox(hDlg, lpszInfoBox, lpszTitle, MB_OK);
+    MYFREE(lpszInfoBox);
+}
+
+// ----------------------------------------------------------------------
+// Display details of comparison result in message box
+// ----------------------------------------------------------------------
+VOID DisplayResultInfo(HWND hDlg)
+{
+    LPTSTR lpszInfoBox;
+    LPTSTR lpszTitle;
+
+    lpszInfoBox = MYALLOC0(SIZEOF_INFOBOX * sizeof(TCHAR));
+    _sntprintf(lpszInfoBox, SIZEOF_INFOBOX, TEXT("%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n%s %u\n\0"),
+               asLangTexts[iszTextKeyDel].lpszText, CompareResult.stcDeleted.cKeys,
+               asLangTexts[iszTextKeyAdd].lpszText, CompareResult.stcAdded.cKeys,
+               asLangTexts[iszTextValDel].lpszText, CompareResult.stcDeleted.cValues,
+               asLangTexts[iszTextValAdd].lpszText, CompareResult.stcAdded.cValues,
+               asLangTexts[iszTextValModi].lpszText, CompareResult.stcModified.cValues,
+               asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs,
+               asLangTexts[iszTextDirAdd].lpszText, CompareResult.stcAdded.cDirs,
+               asLangTexts[iszTextDirModi].lpszText, CompareResult.stcModified.cDirs,
+               asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles,
+               asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles,
+               asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles,
+               asLangTexts[iszTextTotal].lpszText, CompareResult.stcChanged.cAll
+              );
+    lpszInfoBox[SIZEOF_INFOBOX - 1] = (TCHAR)'\0';  // safety NULL char
+
+    lpszTitle = asLangTexts[iszTextButtonCompare].lpszText;
+
+    MessageBox(hDlg, lpszInfoBox, lpszTitle, MB_OK);
+    MYFREE(lpszInfoBox);
 }

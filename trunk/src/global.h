@@ -124,6 +124,7 @@ extern HANDLE hHeap;
 #define SIZEOF_SINGLE_LANGUAGENAME          64
 #define MAX_INI_SECTION_CHARS               32767
 #define SIZEOF_ABOUTBOX                     4096
+#define SIZEOF_INFOBOX                      4096
 
 
 // Struct used for counts of keys, values, dirs and files
@@ -234,6 +235,8 @@ typedef struct _COMPPOINTERS COMPPOINTERS, FAR *LPCOMPPOINTERS;
 
 // Struct for complete compare result
 struct _COMPRESULTS {
+    LPREGSHOT     lpShot1;
+    LPREGSHOT     lpShot2;
     COUNTS        stcCompared;
     COUNTS        stcChanged;
     COUNTS        stcDeleted;
@@ -468,7 +471,6 @@ extern HWND      hWnd;             // The handle of REGSHOT
 extern HMENU     hMenu;            // The handles of shortcut menus
 extern HANDLE    hFile;            // Handle of file regshot use
 extern HANDLE    hFileWholeReg;    // Handle of file regshot use
-extern HCURSOR   hSaveCursor;      // Handle of cursor
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
 extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
@@ -488,15 +490,15 @@ VOID    UI_InitCounters(VOID);
 VOID    UI_InitProgressBar(VOID);
 VOID    UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
 VOID    UI_UpdateProgressBar(VOID);
-VOID    UI_BeforeShot(DWORD nID);
-VOID    UI_AfterShot(VOID);
-VOID    UI_BeforeClear(VOID);
-VOID    UI_AfterClear(VOID);
+VOID    UI_SetHourGlassCursor(VOID);
+VOID    UI_RemoveHourGlassCursor(VOID);
+VOID    UI_EnableMainButtons(VOID);
 VOID    UI_CreateShotPopupMenu(VOID);
-VOID    UI_CreateClearPopupMenu(VOID);
+VOID    UI_CreateComparePopupMenu(VOID);
 
 VOID    Shot(LPREGSHOT lpShot);
-BOOL    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);
+VOID    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);
+BOOL    OutputComparisonResult(VOID);
 VOID    SaveShot(LPREGSHOT lpShot);
 BOOL    LoadShot(LPREGSHOT lpShot);
 VOID    FreeCompareResult(void);
@@ -517,6 +519,8 @@ VOID    ClearHeadFileMatchFlags(LPHEADFILE lpHF);
 BOOL    FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen);
 BOOL    DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2);
 VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
+VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
+VOID    DisplayResultInfo(HWND hDlg);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
@@ -554,7 +558,7 @@ enum eLangTexts {
     iszTextButtonShot1,
     iszTextButtonShot2,
     iszTextButtonCompare,
-    iszTextButtonClear,
+    iszTextMenuClear,
     iszTextButtonQuit,
     iszTextButtonAbout,
     iszTextTextMonitor,
@@ -568,9 +572,17 @@ enum eLangTexts {
     iszTextMenuShot,
     iszTextMenuShotSave,
     iszTextMenuLoad,
-    iszTextMenuClearAll,
+    iszTextButtonClearAll,
     iszTextMenuClearShot1,
     iszTextMenuClearShot2,
+    //
+    iszTextMenuSave,
+    iszTextMenuInfo,
+    //
+    iszTextMenuCompareOutput,
+    iszTextMenuOutput,
+    //
+    iszTextLoadedFromFile,
     // ATTENTION: add new language strings before this line, the last line is used to determine the count
     cLangStrings
 };

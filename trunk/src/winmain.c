@@ -46,9 +46,6 @@ LPTSTR lpszAboutRegshot = TEXT("Regshot is a free and open source registry compa
 LPTSTR lpszIniFileName      = TEXT("regshot.ini"); // tfx
 LPTSTR lpszLanguageFileName = TEXT("language.ini");
 
-REGSHOT Shot1;
-REGSHOT Shot2;
-
 LPTSTR lpszExtDir;
 LPTSTR lpszOutputPath;
 LPTSTR lpszLastSaveDir;
@@ -161,7 +158,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_1STSHOT:  // Button: 1st Shot
+                case IDC_1STSHOT:  // Button: "1st Shot"
                     lpMenuShot = &Shot1;  // Popup window messages are for 1st Shot
                     UI_CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_1STSHOT), &rect);
@@ -169,7 +166,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     DestroyMenu(hMenu);
                     return(TRUE);
 
-                case IDC_2NDSHOT:  // Button: 2nd Shot
+                case IDC_2NDSHOT:  // Button: "2nd Shot"
                     lpMenuShot = &Shot2;  // Popup window messages are for 2nd Shot
                     UI_CreateShotPopupMenu();
                     GetWindowRect(GetDlgItem(hDlg, IDC_2NDSHOT), &rect);
@@ -178,93 +175,129 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return(TRUE);
 
                 case IDM_SHOTONLY:  // Shot Popup Menu: "Shot"
+                    UI_SetHourGlassCursor();
                     Shot(lpMenuShot);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    DisplayShotInfo(hDlg, lpMenuShot);
                     return(TRUE);
 
                 case IDM_SHOTSAVE:  // Shot Popup Menu: "Shot and Save..."
+                    UI_SetHourGlassCursor();
                     Shot(lpMenuShot);
+                    MessageBeep(0xffffffff);
                     SaveShot(lpMenuShot);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    DisplayShotInfo(hDlg, lpMenuShot);
                     return(TRUE);
 
                 case IDM_LOAD:  // Shot Popup Menu: "Load..."
+                    UI_SetHourGlassCursor();
                     LoadShot(lpMenuShot);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    DisplayShotInfo(hDlg, lpMenuShot);
                     return(TRUE);
 
-                    /*case IDC_SAVEREG:
-                        SaveRegistry(Shot1.lpHKLM, Shot1.lpHKU);
-                        return(TRUE);*/
-
-                case IDC_COMPARE:  // Button: Compare
-                    EnableWindow(GetDlgItem(hDlg, IDC_COMPARE), FALSE);
-                    UI_BeforeClear();
-                    CompareShots(&Shot1, &Shot2);
-                    EnableWindow(GetDlgItem(hDlg, IDC_CLEAR1), TRUE);
-                    SetFocus(GetDlgItem(hDlg, IDC_CLEAR1));
-                    SendMessage(hDlg, DM_SETDEFID, (WPARAM)IDC_CLEAR1, (LPARAM)0);
-                    SetCursor(hSaveCursor);
+                case IDM_SAVE:  // Shot Popup Menu: "Save..."
+                    UI_SetHourGlassCursor();
+                    SaveShot(lpMenuShot);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
                     return(TRUE);
 
-                case IDC_CLEAR1:  // Button: Clear
+                case IDC_COMPARE:  // Button: "Compare"
                     lpMenuShot = NULL;
-                    UI_CreateClearPopupMenu();
-                    GetWindowRect(GetDlgItem(hDlg, IDC_CLEAR1), &rect);
+                    UI_CreateComparePopupMenu();
+                    GetWindowRect(GetDlgItem(hDlg, IDC_COMPARE), &rect);
                     TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, rect.left + 10, rect.top + 10, 0, hDlg, NULL);
                     DestroyMenu(hMenu);
                     return(TRUE);
 
-                case IDM_CLEARALL:  // Clear Popup Menu: "Clear All"
-                    UI_BeforeClear();
-                    cCurrent = 0;
+                case IDM_COMPARE:  // Compare Popup Menu: "Compare"
+                    UI_SetHourGlassCursor();
+                    CompareShots(&Shot1, &Shot2);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    DisplayResultInfo(hDlg);
+                    return(TRUE);
+
+                case IDM_COMPAREOUTPUT:  // Compare Popup Menu: "Compare and Output"
+                    UI_SetHourGlassCursor();
+                    CompareShots(&Shot1, &Shot2);
+                    OutputComparisonResult();
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    DisplayResultInfo(hDlg);
+                    return(TRUE);
+
+                case IDM_OUTPUT:  // Compare Popup Menu: "Output"
+                    UI_SetHourGlassCursor();
+                    OutputComparisonResult();
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    return(TRUE);
+
+                case IDC_CLEARALL:  // Button: "Clear All"
+                    UI_SetHourGlassCursor();
                     cEnd = Shot1.stCounts.cAll + Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
                     UI_InitProgressBar();
                     FreeShot(&Shot1);
                     FreeShot(&Shot2);
                     FreeCompareResult();
+                    if (0 != cEnd) {
+                        nCurrentTime = GetTickCount();
+                        UI_UpdateProgressBar();
+                    }
                     UI_ShowHideProgressBar(SW_HIDE);
-                    UI_AfterClear();
-                    EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
                     return(TRUE);
 
-                case IDM_CLEARSHOT1:  // Clear Popup Menu: "Clear 1st Shot"
-                    UI_BeforeClear();
-                    cCurrent = 0;
-                    cEnd = Shot1.stCounts.cAll + CompareResult.stcChanged.cAll;
+                case IDM_CLEAR:  // Shot/Compare Popup Menu: "Clear"
+                    UI_SetHourGlassCursor();
+                    cEnd = 0;
+                    if (NULL != lpMenuShot) {
+                        cEnd = lpMenuShot->stCounts.cAll;
+                    }
+                    cEnd += CompareResult.stcChanged.cAll;
                     UI_InitProgressBar();
-                    FreeShot(&Shot1);
+                    if (NULL != lpMenuShot) {
+                        FreeShot(lpMenuShot);
+                    }
                     FreeCompareResult();
-                    UI_ShowHideProgressBar(SW_HIDE);
-                    ClearRegKeyMatchFlags(Shot2.lpHKLM);  // we clear Shot2's tag
-                    ClearRegKeyMatchFlags(Shot2.lpHKU);
-                    ClearHeadFileMatchFlags(Shot2.lpHF);
-                    UI_AfterClear();
-                    return(TRUE);
-
-                case IDM_CLEARSHOT2:  // Clear Popup Menu: "Clear 2nd Shot"
-                    UI_BeforeClear();
-                    cCurrent = 0;
-                    cEnd = Shot2.stCounts.cAll + CompareResult.stcChanged.cAll;
-                    UI_InitProgressBar();
-                    FreeShot(&Shot2);
-                    FreeCompareResult();
-                    UI_ShowHideProgressBar(SW_HIDE);
-                    ClearRegKeyMatchFlags(Shot1.lpHKLM);  // we clear Shot1's tag
+                    if (0 != cEnd) {
+                        nCurrentTime = GetTickCount();
+                        UI_UpdateProgressBar();
+                    }
+                    ClearRegKeyMatchFlags(Shot1.lpHKLM);
+                    ClearRegKeyMatchFlags(Shot2.lpHKLM);
                     ClearRegKeyMatchFlags(Shot1.lpHKU);
+                    ClearRegKeyMatchFlags(Shot2.lpHKU);
                     ClearHeadFileMatchFlags(Shot1.lpHF);
-                    UI_AfterClear();
+                    ClearHeadFileMatchFlags(Shot2.lpHF);
+                    UI_ShowHideProgressBar(SW_HIDE);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
                     return(TRUE);
 
-                    /*case IDM_CLEARRESULT:
-                        UI_BeforeClear();
-                        FreeCompareResult();
-                        ClearRegKeyMatchFlags(Shot1.lpHKLM);
-                        ClearRegKeyMatchFlags(Shot2.lpHKLM);
-                        ClearRegKeyMatchFlags(Shot1.lpHKU);
-                        ClearRegKeyMatchFlags(Shot2.lpHKU);
-                        ClearHeadFileMatchFlags(Shot1.lpHF);
-                        ClearHeadFileMatchFlags(Shot2.lpHF);
-                        UI_AfterClear();
-                        return(TRUE);*/
+                case IDM_INFO:  // Shot/Compare Popup Menu: "Info"
+                    if (NULL != lpMenuShot) {
+                        DisplayShotInfo(hDlg, lpMenuShot);
+                    } else {
+                        DisplayResultInfo(hDlg);
+                    }
+                    return(TRUE);
 
                 case IDC_CHECKDIR:
                     if (SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0) == 1) {
@@ -276,7 +309,7 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     return(TRUE);
 
-                case IDC_CANCEL1:  // Button: Quit
+                case IDC_QUIT:  // Button: Quit
                 case IDCANCEL:  // Button: Window Close
                     SaveSettingsToIni(hDlg);  // tfx
                     PostQuitMessage(0);

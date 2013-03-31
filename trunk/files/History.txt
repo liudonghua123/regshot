@@ -12,11 +12,18 @@ http://sourceforge.net/projects/regshot/
 -------------------------------------------------
 
 V1.9.1 development snapshot
++ Reworked User Interface to provide more functions and flexibility
++ Saving a shot is now possible all the time, except when it was loaded from a file
++ Re-output of comparison result possible
++ Clear functionality moved to shot and comparison popup menu
++ Info functionality to display details of shots and comparison result
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
 + Output attributes/date/site for dirs/file (feature request #6)
-! Reduce memory footprint for comparison and output by 95%
-* Internal rework of comparison and output logic for future UI rework
+! Reduced memory footprint for comparison and output by roughly 95%
+! Updated Italian and German translation
+* Internal rework of comparison and output logic
+* Fixed some VS6 compilation issues
 
 V1.9.0 2013-02-02
 + Add 64-Bit builds
