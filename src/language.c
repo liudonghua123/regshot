@@ -79,16 +79,15 @@ VOID SetTextsToDefaultLanguage(VOID)
     asLangTexts[iszTextButtonCompare].lpszText     = TEXT("C&ompare");
     asLangTexts[iszTextButtonCompare].nIDDlgItem   = IDC_COMPARE;
 
-    asLangTexts[iszTextButtonClear].lpszText       = TEXT("&Clear");
-    asLangTexts[iszTextButtonClear].nIDDlgItem     = IDC_CLEAR1;
+    asLangTexts[iszTextMenuClear].lpszText         = TEXT("&Clear");
 
     asLangTexts[iszTextButtonQuit].lpszText        = TEXT("&Quit");
-    asLangTexts[iszTextButtonQuit].nIDDlgItem      = IDC_CANCEL1;
+    asLangTexts[iszTextButtonQuit].nIDDlgItem      = IDC_QUIT;
 
     asLangTexts[iszTextButtonAbout].lpszText       = TEXT("&About");
     asLangTexts[iszTextButtonAbout].nIDDlgItem     = IDC_ABOUT;
 
-    asLangTexts[iszTextTextMonitor].lpszText       = TEXT("&Monitor..");
+    asLangTexts[iszTextTextMonitor].lpszText       = TEXT("&Monitor...");
     //asLangTexts[iszTextTextMonitor].nIDDlgItem     = IDC_MONITOR;
 
     asLangTexts[iszTextTextCompare].lpszText       = TEXT("Compare logs save as:");
@@ -112,9 +111,20 @@ VOID SetTextsToDefaultLanguage(VOID)
     asLangTexts[iszTextMenuShot].lpszText          = TEXT("&Shot");
     asLangTexts[iszTextMenuShotSave].lpszText      = TEXT("Shot and Sa&ve...");
     asLangTexts[iszTextMenuLoad].lpszText          = TEXT("Loa&d...");
-    asLangTexts[iszTextMenuClearAll].lpszText      = TEXT("&Clear All");
+
+    asLangTexts[iszTextButtonClearAll].lpszText    = TEXT("&Clear all");
+    asLangTexts[iszTextButtonClearAll].nIDDlgItem  = IDC_CLEARALL;
+
     asLangTexts[iszTextMenuClearShot1].lpszText    = TEXT("Clear &1st shot");
     asLangTexts[iszTextMenuClearShot2].lpszText    = TEXT("Clear &2nd shot");
+
+    asLangTexts[iszTextMenuSave].lpszText          = TEXT("S&ave...");
+    asLangTexts[iszTextMenuInfo].lpszText          = TEXT("&Info");
+
+    asLangTexts[iszTextMenuCompareOutput].lpszText = TEXT("Com&pare and Output");
+    asLangTexts[iszTextMenuOutput].lpszText        = TEXT("Ou&tput");
+
+    asLangTexts[iszTextLoadedFromFile].lpszText    = TEXT("Loaded from file");
 
     // Set language and "translator"
     _tcscpy(lpszLanguage, lpszDefaultLanguage);

@@ -143,126 +143,138 @@ VOID UI_UpdateProgressBar(VOID)
 
 
 // ----------------------------------------------------------------------
-// Prepare the GUI for the shot about to be taken
+// Set mouse cursor to hour glass
 // ----------------------------------------------------------------------
-VOID UI_BeforeShot(DWORD nID)
+VOID UI_SetHourGlassCursor(VOID)
 {
-    hHourGlass = LoadCursor(NULL, IDC_WAIT);
+    if (NULL == hHourGlass) {
+        hHourGlass = LoadCursor(NULL, IDC_WAIT);
+    }
     hSaveCursor = SetCursor(hHourGlass);
-    EnableWindow(GetDlgItem(hWnd, nID), FALSE);
 }
 
 
-//--------------------------------------------------
-// Reset the GUI after the shot has been taken
-//--------------------------------------------------
-VOID UI_AfterShot(VOID)
+// ----------------------------------------------------------------------
+// Set back to previous mouse cursor
+// ----------------------------------------------------------------------
+VOID UI_RemoveHourGlassCursor(VOID)
+{
+    SetCursor(hSaveCursor);
+}
+
+
+// ----------------------------------------------------------------------
+// Enable and disable buttons depending on status
+// ----------------------------------------------------------------------
+VOID UI_EnableMainButtons(VOID)
 {
     DWORD nIDDefault;
+    BOOL fEnable;
 
-    if (!Shot1.fFilled) {
-        nIDDefault = IDC_1STSHOT;
-    } else if (!Shot2.fFilled) {
-        nIDDefault = IDC_2NDSHOT;
-    } else {
+    // Button: 1st Shot
+    nIDDefault = IDC_1STSHOT;
+    EnableWindow(GetDlgItem(hWnd, IDC_1STSHOT), TRUE);
+
+    // Button: 2nd Shot
+    fEnable = FALSE;
+    if ((Shot2.fFilled) || (Shot1.fFilled)) {
+        fEnable = TRUE;
+        if (Shot1.fFilled) {
+            nIDDefault = IDC_2NDSHOT;
+        }
+    }
+    EnableWindow(GetDlgItem(hWnd, IDC_2NDSHOT), fEnable);
+
+    // Button: Compare
+    fEnable = FALSE;
+    if ((CompareResult.fFilled) || (Shot1.fFilled && Shot2.fFilled)) {
+        fEnable = TRUE;
         nIDDefault = IDC_COMPARE;
     }
-    EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), TRUE);
-    EnableWindow(GetDlgItem(hWnd, nIDDefault), TRUE);
+    EnableWindow(GetDlgItem(hWnd, IDC_COMPARE), fEnable);
+
+    // Button: Clear all
+    fEnable = FALSE;
+    if ((Shot1.fFilled) || (Shot2.fFilled) || (CompareResult.fFilled)) {
+        fEnable = TRUE;
+    }
+    EnableWindow(GetDlgItem(hWnd, IDC_CLEARALL), fEnable);
+
+    // Set default button
     SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDefault, (LPARAM)0);
     SetFocus(GetDlgItem(hWnd, nIDDefault));
-    SetCursor(hSaveCursor);
-    MessageBeep(0xffffffff);
-}
 
-
-//--------------------------------------------------
-// Prepare the GUI for clearing
-//--------------------------------------------------
-VOID UI_BeforeClear(VOID)
-{
-    //EnableWindow(GetDlgItem(hWnd,IDC_CLEAR1),FALSE);
-    hHourGlass = LoadCursor(NULL, IDC_WAIT);
-    hSaveCursor = SetCursor(hHourGlass);
-    UI_ShowHideCounters(SW_HIDE);
     UpdateWindow(hWnd);
 }
 
 
 //--------------------------------------------------
-// Reset the GUI after the clearing
-//--------------------------------------------------
-VOID UI_AfterClear(VOID)
-{
-    DWORD nIDDefault;
-    //BOOL fChk;  // used for file scan disable
-
-    nIDDefault = 0;
-    if (!Shot1.fFilled) {
-        nIDDefault = IDC_1STSHOT;
-    } else if (!Shot2.fFilled) {
-        nIDDefault = IDC_2NDSHOT;
-    }
-    EnableWindow(GetDlgItem(hWnd, nIDDefault), TRUE);
-    EnableWindow(GetDlgItem(hWnd, IDC_COMPARE), FALSE);
-
-    //fChk = FALSE;
-    if ((!Shot1.fFilled) && (!Shot2.fFilled)) {
-        EnableWindow(GetDlgItem(hWnd, IDC_2NDSHOT), FALSE);
-        EnableWindow(GetDlgItem(hWnd, IDC_CLEAR1), FALSE);
-        //fChk = TRUE;
-    }
-
-    //EnableWindow(GetDlgItem(hWnd, IDC_CHECKDIR), fChk);  // Not used in 1.8; we only enable fChk when clear all
-    //SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
-
-    SetFocus(GetDlgItem(hWnd, nIDDefault));
-    SendMessage(hWnd, DM_SETDEFID, (WPARAM)nIDDefault, (LPARAM)0);
-    SetCursor(hSaveCursor);
-    MessageBeep(0xffffffff);
-}
-
-
-//--------------------------------------------------
-// Show popup menu for Shot buttons
+// Show popup menu for shot buttons
 //--------------------------------------------------
 VOID UI_CreateShotPopupMenu(VOID)
 {
+    DWORD nIDDefault;
+
     hMenu = CreatePopupMenu();
 
     AppendMenu(hMenu, MF_STRING, IDM_SHOTONLY, asLangTexts[iszTextMenuShot].lpszText);
     AppendMenu(hMenu, MF_STRING, IDM_SHOTSAVE, asLangTexts[iszTextMenuShotSave].lpszText);
     AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
     AppendMenu(hMenu, MF_STRING, IDM_LOAD, asLangTexts[iszTextMenuLoad].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_SAVE, asLangTexts[iszTextMenuSave].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_CLEAR, asLangTexts[iszTextMenuClear].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_INFO, asLangTexts[iszTextMenuInfo].lpszText);
 
-    SetMenuDefaultItem(hMenu, IDM_SHOTONLY, FALSE);
+    if (lpMenuShot->fFilled) {
+        nIDDefault = IDM_INFO;
+        EnableMenuItem(hMenu, IDM_SHOTONLY, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_SHOTSAVE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_LOAD, MF_BYCOMMAND | MF_GRAYED);
+        if (lpMenuShot->fLoaded) {
+            EnableMenuItem(hMenu, IDM_SAVE, MF_BYCOMMAND | MF_GRAYED);
+        }
+    } else {
+        nIDDefault = IDM_SHOTONLY;
+        EnableMenuItem(hMenu, IDM_CLEAR, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_SAVE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_INFO, MF_BYCOMMAND | MF_GRAYED);
+    }
+
+    SetMenuDefaultItem(hMenu, nIDDefault, FALSE);
 }
 
 
 //--------------------------------------------------
-// Show popup menu for Clear button
+// Show popup menu for compare button
 //--------------------------------------------------
-VOID UI_CreateClearPopupMenu(VOID)
+VOID UI_CreateComparePopupMenu(VOID)
 {
+    DWORD nIDDefault;
+
     hMenu = CreatePopupMenu();
 
-    AppendMenu(hMenu, MF_STRING, IDM_CLEARALL, asLangTexts[iszTextMenuClearAll].lpszText);
-    AppendMenu(hMenu, MF_MENUBARBREAK, IDM_BREAK, NULL);
-    AppendMenu(hMenu, MF_STRING, IDM_CLEARSHOT1, asLangTexts[iszTextMenuClearShot1].lpszText);
-    AppendMenu(hMenu, MF_STRING, IDM_CLEARSHOT2, asLangTexts[iszTextMenuClearShot2].lpszText);
-    //AppendMenu(hMenu, MF_STRING, IDM_CLEARRESULT, TEXT("Clear comparison result"));
+    AppendMenu(hMenu, MF_STRING, IDM_COMPARE, asLangTexts[iszTextButtonCompare].lpszText);
+    AppendMenu(hMenu, MF_STRING, IDM_COMPAREOUTPUT, asLangTexts[iszTextMenuCompareOutput].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_OUTPUT, asLangTexts[iszTextMenuOutput].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_CLEAR, asLangTexts[iszTextMenuClear].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_INFO, asLangTexts[iszTextMenuInfo].lpszText);
 
-    if (!Shot1.fFilled) {
-        EnableMenuItem(hMenu, IDM_CLEARSHOT1, MF_BYCOMMAND | MF_GRAYED);
+    if (CompareResult.fFilled) {
+        nIDDefault = IDM_INFO;
+        EnableMenuItem(hMenu, IDM_COMPARE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_COMPAREOUTPUT, MF_BYCOMMAND | MF_GRAYED);
+    } else {
+        nIDDefault = IDM_COMPARE;
+        EnableMenuItem(hMenu, IDM_OUTPUT, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_CLEAR, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_INFO, MF_BYCOMMAND | MF_GRAYED);
     }
-    if (!Shot2.fFilled) {
-        EnableMenuItem(hMenu, IDM_CLEARSHOT2, MF_BYCOMMAND | MF_GRAYED);
-    }
-    /*
-    if (!Comparison.fFilled) {
-        EnableMenuItem(hMenu, IDM_CLEARRESULT, MF_BYCOMMAND | MF_GRAYED);
-    }
-    */
 
-    SetMenuDefaultItem(hMenu, IDM_CLEARALL, FALSE);
+    SetMenuDefaultItem(hMenu, nIDDefault, FALSE);
 }
