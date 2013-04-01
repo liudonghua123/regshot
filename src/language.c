@@ -127,6 +127,11 @@ VOID SetTextsToDefaultLanguage(VOID)
 
     asLangTexts[iszTextLoadedFromFile].lpszText    = TEXT("Loaded from file");
 
+    asLangTexts[iszTextWarning].lpszText           = TEXT("Warning");
+    asLangTexts[iszTextChronology].lpszText        = TEXT("Chronology");
+    asLangTexts[iszTextShotsNotChronological].lpszText = TEXT("Shots not in chronological order.");
+    asLangTexts[iszTextQuestionSwapShots].lpszText     = TEXT("Do you want to swap?");
+
     // Set language and "translator"
     _tcscpy(lpszLanguage, lpszDefaultLanguage);
     lpszCurrentTranslator = lpszOriginal;
