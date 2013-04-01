@@ -181,6 +181,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
                     DisplayShotInfo(hDlg, lpMenuShot);
+                    if (CheckShotsChronology(hDlg)) {
+                        UI_EnableMainButtons();
+                    }
                     return(TRUE);
 
                 case IDM_SHOTSAVE:  // Shot Popup Menu: "Shot and Save..."
@@ -192,6 +195,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
                     DisplayShotInfo(hDlg, lpMenuShot);
+                    if (CheckShotsChronology(hDlg)) {
+                        UI_EnableMainButtons();
+                    }
                     return(TRUE);
 
                 case IDM_LOAD:  // Shot Popup Menu: "Load..."
@@ -201,6 +207,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
                     DisplayShotInfo(hDlg, lpMenuShot);
+                    if (CheckShotsChronology(hDlg)) {
+                        UI_EnableMainButtons();
+                    }
                     return(TRUE);
 
                 case IDM_SAVE:  // Shot Popup Menu: "Save..."
@@ -231,6 +240,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
+                    if (CheckShotsChronology(hDlg)) {
+                        UI_EnableMainButtons();
+                    }
                     return(TRUE);
 
                 case IDC_COMPARE:  // Button: "Compare"
@@ -243,7 +255,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_COMPARE:  // Compare Popup Menu: "Compare"
                     UI_SetHourGlassCursor();
-                    CompareShots(&Shot1, &Shot2);
+                    if (CheckShotsChronology(hDlg)) {
+                        CompareShots();
+                    }
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
@@ -252,8 +266,10 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_COMPAREOUTPUT:  // Compare Popup Menu: "Compare and Output"
                     UI_SetHourGlassCursor();
-                    CompareShots(&Shot1, &Shot2);
-                    OutputComparisonResult();
+                    if (CheckShotsChronology(hDlg)) {
+                        CompareShots();
+                        OutputComparisonResult();
+                    }
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);

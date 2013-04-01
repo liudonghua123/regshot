@@ -833,36 +833,29 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 //------------------------------------------------------------
 // Routine to call registry/file comparison engine
 //------------------------------------------------------------
-VOID CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
+VOID CompareShots(VOID)
 {
-    BOOL   fShot2IsNewer;
-    FILETIME ftime1;
-    FILETIME ftime2;
-
-    if (!DirChainMatch(lpShot1->lpHF, lpShot2->lpHF)) {
-        MessageBox(hWnd, TEXT("Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!"), TEXT("Warning"), MB_ICONWARNING);
+    if (!DirChainMatch(Shot1.lpHF, Shot2.lpHF)) {
+        MessageBox(hWnd, TEXT("Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!"), asLangTexts[iszTextWarning].lpszText, MB_ICONWARNING);  //TODO: I18N, create text index and translate
     }
 
-    // Clear counters
-    ZeroMemory(&CompareResult, sizeof(CompareResult));
+    // Initialize result and markers
+    cEnd = 0;
+    FreeCompareResult();
+    CompareResult.lpShot1 = &Shot1;
+    CompareResult.lpShot2 = &Shot2;
+    ClearRegKeyMatchFlags(Shot1.lpHKLM);
+    ClearRegKeyMatchFlags(Shot2.lpHKLM);
+    ClearRegKeyMatchFlags(Shot1.lpHKU);
+    ClearRegKeyMatchFlags(Shot2.lpHKU);
+    ClearHeadFileMatchFlags(Shot1.lpHF);
+    ClearHeadFileMatchFlags(Shot2.lpHF);
 
     // Setup GUI for comparing...
     UI_InitCounters();
 
-    // Compare timestamps of shots
-    SystemTimeToFileTime(&lpShot1->systemtime, &ftime1);
-    SystemTimeToFileTime(&lpShot2->systemtime, &ftime2);
-    fShot2IsNewer = (0 >= CompareFileTime(&ftime1, &ftime2)) ? TRUE : FALSE;
-    if (fShot2IsNewer) {
-        CompareResult.lpShot1 = lpShot1;
-        CompareResult.lpShot2 = lpShot2;
-    } else {
-        CompareResult.lpShot1 = lpShot2;
-        CompareResult.lpShot2 = lpShot1;
-    }
-
     // Compare HKLM
-    if ((NULL != lpShot1->lpHKLM) || (NULL != lpShot2->lpHKLM)) {
+    if ((NULL != CompareResult.lpShot1->lpHKLM) || (NULL != CompareResult.lpShot2->lpHKLM)) {
         CompareRegKeys(CompareResult.lpShot1->lpHKLM, CompareResult.lpShot2->lpHKLM);
 
         // Update counters display (keys/values final)
@@ -871,7 +864,7 @@ VOID CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     }
 
     // Compare HKU
-    if ((NULL != lpShot1->lpHKU) || (NULL != lpShot2->lpHKU)) {
+    if ((NULL != CompareResult.lpShot1->lpHKU) || (NULL != CompareResult.lpShot2->lpHKU)) {
         CompareRegKeys(CompareResult.lpShot1->lpHKU, CompareResult.lpShot2->lpHKU);
 
         // Update counters display (keys/values final)
@@ -880,7 +873,7 @@ VOID CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     }
 
     // Compare HEADFILEs v1.8.1
-    if ((NULL != lpShot1->lpHF) || (NULL != lpShot2->lpHF)) {
+    if ((NULL != CompareResult.lpShot1->lpHF) || (NULL != CompareResult.lpShot2->lpHF)) {
         CompareHeadFiles(CompareResult.lpShot1->lpHF, CompareResult.lpShot2->lpHF);
 
         // Update counters display (dirs/files final)
@@ -2275,7 +2268,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
     cbFileSize = GetFileSize(hFileWholeReg, NULL);
     if (sizeof(fileheader) > cbFileSize) {
         CloseHandle(hFileWholeReg);
-        ErrMsg(TEXT("wrong filesize"));
+        ErrMsg(TEXT("wrong filesize"));  //TODO: I18N, create text index and translate
         return FALSE;
     }
 
@@ -2289,7 +2282,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
     // Check for valid file signatures (SBCS/MBCS and UTF-16 signature)
     if ((0 != strncmp(szRegshotFileSignatureSBCS, fileheader.signature, MAX_SIGNATURE_LENGTH)) && (0 != strncmp(szRegshotFileSignatureUTF16, fileheader.signature, MAX_SIGNATURE_LENGTH))) {
         CloseHandle(hFileWholeReg);
-        ErrMsg(TEXT("It is not a Regshot hive file!"));
+        ErrMsg(TEXT("It is not a Regshot hive file!"));  //TODO: I18N, create text index and translate
         return FALSE;
     }
 
@@ -2297,9 +2290,9 @@ BOOL LoadShot(LPREGSHOT lpShot)
     if (0 != strncmp(szRegshotFileSignature, fileheader.signature, MAX_SIGNATURE_LENGTH)) {
         CloseHandle(hFileWholeReg);
 #ifdef _UNICODE
-        ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));
+        ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));  //TODO: I18N, create text index and translate
 #else
-        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));
+        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));  //TODO: I18N, create text index and translate
 #endif
         return FALSE;
     }
@@ -2329,7 +2322,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
         ReadFile(hFileWholeReg, lpFileBuffer + cbFileRead, cbReadSize, &NBW, NULL);
         if (NBW != cbReadSize) {
             CloseHandle(hFileWholeReg);
-            ErrMsg(TEXT("Reading ERROR!"));
+            ErrMsg(TEXT("Reading ERROR!"));  //TODO: I18N, create text index and translate
             return FALSE;
         }
 
@@ -2425,14 +2418,14 @@ BOOL LoadShot(LPREGSHOT lpShot)
         fileextradata.bSameCharSize = FALSE;
 #ifdef _UNICODE
         if (1 == fileheader.nCharSize) {
-            ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));
+            ErrMsg(TEXT("It is not a Unicode Regshot hive file! Try the ANSI version with it."));  //TODO: I18N, create text index and translate
         } else if (2 != fileheader.nCharSize) {
-            ErrMsg(TEXT("Unknown character size! Maybe created by a newer Regshot version."));
+            ErrMsg(TEXT("Unknown character size! Maybe created by a newer Regshot version."));  //TODO: I18N, create text index and translate
         } else {
-            ErrMsg(TEXT("Unsupported character size!"));
+            ErrMsg(TEXT("Unsupported character size!"));  //TODO: I18N, create text index and translate
         }
 #else
-        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));
+        ErrMsg(TEXT("It is not an ANSI Regshot hive file! Try the Unicode version with it."));  //TODO: I18N, create text index and translate
 #endif
         if (NULL != lpFileBuffer) {
             MYFREE(lpFileBuffer);
@@ -2447,9 +2440,9 @@ BOOL LoadShot(LPREGSHOT lpShot)
     } else {
         fileextradata.bSameEndianness = FALSE;
 #ifdef __LITTLE_ENDIAN__
-        ErrMsg(TEXT("It is not a Little Endian Regshot hive file!"));
+        ErrMsg(TEXT("It is not a Little Endian Regshot hive file!"));  //TODO: I18N, create text index and translate
 #else
-        ErrMsg(TEXT("It is not a Big Endian Regshot hive file!"));
+        ErrMsg(TEXT("It is not a Big Endian Regshot hive file!"));  //TODO: I18N, create text index and translate
 #endif
         if (NULL != lpFileBuffer) {
             MYFREE(lpFileBuffer);
@@ -2724,4 +2717,78 @@ VOID SwapShots(VOID)
     memcpy(&ShotTemp, &Shot1, sizeof(Shot1));     // backup Shot1 in ShotTemp
     memcpy(&Shot1, &Shot2, sizeof(Shot2));        // copy Shot2 to Shot1
     memcpy(&Shot2, &ShotTemp, sizeof(ShotTemp));  // copy ShotTemp (Shot1) to Shot2
+}
+
+
+// ----------------------------------------------------------------------
+// Check if shot 1 and shot 2 are in chronological order, otherwise prompt to swap
+//   YES = swap, then proceed (returns TRUE)
+//   NO = no swap, then proceed (returns TRUE)
+//   CANCEL = no swap, then cancel functions (returns FALSE)
+// ----------------------------------------------------------------------
+BOOL CheckShotsChronology(HWND hDlg)
+{
+    FILETIME ftime1;
+    FILETIME ftime2;
+    LPTSTR lpszChronoBox;
+    LPTSTR lpszTitle;
+    int nDialogAnswer;
+
+    // CANCEL if not both shots filled
+    if ((!Shot1.fFilled) || (!Shot2.fFilled)) {
+        return FALSE;
+    }
+
+    // Compare time stamps of shots
+    SystemTimeToFileTime(&(Shot1.systemtime), &ftime1);
+    SystemTimeToFileTime(&(Shot2.systemtime), &ftime2);
+    if (0 >= CompareFileTime(&ftime1, &ftime2)) {
+        return TRUE;
+    }
+
+    // Define texts of message box  //TODO: I18N, create text indexes and translate
+    lpszChronoBox = MYALLOC0(SIZEOF_CHRONOBOX * sizeof(TCHAR));
+    _sntprintf(lpszChronoBox, SIZEOF_CHRONOBOX, TEXT("%s\n%s %s %04d-%02d-%02d %02d:%02d:%02d\n%s %s %04d-%02d-%02d %02d:%02d:%02d\n%s\n\0"),
+               asLangTexts[iszTextShotsNotChronological].lpszText,
+               asLangTexts[iszTextButtonShot1].lpszText, asLangTexts[iszTextDateTime].lpszText,
+               Shot1.systemtime.wYear, Shot1.systemtime.wMonth, Shot1.systemtime.wDay,
+               Shot1.systemtime.wHour, Shot1.systemtime.wMinute, Shot1.systemtime.wSecond,
+               asLangTexts[iszTextButtonShot2].lpszText, asLangTexts[iszTextDateTime].lpszText,
+               Shot2.systemtime.wYear, Shot2.systemtime.wMonth, Shot2.systemtime.wDay,
+               Shot2.systemtime.wHour, Shot2.systemtime.wMinute, Shot2.systemtime.wSecond,
+               asLangTexts[iszTextQuestionSwapShots].lpszText
+              );
+    lpszChronoBox[SIZEOF_CHRONOBOX - 1] = (TCHAR)'\0';  // safety NULL char
+
+    lpszTitle = MYALLOC0(SIZEOF_CHRONOBOX * sizeof(TCHAR));
+    _sntprintf(lpszTitle, SIZEOF_CHRONOBOX, TEXT("%s %s\0"),
+               asLangTexts[iszTextChronology].lpszText,
+               asLangTexts[iszTextWarning].lpszText
+              );
+    lpszTitle[SIZEOF_CHRONOBOX - 1] = (TCHAR)'\0';  // safety NULL char
+
+    nDialogAnswer = MessageBox(hDlg, lpszChronoBox, lpszTitle, MB_ICONWARNING | MB_YESNOCANCEL | MB_DEFBUTTON2);
+    if (IDCANCEL == nDialogAnswer) {
+        return FALSE;
+    }
+
+    if (IDYES == nDialogAnswer) {
+        SwapShots();
+        cEnd = CompareResult.stcChanged.cAll;
+        UI_InitProgressBar();
+        FreeCompareResult();
+        if (0 != cEnd) {
+            nCurrentTime = GetTickCount();
+            UI_UpdateProgressBar();
+        }
+        ClearRegKeyMatchFlags(Shot1.lpHKLM);
+        ClearRegKeyMatchFlags(Shot2.lpHKLM);
+        ClearRegKeyMatchFlags(Shot1.lpHKU);
+        ClearRegKeyMatchFlags(Shot2.lpHKU);
+        ClearHeadFileMatchFlags(Shot1.lpHF);
+        ClearHeadFileMatchFlags(Shot2.lpHF);
+        UI_ShowHideProgressBar(SW_HIDE);
+    }
+
+    return TRUE;
 }

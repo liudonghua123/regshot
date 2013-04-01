@@ -125,6 +125,7 @@ extern HANDLE hHeap;
 #define MAX_INI_SECTION_CHARS               32767
 #define SIZEOF_ABOUTBOX                     4096
 #define SIZEOF_INFOBOX                      4096
+#define SIZEOF_CHRONOBOX                    4096
 
 
 // Struct used for counts of keys, values, dirs and files
@@ -497,7 +498,7 @@ VOID    UI_CreateShotPopupMenu(VOID);
 VOID    UI_CreateComparePopupMenu(VOID);
 
 VOID    Shot(LPREGSHOT lpShot);
-VOID    CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2);
+VOID    CompareShots(VOID);
 BOOL    OutputComparisonResult(VOID);
 VOID    SaveShot(LPREGSHOT lpShot);
 BOOL    LoadShot(LPREGSHOT lpShot);
@@ -522,6 +523,7 @@ VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
 VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
 VOID    DisplayResultInfo(HWND hDlg);
 VOID    SwapShots(VOID);
+BOOL    CheckShotsChronology(HWND hDlg);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
@@ -585,6 +587,11 @@ enum eLangTexts {
     iszTextMenuOutput,
     //
     iszTextLoadedFromFile,
+    //
+    iszTextWarning,
+    iszTextChronology,
+    iszTextShotsNotChronological,
+    iszTextQuestionSwapShots,
     // ATTENTION: add new language strings before this line, the last line is used to determine the count
     cLangStrings
 };
