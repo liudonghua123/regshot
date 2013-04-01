@@ -211,6 +211,28 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     MessageBeep(0xffffffff);
                     return(TRUE);
 
+                case IDM_SWAP:  // Shot Popup Menu: "Swap"
+                    UI_SetHourGlassCursor();
+                    SwapShots();
+                    cEnd = CompareResult.stcChanged.cAll;
+                    UI_InitProgressBar();
+                    FreeCompareResult();
+                    if (0 != cEnd) {
+                        nCurrentTime = GetTickCount();
+                        UI_UpdateProgressBar();
+                    }
+                    ClearRegKeyMatchFlags(Shot1.lpHKLM);
+                    ClearRegKeyMatchFlags(Shot2.lpHKLM);
+                    ClearRegKeyMatchFlags(Shot1.lpHKU);
+                    ClearRegKeyMatchFlags(Shot2.lpHKU);
+                    ClearHeadFileMatchFlags(Shot1.lpHF);
+                    ClearHeadFileMatchFlags(Shot2.lpHF);
+                    UI_ShowHideProgressBar(SW_HIDE);
+                    UI_RemoveHourGlassCursor();
+                    UI_EnableMainButtons();
+                    MessageBeep(0xffffffff);
+                    return(TRUE);
+
                 case IDC_COMPARE:  // Button: "Compare"
                     lpMenuShot = NULL;
                     UI_CreateComparePopupMenu();

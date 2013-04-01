@@ -227,6 +227,8 @@ VOID UI_CreateShotPopupMenu(VOID)
     AppendMenu(hMenu, MF_STRING, IDM_CLEAR, asLangTexts[iszTextMenuClear].lpszText);
     AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
     AppendMenu(hMenu, MF_STRING, IDM_INFO, asLangTexts[iszTextMenuInfo].lpszText);
+    AppendMenu(hMenu, MF_SEPARATOR, IDM_BREAK, NULL);
+    AppendMenu(hMenu, MF_STRING, IDM_SWAP, asLangTexts[iszTextMenuSwap].lpszText);
 
     if (lpMenuShot->fFilled) {
         nIDDefault = IDM_INFO;
@@ -241,6 +243,7 @@ VOID UI_CreateShotPopupMenu(VOID)
         EnableMenuItem(hMenu, IDM_CLEAR, MF_BYCOMMAND | MF_GRAYED);
         EnableMenuItem(hMenu, IDM_SAVE, MF_BYCOMMAND | MF_GRAYED);
         EnableMenuItem(hMenu, IDM_INFO, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_SWAP, MF_BYCOMMAND | MF_GRAYED);
     }
 
     SetMenuDefaultItem(hMenu, nIDDefault, FALSE);

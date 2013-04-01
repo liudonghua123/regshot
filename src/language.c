@@ -120,6 +120,7 @@ VOID SetTextsToDefaultLanguage(VOID)
 
     asLangTexts[iszTextMenuSave].lpszText          = TEXT("S&ave...");
     asLangTexts[iszTextMenuInfo].lpszText          = TEXT("&Info");
+    asLangTexts[iszTextMenuSwap].lpszText          = TEXT("S&wap");
 
     asLangTexts[iszTextMenuCompareOutput].lpszText = TEXT("Com&pare and Output");
     asLangTexts[iszTextMenuOutput].lpszText        = TEXT("Ou&tput");
