@@ -17,6 +17,7 @@ V1.9.1 development snapshot
 + Re-output of comparison result possible
 + Clear functionality moved to shot and comparison popup menu
 + Info functionality to display details of shots and comparison result
++ Swap functionality for shots
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
 + Output attributes/date/site for dirs/file (feature request #6)
