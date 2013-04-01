@@ -648,6 +648,7 @@ VOID FreeAllCompResults(LPCOMPRESULT lpCR)
     }
 }
 
+
 // ----------------------------------------------------------------------
 // Free all compare results
 // ----------------------------------------------------------------------
@@ -913,6 +914,7 @@ VOID CompareShots(LPREGSHOT lpShot1, LPREGSHOT lpShot2)
     UI_ShowHideCounters(SW_HIDE);
 }
 
+
 //------------------------------------------------------------
 // Routine to output comparison result
 //------------------------------------------------------------
@@ -1152,6 +1154,7 @@ VOID FreeAllValueContents(LPVALUECONTENT lpVC)
     }
 }
 
+
 // ----------------------------------------------------------------------
 // Free all registry keys and values
 // ----------------------------------------------------------------------
@@ -1199,6 +1202,7 @@ VOID FreeAllKeyContents(LPKEYCONTENT lpKC)
         MYFREE(lpKC);
     }
 }
+
 
 // ----------------------------------------------------------------------
 // Free shot completely and initialize
@@ -1799,6 +1803,7 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
     }
 }
 
+
 // ----------------------------------------------------------------------
 // Save registry and files to HIVE file
 // ----------------------------------------------------------------------
@@ -2026,6 +2031,7 @@ size_t AdjustBuffer(LPVOID *lpBuffer, size_t nCurrentSize, size_t nWantedSize, s
     return nCurrentSize;
 }
 
+
 // ----------------------------------------------------------------------
 // Load registry key with values from HIVE file
 // ----------------------------------------------------------------------
@@ -2225,6 +2231,7 @@ VOID LoadRegKeys(LPREGSHOT lpShot, DWORD ofsKey, LPKEYCONTENT lpFatherKC, LPKEYC
         lplpCaller = &lpKC->lpBrotherKC;
     }
 }
+
 
 // ----------------------------------------------------------------------
 // Load registry and files from HIVE file
@@ -2623,6 +2630,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
     return TRUE;
 }
 
+
 // ----------------------------------------------------------------------
 // Display details of shot in message box
 // ----------------------------------------------------------------------
@@ -2673,6 +2681,7 @@ VOID DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot)
     MYFREE(lpszInfoBox);
 }
 
+
 // ----------------------------------------------------------------------
 // Display details of comparison result in message box
 // ----------------------------------------------------------------------
@@ -2702,4 +2711,17 @@ VOID DisplayResultInfo(HWND hDlg)
 
     MessageBox(hDlg, lpszInfoBox, lpszTitle, MB_OK);
     MYFREE(lpszInfoBox);
+}
+
+
+// ----------------------------------------------------------------------
+// Swap shot 1 and shot 2
+// ----------------------------------------------------------------------
+VOID SwapShots(VOID)
+{
+    REGSHOT ShotTemp;
+
+    memcpy(&ShotTemp, &Shot1, sizeof(Shot1));     // backup Shot1 in ShotTemp
+    memcpy(&Shot1, &Shot2, sizeof(Shot2));        // copy Shot2 to Shot1
+    memcpy(&Shot2, &ShotTemp, sizeof(ShotTemp));  // copy ShotTemp (Shot1) to Shot2
 }

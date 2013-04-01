@@ -64,9 +64,10 @@
 #define IDM_CLEARALL                    1052
 #define IDM_CLEAR                       1053
 #define IDM_INFO                        1054
-#define IDM_COMPARE                     1055
-#define IDM_COMPAREOUTPUT               1056
-#define IDM_OUTPUT                      1057
+#define IDM_SWAP                        1055
+#define IDM_COMPARE                     1056
+#define IDM_COMPAREOUTPUT               1057
+#define IDM_OUTPUT                      1058
 
 // Next default values for new objects
 //
@@ -74,7 +75,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        120
 #define _APS_NEXT_COMMAND_VALUE         40007
-#define _APS_NEXT_CONTROL_VALUE         1058
+#define _APS_NEXT_CONTROL_VALUE         1059
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

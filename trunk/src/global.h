@@ -521,6 +521,7 @@ BOOL    DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2);
 VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
 VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
 VOID    DisplayResultInfo(HWND hDlg);
+VOID    SwapShots(VOID);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
@@ -578,6 +579,7 @@ enum eLangTexts {
     //
     iszTextMenuSave,
     iszTextMenuInfo,
+    iszTextMenuSwap,
     //
     iszTextMenuCompareOutput,
     iszTextMenuOutput,
