@@ -22,7 +22,11 @@ It pops up a menu which contains several items:
  (A) "Shot", to take a snapshot only, and it will not be kept if you exit Regshot program;
  (B) "Shot and save...", to take a snapshot of your registry and save the whole registry to
      a "hive" file and you can keep it in your hard disk for future use;
- (C) "Load...", to load a "hive" file previous saved.
+ (C) "Load...", to load a "hive" file that was previously saved.
+ (D) "Save...", to save the snapshot to a "hive" file.
+ (E) "Clear", to remove the snapshot from memory.
+ (F) "Info", to display some statistics of the snapshot.
+ (G) "Swap", to swap 1st shot and 2nd shot.
 If you want to monitor your file system, just check the "Scan Dir [dir..]" checkbox
 and input the folder names below it. Note: Regshot has the ability to scan multiple
 folders, just separate them with ";", Regshot will also scan the subfolders of the current
@@ -30,7 +34,7 @@ folders you entered.
 
 (2) Run any program that may change your windows registry or the file system
 
-(3) Click the "2nd shot" button
+(3) Click the "2nd shot" button to create another snapshot
 
 (4) Select your output LOG file type, "text" or "HTML", default is "text"
 
@@ -38,14 +42,19 @@ folders you entered.
 winzip started". The comment will only be saved into the comparison log files not into "hive" files
 
 (6) Click the "Compare" button
-Regshot will do the comparison job now (auto detect which shot is newer), when it is finished,
-Regshot will automatically load the comparison log as you defined above, the log files are
-saved  in the directory where "Output path" is defined, default is your Windows Temp Path,
-it was named as the "comment" you input, if the "comment field" is empty or invalid, the
-log will be name as "~resxxxx.txt" or "~resxxxx.htm" where "xxxx" is 0000-9999.
+It pops up a menu which contains several items:
+ (A) "Compare", to compare both snapshots only and no comparison log will be created.
+ (B) "Compare and Output", to compare both snapshots and create a comparison log.
+ (C) "Output", to create a comparison log.
+ (D) "Clear", to remove the comparison result from memory.
+ (E) "Info", to display some statistics of the comparison result.
+When creating a comparison log Regshot will automatically load it, the log files are
+saved in the directory where "Output path" is defined, default is your Windows Temp Path,
+It will be named as the "comment" you entered, if the "comment field" is empty or invalid, the
+log will be name as "~res_xxxx.txt" or "~res_xxxx.htm" where "xxxx" is 0000-9999.
 
-(7) Click the "Clear" button
-The two snapshots (or separately) previous made will be cleared and you can begin a new job.
+(7) Click the "Clear all" button
+The snapshots and comparison result will be cleared and you can begin a new job.
 Note: "Clear" does not erase the log files!
 
 (8) To quit Regshot, just click the "Quit" button
@@ -57,7 +66,7 @@ file "language.ini". View it for details!
 are included. The executable's size is smaller!
 
 (11) New to 1.8:
-File shots are now saved in hive file.
+File shots are now saved in hive files too.
 "UseLongRegHead" option added in regshot.ini to compatible with undoReg (1.46)
 "UseLongRegHead=1" means using "HKEY_LOCAL_MACHINE" instead of "HKLM", default 0
 Do not compare shots saved with different "UseLongRegHead" option! (limit gone in 1.9.0)
@@ -67,6 +76,8 @@ x64 and Unicode versions.
 You can compare shots saved with different "UseLongRegHead" option.
 Unicode shots have .hivu extension.
 Loading ANSI hive files in Unicode builds and vice versa is not supported.
+The skip list is now additionally checked against the single name of keys, values, dirs and files.
+Internally Regshot always uses the short forms HKLM and HKU, so these have to be used in your skip lists too.
 
 (13) New to development snapshot (alpha):
 ...
