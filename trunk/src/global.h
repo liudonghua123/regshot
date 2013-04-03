@@ -126,6 +126,8 @@ extern HANDLE hHeap;
 #define SIZEOF_ABOUTBOX                     4096
 #define SIZEOF_INFOBOX                      4096
 #define SIZEOF_CHRONOBOX                    4096
+#define MAX_RESULT_STRINGS                  10
+#define SIZEOF_RESULT_DATA                  512
 
 
 // Struct used for counts of keys, values, dirs and files
@@ -476,7 +478,7 @@ extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus an
 extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
 
 VOID    CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew);
-LPTSTR  ResultToString(DWORD nActionType, LPVOID lpContent);
+size_t  ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWORD nActionType, LPVOID lpContent, BOOL fNewContent);
 BOOL    LoadSettingsFromIni(HWND hDlg);
 BOOL    SaveSettingsToIni(HWND hDlg);
 BOOL    IsInSkipList(LPTSTR lpszString, LPTSTR rgszSkipList[]);

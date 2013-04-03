@@ -93,7 +93,6 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
 {
     size_t nCharsToWrite;
     size_t nCharsToGo;
-    LPTSTR lpszResult;
     LPTSTR lpszResultTemp;
     LPCOMPRESULT lpCR;
     BOOL fColor;  // color flip-flop flag
@@ -102,7 +101,9 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
     DWORD cbHTMLSpanEnd;
     DWORD cbHTML_BR;
     DWORD cbCRLF;
-    int i;
+    size_t i;
+    LPTSTR rgszResultStrings[MAX_RESULT_STRINGS];
+    size_t iResultStringsMac;
 
     cbHTMLSpan1 = 0;
     cbHTMLSpan2 = 0;
@@ -125,21 +126,17 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
 
     fColor = FALSE;
     for (lpCR = lpStartCR; NULL != lpCR; lpCR = lpCR->lpNextCR) {
-        for (i = 0; i < 2; i++) {
-            lpszResult = NULL;
-            if (0 == i) {
-                if (NULL == lpCR->lpContentOld) {
-                    continue;
-                }
-                lpszResult = ResultToString(nActionType, lpCR->lpContentOld);
-            }
-            if (1 == i) {
-                if (NULL == lpCR->lpContentNew) {
-                    continue;
-                }
-                lpszResult = ResultToString(nActionType, lpCR->lpContentNew);
-            }
-            if (NULL == lpszResult) {
+        iResultStringsMac = 0;
+
+        if (NULL != lpCR->lpContentOld) {
+            iResultStringsMac = ResultToString(rgszResultStrings, iResultStringsMac, nActionType, lpCR->lpContentOld, FALSE);
+        }
+        if (NULL != lpCR->lpContentNew) {
+            iResultStringsMac = ResultToString(rgszResultStrings, iResultStringsMac, nActionType, lpCR->lpContentNew, TRUE);
+        }
+
+        for (i = 0; i < iResultStringsMac; i++) {
+            if (NULL == rgszResultStrings[i]) {
                 continue;
             }
 
@@ -154,8 +151,8 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
                 }
             }
 
-            lpszResultTemp = lpszResult;
-            for (nCharsToGo = _tcslen(lpszResult); 0 < nCharsToGo;) {
+            lpszResultTemp = rgszResultStrings[i];
+            for (nCharsToGo = _tcslen(rgszResultStrings[i]); 0 < nCharsToGo;) {
                 nCharsToWrite = nCharsToGo;
                 if (HTMLWRAPLENGTH < nCharsToWrite) {
                     nCharsToWrite = HTMLWRAPLENGTH;
@@ -175,7 +172,7 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
                     WriteFile(hFile, lpszCRLF, cbCRLF, &NBW, NULL);
                 }
             }
-            MYFREE(lpszResult);
+            MYFREE(rgszResultStrings[i]);
 
             if (fAsHTML) {
                 if (fUseColor) {
