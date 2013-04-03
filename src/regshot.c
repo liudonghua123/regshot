@@ -541,20 +541,26 @@ VOID CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew
 
 
 //-------------------------------------------------------------
-// Convert content to a string
+// Convert content to result strings
 //-------------------------------------------------------------
-LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
+size_t ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWORD nActionType, LPVOID lpContent, BOOL fNewContent)
 {
-    LPTSTR lpszResult;
     LPTSTR lpszName;
     LPTSTR lpszData;
+    LPTSTR lpszOldData;
     size_t cchData;
+    size_t iResultStringsNew;
+    size_t iResultStringsTemp1;
 
-    lpszResult = NULL;
+    iResultStringsNew = iResultStringsMac;
 
     if ((KEYDEL == nActionType) || (KEYADD == nActionType)) {
-        // name
-        lpszResult = GetWholeKeyName(lpContent, fUseLongRegHead);
+        // create result
+        // name only
+        if (iResultStringsNew < MAX_RESULT_STRINGS) {
+            rgszResultStrings[iResultStringsNew] = GetWholeKeyName(lpContent, fUseLongRegHead);
+            iResultStringsNew++;
+        }
     } else if ((VALDEL == nActionType) || (VALADD == nActionType) || (VALMODI == nActionType)) {
         // name
         lpszName = GetWholeValueName(lpContent, fUseLongRegHead);
@@ -565,34 +571,68 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
             cchData = _tcslen(lpszData);
         }
         // create result
-        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
-        _tcscpy(lpszResult, lpszName);
-        if (NULL != lpszData) {
-            _tcscat(lpszResult, lpszData);
+        if (iResultStringsNew < MAX_RESULT_STRINGS) {
+            rgszResultStrings[iResultStringsNew] = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
+            _tcscpy(rgszResultStrings[iResultStringsNew], lpszName);
+            if (NULL != lpszData) {
+                _tcscat(rgszResultStrings[iResultStringsNew], lpszData);
+            }
+            iResultStringsNew++;
         }
         MYFREE(lpszName);
         if (NULL != lpszData) {
             MYFREE(lpszData);
         }
     } else if ((DIRDEL == nActionType) || (DIRADD == nActionType) || (DIRMODI == nActionType)) {
-        // name
-        lpszName = GetWholeFileName(lpContent, 0);
+        // create result (1st line)
+        // name only
+        if ((!fNewContent) || (0 >= iResultStringsMac)) {
+            if (iResultStringsNew < MAX_RESULT_STRINGS) {
+                rgszResultStrings[iResultStringsNew] = GetWholeFileName(lpContent, 0);
+                iResultStringsNew++;
+            }
+        }
         // attributes
-        cchData = 512;
-        lpszData = MYALLOC0(cchData * sizeof(TCHAR));
-        cchData = _sntprintf(lpszData, cchData, TEXT("|0x%08X\0"), ((LPFILECONTENT)lpContent)->nFileAttributes);
-        // create result
-        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
-        _tcscpy(lpszResult, lpszName);
-        _tcscat(lpszResult, lpszData);
-        MYFREE(lpszName);
+        lpszData = MYALLOC0(SIZEOF_RESULT_DATA * sizeof(TCHAR));
+        cchData = _sntprintf(lpszData, SIZEOF_RESULT_DATA, TEXT("0x%08X\0"), ((LPFILECONTENT)lpContent)->nFileAttributes);
+        // add to previous line if old and new data present
+        iResultStringsTemp1 = iResultStringsNew;
+        lpszOldData = NULL;
+        if ((fNewContent) && (0 < iResultStringsMac)) {
+            iResultStringsTemp1 = iResultStringsMac - 1;
+            lpszOldData = rgszResultStrings[iResultStringsTemp1];
+            cchData += _tcslen(lpszOldData) + 5;  // length in chars of separator between old and new content
+        }
+        if (iResultStringsTemp1 < MAX_RESULT_STRINGS) {
+            rgszResultStrings[iResultStringsTemp1] = MYALLOC((cchData + 1) * sizeof(TCHAR));
+            if ((fNewContent) && (0 < iResultStringsMac)) {
+                _tcscpy(rgszResultStrings[iResultStringsTemp1], lpszOldData);
+                _tcscat(rgszResultStrings[iResultStringsTemp1], TEXT(" --> "));
+            } else {
+                rgszResultStrings[iResultStringsNew][0] = (TCHAR)'\0';
+            }
+            _tcscat(rgszResultStrings[iResultStringsTemp1], lpszData);
+
+            if (iResultStringsTemp1 >= iResultStringsMac) {
+                iResultStringsNew++;
+            }
+        }
         MYFREE(lpszData);
+        if (NULL != lpszOldData) {
+            MYFREE(lpszOldData);
+        }
     } else if ((FILEDEL == nActionType) || (FILEADD == nActionType) || (FILEMODI == nActionType)) {
         SYSTEMTIME stFile;
         FILETIME ftFile;
         LARGE_INTEGER cbFile;
-        // name
-        lpszName = GetWholeFileName(lpContent, 0);
+        // create result (1st line)
+        // name only
+        if ((!fNewContent) || (0 >= iResultStringsMac)) {
+            if (iResultStringsNew < MAX_RESULT_STRINGS) {
+                rgszResultStrings[iResultStringsNew] = GetWholeFileName(lpContent, 0);
+                iResultStringsNew++;
+            }
+        }
         // last write time, attributes, size
         ZeroMemory(&ftFile, sizeof(ftFile));
         ftFile.dwLowDateTime = ((LPFILECONTENT)lpContent)->nWriteDateTimeLow;
@@ -602,22 +642,43 @@ LPTSTR ResultToString(DWORD nActionType, LPVOID lpContent)
         ZeroMemory(&cbFile, sizeof(cbFile));
         cbFile.LowPart = ((LPFILECONTENT)lpContent)->nFileSizeLow;
         cbFile.HighPart = ((LPFILECONTENT)lpContent)->nFileSizeHigh;
-        cchData = 512;
-        lpszData = MYALLOC0(cchData * sizeof(TCHAR));
-        cchData = _sntprintf(lpszData, cchData, TEXT("|%04d-%02d-%02d %02d:%02d:%02d|0x%08X|%ld\0"),
+        lpszData = MYALLOC0(SIZEOF_RESULT_DATA * sizeof(TCHAR));
+        cchData = _sntprintf(lpszData, SIZEOF_RESULT_DATA, TEXT("%04d-%02d-%02d %02d:%02d:%02d, 0x%08X, %ld\0"),
                              stFile.wYear, stFile.wMonth, stFile.wDay,
                              stFile.wHour, stFile.wMinute, stFile.wSecond,
                              ((LPFILECONTENT)lpContent)->nFileAttributes, cbFile);
-        // create result
-        lpszResult = MYALLOC((_tcslen(lpszName) + cchData + 1) * sizeof(TCHAR));
-        _tcscpy(lpszResult, lpszName);
-        _tcscat(lpszResult, lpszData);
-        MYFREE(lpszName);
+        // add to previous line if old and new data present
+        iResultStringsTemp1 = iResultStringsNew;
+        lpszOldData = NULL;
+        if ((fNewContent) && (0 < iResultStringsMac)) {
+            iResultStringsTemp1 = iResultStringsMac - 1;
+            lpszOldData = rgszResultStrings[iResultStringsTemp1];
+            cchData += _tcslen(lpszOldData) + 5;  // length in chars of separator between old and new content
+        }
+        // create result (2nd line)
+        if (iResultStringsTemp1 < MAX_RESULT_STRINGS) {
+            rgszResultStrings[iResultStringsTemp1] = MYALLOC((cchData + 1) * sizeof(TCHAR));
+            if ((fNewContent) && (0 < iResultStringsMac)) {
+                _tcscpy(rgszResultStrings[iResultStringsTemp1], lpszOldData);
+                _tcscat(rgszResultStrings[iResultStringsTemp1], TEXT(" --> "));
+            } else {
+                rgszResultStrings[iResultStringsNew][0] = (TCHAR)'\0';
+            }
+            _tcscat(rgszResultStrings[iResultStringsTemp1], lpszData);
+
+            if (iResultStringsTemp1 >= iResultStringsMac) {
+                iResultStringsNew++;
+            }
+        }
         MYFREE(lpszData);
+        if (NULL != lpszOldData) {
+            MYFREE(lpszOldData);
+        }
     } else {
         // TODO: error message and handling
     }
-    return lpszResult;
+
+    return iResultStringsNew;
 }
 
 
