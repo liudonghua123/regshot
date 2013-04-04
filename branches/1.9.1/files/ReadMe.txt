@@ -1,6 +1,6 @@
 
-Readme file of Regshot development snapshot (post 1.9.0)
-(Note: this is for testing purpose only)
+Readme file of Regshot 1.9.1 beta 2013-04-04
+(Note: this is the beta version for testing purpose only)
 
 -----------------
 Introduction:
@@ -78,9 +78,6 @@ Unicode shots have .hivu extension.
 Loading ANSI hive files in Unicode builds and vice versa is not supported.
 The skip list is now additionally checked against the single name of keys, values, dirs and files.
 Internally Regshot always uses the short forms HKLM and HKU, so these have to be used in your skip lists too.
-
-(13) New to development snapshot (alpha):
-...
 
 
 -----------------
