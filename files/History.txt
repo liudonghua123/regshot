@@ -11,7 +11,7 @@ http://sourceforge.net/projects/regshot/
 -: Function deleted
 -------------------------------------------------
 
-V1.9.1 development snapshot
+V1.9.1 beta 2013-04-04
 + Reworked User Interface to provide more functions and flexibility
 + Saving a shot is now possible all the time, except when it was loaded from a file
 + Re-output of comparison result possible
