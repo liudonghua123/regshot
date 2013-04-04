@@ -595,6 +595,7 @@ size_t ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWOR
         // attributes
         lpszData = MYALLOC0(SIZEOF_RESULT_DATA * sizeof(TCHAR));
         cchData = _sntprintf(lpszData, SIZEOF_RESULT_DATA, TEXT("0x%08X\0"), ((LPFILECONTENT)lpContent)->nFileAttributes);
+        // create result (2nd line)
         // add to previous line if old and new data present
         iResultStringsTemp1 = iResultStringsNew;
         lpszOldData = NULL;
@@ -647,32 +648,10 @@ size_t ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWOR
                              stFile.wYear, stFile.wMonth, stFile.wDay,
                              stFile.wHour, stFile.wMinute, stFile.wSecond,
                              ((LPFILECONTENT)lpContent)->nFileAttributes, cbFile);
-        // add to previous line if old and new data present
-        iResultStringsTemp1 = iResultStringsNew;
-        lpszOldData = NULL;
-        if ((fNewContent) && (0 < iResultStringsMac)) {
-            iResultStringsTemp1 = iResultStringsMac - 1;
-            lpszOldData = rgszResultStrings[iResultStringsTemp1];
-            cchData += _tcslen(lpszOldData) + 5;  // length in chars of separator between old and new content
-        }
-        // create result (2nd line)
-        if (iResultStringsTemp1 < MAX_RESULT_STRINGS) {
-            rgszResultStrings[iResultStringsTemp1] = MYALLOC((cchData + 1) * sizeof(TCHAR));
-            if ((fNewContent) && (0 < iResultStringsMac)) {
-                _tcscpy(rgszResultStrings[iResultStringsTemp1], lpszOldData);
-                _tcscat(rgszResultStrings[iResultStringsTemp1], TEXT(" --> "));
-            } else {
-                rgszResultStrings[iResultStringsNew][0] = (TCHAR)'\0';
-            }
-            _tcscat(rgszResultStrings[iResultStringsTemp1], lpszData);
-
-            if (iResultStringsTemp1 >= iResultStringsMac) {
-                iResultStringsNew++;
-            }
-        }
-        MYFREE(lpszData);
-        if (NULL != lpszOldData) {
-            MYFREE(lpszOldData);
+        // create result (2nd/3rd line)
+        if (iResultStringsNew < MAX_RESULT_STRINGS) {
+            rgszResultStrings[iResultStringsNew] = lpszData;
+            iResultStringsNew++;
         }
     } else {
         // TODO: error message and handling

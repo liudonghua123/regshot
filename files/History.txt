@@ -20,7 +20,7 @@ V1.9.1 development snapshot
 + Swap functionality for shots
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
-+ Output attributes/date/site for dirs/file (feature request #6)
++ Output attributes/date/size for dirs/file (feature request #6)
 ! Reduced memory footprint for comparison and output by roughly 95%
 ! Updated Italian and German translation
 * Internal rework of comparison and output logic
