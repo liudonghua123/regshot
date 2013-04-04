@@ -354,10 +354,22 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
             // Set file name length
             lpFatherFC->cchFileName = _tcslen(lpszFullName);
 
+            // Copy file name to new buffer for directory search and more
+            lpszFindFileName = MYALLOC((lpFatherFC->cchFileName + 4 + 1) * sizeof(TCHAR));  // +4 for "\*.*" search when directory (later in routine)
+            _tcscpy(lpszFindFileName, lpszFullName);
+            // Special case if root dir of a drive was specified, needs trailing backslash otherwise current dir of that drive is used
+            if ((TCHAR)':' == lpszFindFileName[lpFatherFC->cchFileName - 1]) {
+                lpszFindFileName[lpFatherFC->cchFileName] = (TCHAR)'\\';
+                lpszFindFileName[lpFatherFC->cchFileName + 1] = (TCHAR)'\0';
+            }
+
             // Check if file is to be excluded
             if (NULL != lprgszFileSkipStrings[0]) {  // only if there is something to exclude
                 if (IsInSkipList(lpszFullName, lprgszFileSkipStrings)) {
                     FreeAllFileContents(lpFatherFC);
+                    if (NULL != lpszFindFileName) {
+                        MYFREE(lpszFindFileName);
+                    }
                     return;
                 }
             }
@@ -416,6 +428,9 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
                 }
             }
 
+            // Remove previously added backslash (if any)
+            lpszFindFileName[lpFatherFC->cchFileName] = (TCHAR)'\0';
+
             // Copy pointer to current file into caller's pointer
             if (NULL != lplpCaller) {
                 *lplpCaller = lpFatherFC;
@@ -441,10 +456,6 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
 
             // Set "lpFirstSubFC" pointer for storing the first child's pointer
             lplpCaller = &lpFatherFC->lpFirstSubFC;
-
-            // Copy file name to new buffer for directory search
-            lpszFindFileName = MYALLOC((lpFatherFC->cchFileName + 4 + 1) * sizeof(TCHAR));  // +4 for "\*.*" search when directory (later in routine)
-            _tcscpy(lpszFindFileName, lpszFullName);
         }
 
         // If father is a file, then leave (=special case when called from FileShot)
@@ -591,9 +602,14 @@ VOID FileShot(LPREGSHOT lpShot)
                 lpszExtDir[i] = (TCHAR)'\0';
                 j = i;
 
-                // remove all trailing backslashes
-                while ((0 < j) && ((TCHAR)'\\' == lpszExtDir[--j])) {
-                    lpszExtDir[j] = (TCHAR)'\0';
+                // remove all trailing spaces and backslashes
+                while (0 < j) {
+                    --j;
+                    if (((TCHAR)'\\' == lpszExtDir[j]) || ((TCHAR)' ' == lpszExtDir[j])) {
+                        lpszExtDir[j] = (TCHAR)'\0';
+                    } else {
+                        break;
+                    }
                 }
 
                 // if anything is left then process this directory

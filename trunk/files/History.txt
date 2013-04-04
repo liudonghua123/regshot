@@ -21,6 +21,8 @@ V1.9.1 development snapshot
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
 + Output attributes/date/size for dirs/file (feature request #6)
+! Fixed bug where the current dir of a drive was scanned instead of its root dir
+  when only the drive was specified in the scan dir list, e.g. "C:\" was used as "C:"
 ! Reduced memory footprint for comparison and output by roughly 95%
 ! Updated Italian and German translation
 * Internal rework of comparison and output logic
