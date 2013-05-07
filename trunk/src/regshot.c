@@ -2684,7 +2684,7 @@ VOID DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot)
         lpszUserName = lpszEmpty;
     }
     lpszLoaded = lpszEmpty;
-    if (lpShot->fFilled) {
+    if (lpShot->fLoaded) {
         lpszLoaded = asLangTexts[iszTextLoadedFromFile].lpszText;
     }
 
