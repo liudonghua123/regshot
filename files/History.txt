@@ -28,6 +28,7 @@ V1.9.1 development snapshot
 * Internal rework of comparison and output logic
 * Allow multi line output for each difference
 * Fixed some VS6 compilation issues
+* Bug #12: add note to run as admin in readme file
 
 V1.9.0 2013-02-02
 + Add 64-Bit builds
