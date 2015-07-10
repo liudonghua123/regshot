@@ -17,6 +17,10 @@ scanned for changes as well.
 -----------------
 Usage:
 -----------------
+Note:
+RegShot has to be run with an administrator account or UAC to be able access all changes.
+Still you can use it for normal users but won't log all system changes.
+
 (1) Click the "1st shot" button
 It pops up a menu which contains several items:
  (A) "Shot", to take a snapshot only, and it will not be kept if you exit Regshot program;
