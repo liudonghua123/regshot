@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -234,7 +234,7 @@ LPTSTR GetWholeValueName(LPVALUECONTENT lpVC, BOOL fUseLongNames)
 // to given conversion type (may differ from original type)
 // Called by GetWholeValueData()
 // ----------------------------------------------------------------------
-LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
+LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType, BOOL fForOutput)
 {
     LPTSTR lpszValueData;
     LPDWORD lpDword;
@@ -379,11 +379,17 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
 
             default:
                 // display value as hex bytes
-                // format ":[ xx][ xx]...[ xx]\0"
-                lpszValueData = MYALLOC0((1 + (cbData * 3) + 1) * sizeof(TCHAR));
+                // format ":[ xx][ xx]...[ xx][ ...]\0"
+                if ((fForOutput) && (0 < cbOutBinaryMax) && (cbData > cbOutBinaryMax)) {
+                    cbData = cbOutBinaryMax;
+                }
+                lpszValueData = MYALLOC0((1 + (cbData * 3) + 4 + 1) * sizeof(TCHAR));
                 _tcscpy(lpszValueData, TEXT(":"));
                 for (ibCurrent = 0; ibCurrent < cbData; ibCurrent++) {
                     _sntprintf(lpszValueData + (1 + (ibCurrent * 3)), 4, TEXT(" %02X\0"), *(lpVC->lpValueData + ibCurrent));
+                }
+                if (cbData != lpVC->cbData) {
+                    _sntprintf(lpszValueData + (1 + (ibCurrent * 3)), 4, TEXT(" ...\0"));
                 }
         }
     }
@@ -396,14 +402,14 @@ LPTSTR TransData(LPVALUECONTENT lpVC, DWORD nConversionType)
 // Get value data from value content as string
 // Check for special cases to call TransData() properly
 // ----------------------------------------------------------------------
-LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
+LPTSTR GetWholeValueData(LPVALUECONTENT lpVC, BOOL fForOutput)
 {
     LPTSTR lpszValueData;
 
     lpszValueData = NULL;
 
     if (NULL == lpVC->lpValueData) {
-        lpszValueData = TransData(lpVC, REG_BINARY);
+        lpszValueData = TransData(lpVC, REG_BINARY, fForOutput);
     } else {
         DWORD cbData;
         size_t cchMax;
@@ -445,9 +451,9 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
                     }
                 }
                 if ((cchActual * sizeof(TCHAR)) == cbData) {
-                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode, fForOutput);
                 } else {
-                    lpszValueData = TransData(lpVC, REG_BINARY);
+                    lpszValueData = TransData(lpVC, REG_BINARY, fForOutput);
                 }
                 break;
 
@@ -455,9 +461,9 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
             case REG_DWORD_BIG_ENDIAN:
                 // DWORD values
                 if (sizeof(DWORD) == cbData) {
-                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode, fForOutput);
                 } else {
-                    lpszValueData = TransData(lpVC, REG_BINARY);
+                    lpszValueData = TransData(lpVC, REG_BINARY, fForOutput);
                 }
                 break;
 
@@ -465,14 +471,14 @@ LPTSTR GetWholeValueData(LPVALUECONTENT lpVC)
                 //case REG_QWORD_BIG_ENDIAN:
                 // QWORD values
                 if (sizeof(QWORD) == cbData) {
-                    lpszValueData = TransData(lpVC, lpVC->nTypeCode);
+                    lpszValueData = TransData(lpVC, lpVC->nTypeCode, fForOutput);
                 } else {
-                    lpszValueData = TransData(lpVC, REG_BINARY);
+                    lpszValueData = TransData(lpVC, REG_BINARY, fForOutput);
                 }
                 break;
 
             default:
-                lpszValueData = TransData(lpVC, REG_BINARY);
+                lpszValueData = TransData(lpVC, REG_BINARY, fForOutput);
         }
     }
 
@@ -565,7 +571,7 @@ size_t ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWOR
         // name
         lpszName = GetWholeValueName(lpContent, fUseLongRegHead);
         // data
-        lpszData = GetWholeValueData(lpContent);
+        lpszData = GetWholeValueData(lpContent, TRUE);
         cchData = 0;
         if (NULL != lpszData) {
             cchData = _tcslen(lpszData);
@@ -996,9 +1002,9 @@ BOOL OutputComparisonResult(VOID)
     _tcscat(lpszDestFileName, lpszExtension);
     hFile = CreateFile(lpszDestFileName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     if (INVALID_HANDLE_VALUE == hFile) {
-        DWORD filetail = 0;
+        DWORD filetail;
 
-        for (filetail = 0; MAXAMOUNTOFFILE > filetail; filetail++) {
+        for (filetail = 1; MAXAMOUNTOFFILE > filetail; filetail++) {
             _sntprintf(lpszDestFileName + cchString, 6, TEXT("_%04u\0"), filetail);
             //*(lpszDestFileName+cchString + 5) = 0x00;
             _tcscpy(lpszDestFileName + cchString + 5, lpszExtension);
@@ -1066,22 +1072,22 @@ BOOL OutputComparisonResult(VOID)
     // Write keydel part
     if (0 != CompareResult.stcDeleted.cKeys) {
         WriteTableHead(asLangTexts[iszTextKeyDel].lpszText, CompareResult.stcDeleted.cKeys, fAsHTML);
-        WritePart(KEYDEL, CompareResult.stCRHeads.lpCRKeyDeleted, fAsHTML, FALSE);
+        WritePart(KEYDEL, CompareResult.stCRHeads.lpCRKeyDeleted, fAsHTML, TRUE);
     }
     // Write keyadd part
     if (0 != CompareResult.stcAdded.cKeys) {
         WriteTableHead(asLangTexts[iszTextKeyAdd].lpszText, CompareResult.stcAdded.cKeys, fAsHTML);
-        WritePart(KEYADD, CompareResult.stCRHeads.lpCRKeyAdded, fAsHTML, FALSE);
+        WritePart(KEYADD, CompareResult.stCRHeads.lpCRKeyAdded, fAsHTML, TRUE);
     }
     // Write valdel part
     if (0 != CompareResult.stcDeleted.cValues) {
         WriteTableHead(asLangTexts[iszTextValDel].lpszText, CompareResult.stcDeleted.cValues, fAsHTML);
-        WritePart(VALDEL, CompareResult.stCRHeads.lpCRValDeleted, fAsHTML, FALSE);
+        WritePart(VALDEL, CompareResult.stCRHeads.lpCRValDeleted, fAsHTML, TRUE);
     }
     // Write valadd part
     if (0 != CompareResult.stcAdded.cValues) {
         WriteTableHead(asLangTexts[iszTextValAdd].lpszText, CompareResult.stcAdded.cValues, fAsHTML);
-        WritePart(VALADD, CompareResult.stCRHeads.lpCRValAdded, fAsHTML, FALSE);
+        WritePart(VALADD, CompareResult.stCRHeads.lpCRValAdded, fAsHTML, TRUE);
     }
     // Write valmodi part
     if (0 != CompareResult.stcModified.cValues) {
@@ -1091,32 +1097,32 @@ BOOL OutputComparisonResult(VOID)
     // Write directory del part
     if (0 != CompareResult.stcDeleted.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirDel].lpszText, CompareResult.stcDeleted.cDirs, fAsHTML);
-        WritePart(DIRDEL, CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, FALSE);
+        WritePart(DIRDEL, CompareResult.stCRHeads.lpCRDirDeleted, fAsHTML, TRUE);
     }
     // Write directory add part
     if (0 != CompareResult.stcAdded.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirAdd].lpszText, CompareResult.stcAdded.cDirs, fAsHTML);
-        WritePart(DIRADD, CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, FALSE);
+        WritePart(DIRADD, CompareResult.stCRHeads.lpCRDirAdded, fAsHTML, TRUE);
     }
     // Write directory modi part
     if (0 != CompareResult.stcModified.cDirs) {
         WriteTableHead(asLangTexts[iszTextDirModi].lpszText, CompareResult.stcModified.cDirs, fAsHTML);
-        WritePart(DIRMODI, CompareResult.stCRHeads.lpCRDirModified, fAsHTML, FALSE);
+        WritePart(DIRMODI, CompareResult.stCRHeads.lpCRDirModified, fAsHTML, TRUE);
     }
     // Write file del part
     if (0 != CompareResult.stcDeleted.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileDel].lpszText, CompareResult.stcDeleted.cFiles, fAsHTML);
-        WritePart(FILEDEL, CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, FALSE);
+        WritePart(FILEDEL, CompareResult.stCRHeads.lpCRFileDeleted, fAsHTML, TRUE);
     }
     // Write file add part
     if (0 != CompareResult.stcAdded.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileAdd].lpszText, CompareResult.stcAdded.cFiles, fAsHTML);
-        WritePart(FILEADD, CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, FALSE);
+        WritePart(FILEADD, CompareResult.stCRHeads.lpCRFileAdded, fAsHTML, TRUE);
     }
     // Write file modi part
     if (0 != CompareResult.stcModified.cFiles) {
         WriteTableHead(asLangTexts[iszTextFileModi].lpszText, CompareResult.stcModified.cFiles, fAsHTML);
-        WritePart(FILEMODI, CompareResult.stCRHeads.lpCRFileModified, fAsHTML, FALSE);
+        WritePart(FILEMODI, CompareResult.stCRHeads.lpCRFileModified, fAsHTML, TRUE);
     }
 
     if (fAsHTML) {
@@ -1451,7 +1457,7 @@ LPKEYCONTENT GetRegistrySnap(LPREGSHOT lpShot, HKEY hRegKey, LPTSTR lpszRegKeyNa
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, FALSE);
                 MYFREE(lpszDebugMsg);
 
-                lpszDebugMsg = GetWholeValueData(lpVC);
+                lpszDebugMsg = GetWholeValueData(lpVC, FALSE);
                 DebugLog(lpszDebugValueNameDataLog, lpszDebugMsg, TRUE);
                 MYFREE(lpszDebugMsg);
 #endif

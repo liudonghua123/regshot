@@ -21,10 +21,13 @@ V1.9.1 development snapshot
 + Support for QWORDs
 + Support for DWORDs and QWORDs with different endiannes than CPU
 + Output attributes/date/size for dirs/file (feature request #6)
++ Feature Req #8: INI option for empty lines between objects
++ Feature Req #9: INI option for maximum output length of binary data
++ Feature Req #10: INI option to disable info display after shot
 ! Fixed bug where the current dir of a drive was scanned instead of its root dir
   when only the drive was specified in the scan dir list, e.g. "C:\" was used as "C:"
 ! Reduced memory footprint for comparison and output by roughly 95%
-! Much better performance when saving snap shot to a network folder
+! Much better performance when saving snapshot to a network folder
 ! Updated Italian and German translation
 * Internal rework of comparison and output logic
 * Allow multi line output for each difference
