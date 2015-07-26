@@ -84,7 +84,9 @@ The skip list is now additionally checked against the single name of keys, value
 Internally Regshot always uses the short forms HKLM and HKU, so these have to be used in your skip lists too.
 
 (13) New to development snapshot (alpha):
-...
+Reworked User Interface to provide more functions and flexibility.
+Support for DWORDs and QWORDs with different endiannes than CPU.
+New INI options to fine tune UI behaviour and output result.
 
 
 -----------------
@@ -140,7 +142,7 @@ Dchenka, itschy, HANDLE and all those we forgot to mention!!
 LICENSE:
 -----------------
 
-Copyright 2011-2013 The Regshot Team : TiANWEi, Maddes, XhmikosR
+Copyright 2011-2015 The Regshot Team : TiANWEi, Maddes, XhmikosR
 Copyright 1999-2003,2007,2011 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri
