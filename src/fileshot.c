@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -669,14 +669,11 @@ VOID SaveFiles(LPREGSHOT lpShot, LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD 
     for (; NULL != lpFC; lpFC = lpFC->lpBrotherFC) {
         // Get current file position
         // put in a separate var for later use
-        nFPFile = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+        nFPFile = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
         // Write position of current file in caller's field
         if (0 < nFPCaller) {
-            SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-            WriteFile(hFileWholeReg, &nFPFile, sizeof(nFPFile), &NBW, NULL);
-
-            SetFilePointer(hFileWholeReg, nFPFile, NULL, FILE_BEGIN);
+            WriteFileBuffer(nFPCaller, &nFPFile, sizeof(nFPFile));
         }
 
         // Initialize file content
@@ -721,15 +718,15 @@ VOID SaveFiles(LPREGSHOT lpShot, LPFILECONTENT lpFC, DWORD nFPFatherFile, DWORD 
 
         // Write file content to file
         // Make sure that ALL fields have been initialized/set
-        WriteFile(hFileWholeReg, &sFC, sizeof(sFC), &NBW, NULL);
+        WriteFileBuffer(-1, &sFC, sizeof(sFC));
 
         // Write file name to file
         if (0 < sFC.nFileNameLen) {
-            WriteFile(hFileWholeReg, lpFC->lpszFileName, sFC.nFileNameLen * sizeof(TCHAR), &NBW, NULL);
+            WriteFileBuffer(-1, lpFC->lpszFileName, sFC.nFileNameLen * sizeof(TCHAR));
 #ifndef _UNICODE
         } else {
             // Write empty string for backward compatibility
-            WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
+            WriteFileBuffer(-1, lpszEmpty, 1 * sizeof(TCHAR));
 #endif
         }
 
@@ -764,14 +761,11 @@ VOID SaveHeadFiles(LPREGSHOT lpShot, LPHEADFILE lpHF, DWORD nFPCaller)
     for (; NULL != lpHF; lpHF = lpHF->lpBrotherHF) {
         // Get current file position
         // put in a separate var for later use
-        nFPHF = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+        nFPHF = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
         // Write position of current head file in caller's field
         if (0 < nFPCaller) {
-            SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-            WriteFile(hFileWholeReg, &nFPHF, sizeof(nFPHF), &NBW, NULL);
-
-            SetFilePointer(hFileWholeReg, nFPHF, NULL, FILE_BEGIN);
+            WriteFileBuffer(nFPCaller, &nFPHF, sizeof(nFPHF));
         }
 
         // Initialize head file
@@ -782,7 +776,7 @@ VOID SaveHeadFiles(LPREGSHOT lpShot, LPHEADFILE lpHF, DWORD nFPCaller)
 
         // Write head file to file
         // Make sure that ALL fields have been initialized/set
-        WriteFile(hFileWholeReg, &sHF, sizeof(sHF), &NBW, NULL);
+        WriteFileBuffer(-1, &sHF, sizeof(sHF));
 
         // Write all file contents of head file
         if (NULL != lpHF->lpFirstFC) {

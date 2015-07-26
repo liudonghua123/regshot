@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.9.1 beta 2013-04-04
+Readme file of Regshot 1.9.1 beta 2015-07-26
 (Note: this is the beta version for testing purpose only)
 
 -----------------
@@ -17,6 +17,10 @@ scanned for changes as well.
 -----------------
 Usage:
 -----------------
+Note:
+RegShot has to be run with an administrator account or UAC to be able access all changes.
+Still you can use it for normal users but won't log all system changes.
+
 (1) Click the "1st shot" button
 It pops up a menu which contains several items:
  (A) "Shot", to take a snapshot only, and it will not be kept if you exit Regshot program;
@@ -79,6 +83,11 @@ Loading ANSI hive files in Unicode builds and vice versa is not supported.
 The skip list is now additionally checked against the single name of keys, values, dirs and files.
 Internally Regshot always uses the short forms HKLM and HKU, so these have to be used in your skip lists too.
 
+(13) New to 1.9.1:
+Reworked User Interface to provide more functions and flexibility.
+Support for DWORDs and QWORDs with different endiannes than CPU.
+New INI options to fine tune UI behaviour and output result.
+
 
 -----------------
 Thanks:
@@ -133,7 +142,7 @@ Dchenka, itschy, HANDLE and all those we forgot to mention!!
 LICENSE:
 -----------------
 
-Copyright 2011-2013 The Regshot Team : TiANWEi, Maddes, XhmikosR
+Copyright 2011-2015 The Regshot Team : TiANWEi, Maddes, XhmikosR
 Copyright 1999-2003,2007,2011 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri

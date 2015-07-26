@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 2004 tulipfan
 
     This file is part of Regshot.
@@ -36,6 +36,9 @@ LPTSTR lpszIniOutDir         = TEXT("OutDir");
 LPTSTR lpszIniSkipRegKey     = TEXT("SkipRegKey");
 LPTSTR lpszIniSkipdir        = TEXT("SkipDir");
 LPTSTR lpszIniUseLongRegHead = TEXT("UseLongRegHead");
+LPTSTR lpszIniOutSeparateObjs          = TEXT("OutSeparateObjs");
+LPTSTR lpszIniOutMaxBinaryBytes        = TEXT("OutMaxBinaryBytes");
+LPTSTR lpszIniDontDisplayInfoAfterShot = TEXT("DontDisplayInfoAfterShot");
 
 LPTSTR lpgrszRegSkipStrings;
 LPTSTR lpgrszFileSkipStrings;
@@ -43,7 +46,11 @@ LPTSTR lpgrszFileSkipStrings;
 LPTSTR *lprgszRegSkipStrings;
 LPTSTR *lprgszFileSkipStrings;
 
-BOOL fUseLongRegHead;  // since 1.8.1 tianwei: Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+BOOL  fUseLongRegHead;  // since 1.8.1 tianwei: Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+BOOL  fOutSeparateObjs;  // since 1.9.1: Separate objects in output with empty line
+DWORD cbOutBinaryMax;  // since 1.9.1: Limit output length of binary data
+int   nOutMaxBinaryBytes;
+BOOL  fDontDisplayInfoAfterShot;  // since 1.9.1: Don't display info dialog after shot
 
 
 BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
@@ -118,6 +125,19 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
 
     SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
 
+    // 1.9.1: Separate objects in output with empty line
+    fOutSeparateObjs = GetPrivateProfileInt(lpszIniSetup, lpszIniOutSeparateObjs, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+
+    // 1.9.1: Limit output length of binary data
+    nOutMaxBinaryBytes = GetPrivateProfileInt(lpszIniSetup, lpszIniOutMaxBinaryBytes, 0, lpszRegshotIni);
+    if (0 > nOutMaxBinaryBytes) {
+        nOutMaxBinaryBytes = 0;
+    }
+    cbOutBinaryMax = nOutMaxBinaryBytes;
+
+    // 1.9.1: Don't display info dialog after shot
+    fDontDisplayInfoAfterShot = GetPrivateProfileInt(lpszIniSetup, lpszIniDontDisplayInfoAfterShot, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+
     return TRUE;
 }
 
@@ -168,6 +188,21 @@ BOOL SaveSettingsToIni(HWND hDlg) // tfx save settings to ini
 
     // 1.9.0: Write language selection to regshot ini (was in language ini before)
     WritePrivateProfileString(lpszIniSetup, lpszIniLanguage, lpszLanguage, lpszRegshotIni);
+
+    // 1.9.1: Separate objects in output with empty line
+    _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), fOutSeparateObjs);
+    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
+    WritePrivateProfileString(lpszIniSetup, lpszIniOutSeparateObjs, lpszValue, lpszRegshotIni);
+
+    // 1.9.1: Limit output length of binary data
+    _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), cbOutBinaryMax);
+    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
+    WritePrivateProfileString(lpszIniSetup, lpszIniOutMaxBinaryBytes, lpszValue, lpszRegshotIni);
+
+    // 1.9.1: Don't display info dialog after shot
+    _sntprintf(lpszValue, EXTDIRLEN, TEXT("%d\0"), fDontDisplayInfoAfterShot);
+    lpszValue[EXTDIRLEN - 1] = (TCHAR)'\0';  // safety NULL char
+    WritePrivateProfileString(lpszIniSetup, lpszIniDontDisplayInfoAfterShot, lpszValue, lpszRegshotIni);
 
     MYFREE(lpszValue);
 

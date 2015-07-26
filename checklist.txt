@@ -25,6 +25,7 @@ Important steps to take before a release:
 - copy the trunk to a new branch
   svn copy https://svn.code.sf.net/p/regshot/code/trunk https://svn.code.sf.net/p/regshot/code/branches/X.Y.Z -m "Branch X.Y.Z"
 - the branch will be used to maintain bugfixes for this version
+- if you want to sync with trunk again use svn merge ^/trunk (on Windows double circonflex to escape it)
 
 #3 Build beta from branch
 - checkout branch in a new separate folder (this ensures nothing was forgotten in trunk to be committed)

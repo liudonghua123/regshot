@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -32,6 +32,7 @@
 #include <stddef.h>  // for "offsetof" macro
 #include <string.h>
 #include <tchar.h>
+#include <assert.h>  // for assert()
 #include "resource.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)  // before VS 2002 .NET (e.g. VS 6), may depend on PSDK/WSDK too
@@ -83,8 +84,8 @@ extern HANDLE hHeap;
 
 #else
 
-#define MYALLOC(x)  GlobalAlloc(GMEM_FIXED,x)
-#define MYALLOC0(x) GlobalAlloc(GPTR,x)
+#define MYALLOC(x)  GlobalAlloc(GMEM_FIXED,x) // GMEM_FIXED, 0
+#define MYALLOC0(x) GlobalAlloc(GPTR,x) // Combines GMEM_FIXED and GMEM_ZEROINIT GPTR, 0|0x0040
 #define MYFREE(x)   GlobalFree(x)
 
 #endif
@@ -315,6 +316,11 @@ struct _FILEEXTRADATA {
     BOOL bOldKCVersion;
     BOOL bOldVCVersion;
     BOOL bOldFCVersion;
+
+    size_t cbFBuffer;
+    DWORD  ofsFBuffer;
+    DWORD  ofsFBFile;
+    BOOL   bFBStopAlloc;
 };
 typedef struct _FILEEXTRADATA FILEEXTRADATA, FAR *LPFILEEXTRADATA;
 
@@ -476,6 +482,9 @@ extern HANDLE    hFile;            // Handle of file regshot use
 extern HANDLE    hFileWholeReg;    // Handle of file regshot use
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
 extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+extern BOOL      fOutSeparateObjs;          // since 1.9.1: Separate objects in output with empty line
+extern DWORD     cbOutBinaryMax;            // since 1.9.1: Limit output length of binary data
+extern BOOL      fDontDisplayInfoAfterShot; // since 1.9.1: Don't display info dialog after shot
 
 VOID    CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew);
 size_t  ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWORD nActionType, LPVOID lpContent, BOOL fNewContent);
@@ -526,6 +535,7 @@ VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
 VOID    DisplayResultInfo(HWND hDlg);
 VOID    SwapShots(VOID);
 BOOL    CheckShotsChronology(HWND hDlg);
+VOID    WriteFileBuffer(long ofsFile, LPCVOID lpData, DWORD cbData);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 
