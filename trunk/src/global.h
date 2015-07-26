@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -482,6 +482,9 @@ extern HANDLE    hFile;            // Handle of file regshot use
 extern HANDLE    hFileWholeReg;    // Handle of file regshot use
 extern LPREGSHOT lpMenuShot;       // Pointer to current Shot for popup menus and alike
 extern BOOL      fUseLongRegHead;  // Flag for compatibility with Regshot 1.61e5 and undoreg 1.46
+extern BOOL      fOutSeparateObjs;          // since 1.9.1: Separate objects in output with empty line
+extern DWORD     cbOutBinaryMax;            // since 1.9.1: Limit output length of binary data
+extern BOOL      fDontDisplayInfoAfterShot; // since 1.9.1: Don't display info dialog after shot
 
 VOID    CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew);
 size_t  ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWORD nActionType, LPVOID lpContent, BOOL fNewContent);

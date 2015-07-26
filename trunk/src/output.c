@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2007 Belogorokhov Youri
 
@@ -42,13 +42,13 @@ LPTSTR lpszHTMLTd2End       = TEXT("</FONT></TD></TR>\r\n");
 // color idea got from HANDLE(Youri) at wgapatcher.ru :) 1.8
 LPTSTR lpszHTML_CSS         = TEXT("<STYLE TYPE = \"text/css\">td{font-family:\"Tahoma\";font-size:9pt}\
 tr{font-size:9pt}body{font-size:9pt}\
-.o{background:#E0F0E0}.n{background:#FFFFFF}</STYLE>\r\n");  // 1.8.2 from e0e0e0 to e0f0e0 by Charles
+.a{background:#FFFFFF}.b{background:#E0F0E0}</STYLE>\r\n");  // 1.8.2 from e0e0e0 to e0f0e0 by Charles
 LPTSTR lpszHTMLBodyBegin    = TEXT("<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\" LINK=\"#C8C8C8\">\r\n");
 LPTSTR lpszHTMLBodyEnd      = TEXT("</BODY>\r\n");
 LPTSTR lpszHTMLTableBegin   = TEXT("<TABLE BORDER=\"0\" WIDTH=\"480\">\r\n");
 LPTSTR lpszHTMLTableEnd     = TEXT("</TABLE>\r\n");
-LPTSTR lpszHTMLSpan1        = TEXT("<SPAN CLASS=\"o\">");
-LPTSTR lpszHTMLSpan2        = TEXT("<SPAN CLASS=\"n\">");
+LPTSTR lpszHTMLSpan1        = TEXT("<SPAN CLASS=\"a\">");
+LPTSTR lpszHTMLSpan2        = TEXT("<SPAN CLASS=\"b\">");
 LPTSTR lpszHTMLSpanEnd      = TEXT("</SPAN>");
 LPTSTR lpszHTMLWebSiteBegin = TEXT("<FONT COLOR=\"#888888\">Created with <A HREF=\"http://sourceforge.net/projects/regshot/\">");
 LPTSTR lpszHTMLWebSiteEnd   = TEXT("</A></FONT><BR>\r\n");
@@ -178,6 +178,15 @@ VOID WritePart(DWORD nActionType, LPCOMPRESULT lpStartCR, BOOL fAsHTML, BOOL fUs
                 if (fUseColor) {
                     WriteFile(hFile, lpszHTMLSpanEnd, cbHTMLSpanEnd, &NBW, NULL);
                 }
+                WriteFile(hFile, lpszHTML_BR, cbHTML_BR, &NBW, NULL);
+            } else {
+                WriteFile(hFile, lpszCRLF, cbCRLF, &NBW, NULL);
+            }
+        }
+
+        // since 1.9.1: Separate objects in output with empty line
+        if (fOutSeparateObjs) {
+            if (fAsHTML) {
                 WriteFile(hFile, lpszHTML_BR, cbHTML_BR, &NBW, NULL);
             } else {
                 WriteFile(hFile, lpszCRLF, cbCRLF, &NBW, NULL);
