@@ -235,9 +235,6 @@ VOID UI_CreateShotPopupMenu(VOID)
         EnableMenuItem(hMenu, IDM_SHOTONLY, MF_BYCOMMAND | MF_GRAYED);
         EnableMenuItem(hMenu, IDM_SHOTSAVE, MF_BYCOMMAND | MF_GRAYED);
         EnableMenuItem(hMenu, IDM_LOAD, MF_BYCOMMAND | MF_GRAYED);
-        if (lpMenuShot->fLoaded) {
-            EnableMenuItem(hMenu, IDM_SAVE, MF_BYCOMMAND | MF_GRAYED);
-        }
     } else {
         nIDDefault = IDM_SHOTONLY;
         EnableMenuItem(hMenu, IDM_CLEAR, MF_BYCOMMAND | MF_GRAYED);
