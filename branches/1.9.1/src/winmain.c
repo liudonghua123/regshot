@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 1999-2003,2007 TiANWEi
     Copyright 2007 Belogorokhov Youri
     Copyright 2004 tulipfan
@@ -180,7 +180,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
-                    DisplayShotInfo(hDlg, lpMenuShot);
+                    if (!fDontDisplayInfoAfterShot) {
+                        DisplayShotInfo(hDlg, lpMenuShot);
+                    }
                     if (CheckShotsChronology(hDlg)) {
                         UI_EnableMainButtons();
                     }
@@ -194,7 +196,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
-                    DisplayShotInfo(hDlg, lpMenuShot);
+                    if (!fDontDisplayInfoAfterShot) {
+                        DisplayShotInfo(hDlg, lpMenuShot);
+                    }
                     if (CheckShotsChronology(hDlg)) {
                         UI_EnableMainButtons();
                     }
@@ -206,7 +210,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
-                    DisplayShotInfo(hDlg, lpMenuShot);
+                    if (lpMenuShot->fFilled) {
+                        DisplayShotInfo(hDlg, lpMenuShot);
+                    }
                     if (CheckShotsChronology(hDlg)) {
                         UI_EnableMainButtons();
                     }

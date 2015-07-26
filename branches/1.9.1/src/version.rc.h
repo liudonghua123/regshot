@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2013 Regshot Team
+    Copyright 2011-2015 Regshot Team
     Copyright 2011-2012 XhmikosR
 
     This file is part of Regshot.
@@ -124,7 +124,7 @@
 /*
     Copyright
 */
-#define REGSHOT_VERSION_COPYRIGHT   TEXT("Copyright (C) 1999-2013, Regshot Team and all contributors")
+#define REGSHOT_VERSION_COPYRIGHT   TEXT("Copyright (C) 1999-2015, Regshot Team and all contributors")
 
 
 /*
