@@ -206,7 +206,9 @@ BOOL CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     UI_RemoveHourGlassCursor();
                     UI_EnableMainButtons();
                     MessageBeep(0xffffffff);
-                    DisplayShotInfo(hDlg, lpMenuShot);
+                    if (lpMenuShot->fFilled) {
+                        DisplayShotInfo(hDlg, lpMenuShot);
+                    }
                     if (CheckShotsChronology(hDlg)) {
                         UI_EnableMainButtons();
                     }
