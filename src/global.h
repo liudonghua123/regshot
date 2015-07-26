@@ -32,6 +32,7 @@
 #include <stddef.h>  // for "offsetof" macro
 #include <string.h>
 #include <tchar.h>
+#include <assert.h>  // for assert()
 #include "resource.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)  // before VS 2002 .NET (e.g. VS 6), may depend on PSDK/WSDK too
@@ -83,8 +84,8 @@ extern HANDLE hHeap;
 
 #else
 
-#define MYALLOC(x)  GlobalAlloc(GMEM_FIXED,x)
-#define MYALLOC0(x) GlobalAlloc(GPTR,x)
+#define MYALLOC(x)  GlobalAlloc(GMEM_FIXED,x) // GMEM_FIXED, 0
+#define MYALLOC0(x) GlobalAlloc(GPTR,x) // Combines GMEM_FIXED and GMEM_ZEROINIT GPTR, 0|0x0040
 #define MYFREE(x)   GlobalFree(x)
 
 #endif
@@ -315,6 +316,11 @@ struct _FILEEXTRADATA {
     BOOL bOldKCVersion;
     BOOL bOldVCVersion;
     BOOL bOldFCVersion;
+
+    size_t cbFBuffer;
+    DWORD  ofsFBuffer;
+    DWORD  ofsFBFile;
+    BOOL   bFBStopAlloc;
 };
 typedef struct _FILEEXTRADATA FILEEXTRADATA, FAR *LPFILEEXTRADATA;
 
@@ -526,6 +532,7 @@ VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
 VOID    DisplayResultInfo(HWND hDlg);
 VOID    SwapShots(VOID);
 BOOL    CheckShotsChronology(HWND hDlg);
+VOID    WriteFileBuffer(long ofsFile, LPCVOID lpData, DWORD cbData);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
 

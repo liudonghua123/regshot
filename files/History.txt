@@ -24,6 +24,7 @@ V1.9.1 development snapshot
 ! Fixed bug where the current dir of a drive was scanned instead of its root dir
   when only the drive was specified in the scan dir list, e.g. "C:\" was used as "C:"
 ! Reduced memory footprint for comparison and output by roughly 95%
+! Much better performance when saving snap shot to a network folder
 ! Updated Italian and German translation
 * Internal rework of comparison and output logic
 * Allow multi line output for each difference

@@ -1636,6 +1636,108 @@ VOID Shot(LPREGSHOT lpShot)
 
 
 // ----------------------------------------------------------------------
+// Write file buffer content to file with a single write
+// ----------------------------------------------------------------------
+VOID EmptyFileBuffer(VOID)
+{
+    if ((NULL != lpFileBuffer) && (0 < fileextradata.ofsFBuffer)) {
+        WriteFile(hFileWholeReg, lpFileBuffer, fileextradata.ofsFBuffer, &NBW, NULL);
+        fileextradata.ofsFBFile += fileextradata.ofsFBuffer;
+        fileextradata.ofsFBuffer = 0;
+    }
+}
+
+
+// ----------------------------------------------------------------------
+// Write file content to file buffer to speed up saving onto network drives
+// as a lot of SetFilePointer() calls will extremely decrease save speed
+// ----------------------------------------------------------------------
+VOID WriteFileBuffer(long ofsFile, LPCVOID lpData, DWORD cbData)
+{
+    DWORD ofsFileDW;
+    long  ofsFileCurrent;
+
+    if (0 >= cbData) {  // Ignore, but still Aaarrrggghhh!!!
+        return;
+    }
+
+    ofsFileCurrent = (long)fileextradata.ofsFBFile + (long)fileextradata.ofsFBuffer;
+
+    if (0 > ofsFile) {  // special case: negative value means append
+        ofsFile = ofsFileCurrent;
+    } else {
+        // Error case: Writing only allowed before or at current file offset (replace or append)
+        assert(ofsFileCurrent >= ofsFile);
+    }
+
+    ofsFileDW = ofsFile;
+
+    if ((long)fileextradata.ofsFBFile > ofsFile) {
+        // Error case: Writing before buffer only allowed if data is not reaching into the buffer / no buffer: behind current file end
+        assert((ofsFile + (long)cbData) <= (long)fileextradata.ofsFBFile);
+
+        SetFilePointer(hFileWholeReg, ofsFileDW, NULL, FILE_BEGIN);
+        WriteFile(hFileWholeReg, lpData, cbData, &NBW, NULL);
+        SetFilePointer(hFileWholeReg, fileextradata.ofsFBFile, NULL, FILE_BEGIN);
+        return;
+    }
+
+    if ((NULL == lpFileBuffer) && (!fileextradata.bFBStopAlloc)) {
+        DWORD cbNewSize;
+
+        cbNewSize = 1024 * 1024;  // 1 MiB
+        lpFileBuffer = MYALLOC(cbNewSize);
+        if (NULL == lpFileBuffer) {
+            cbNewSize = 128 * 1024;  // 128 KiB
+            lpFileBuffer = MYALLOC(cbNewSize);
+        }
+        if (NULL == lpFileBuffer) {
+            cbNewSize = 10 * 1024;  // 10 KiB
+            lpFileBuffer = MYALLOC(cbNewSize);
+        }
+        if (NULL == lpFileBuffer) {
+            cbNewSize = 1024;  // 1 KiB
+            lpFileBuffer = MYALLOC(cbNewSize);
+        }
+        if (NULL == lpFileBuffer) {
+            fileextradata.bFBStopAlloc = TRUE;
+        } else {
+            fileextradata.cbFBuffer = cbNewSize;
+        }
+    }
+
+    if (NULL != lpFileBuffer) {
+        DWORD cbWantedSize;
+
+        // Error case: Not appending but still writing over current buffer offset
+        if (ofsFileCurrent > ofsFile) {
+            assert((ofsFile + (long)cbData) <= ofsFileCurrent);
+        }
+
+        cbWantedSize = ofsFileDW - fileextradata.ofsFBFile + cbData;
+
+        if (cbWantedSize > fileextradata.cbFBuffer) {
+            EmptyFileBuffer();
+            cbWantedSize = ofsFileDW - fileextradata.ofsFBFile + cbData;
+        }
+
+        if (cbWantedSize <= fileextradata.cbFBuffer) {
+            ofsFileDW -= fileextradata.ofsFBFile;
+            CopyMemory((lpFileBuffer + ofsFileDW), lpData, cbData);
+            if (ofsFileDW == fileextradata.ofsFBuffer) {
+                fileextradata.ofsFBuffer += cbData;
+            }
+            return;
+        }
+    }
+
+    // Fallback: direct append (e.g. no buffer or buffer too small)
+    WriteFile(hFileWholeReg, lpData, cbData, &NBW, NULL);
+    fileextradata.ofsFBFile += cbData;
+}
+
+
+// ----------------------------------------------------------------------
 // Save registry key with values to HIVE file
 //
 // This routine is called recursively to store the keys of the Registry tree
@@ -1648,14 +1750,11 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
     for (; NULL != lpKC; lpKC = lpKC->lpBrotherKC) {
         // Get current file position
         // put in a separate var for later use
-        nFPKey = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+        nFPKey = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
         // Write position of current reg key in caller's field
         if (0 < nFPCaller) {
-            SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-            WriteFile(hFileWholeReg, &nFPKey, sizeof(nFPKey), &NBW, NULL);
-
-            SetFilePointer(hFileWholeReg, nFPKey, NULL, FILE_BEGIN);
+            WriteFileBuffer(nFPCaller, &nFPKey, sizeof(nFPKey));
         }
 
         // Initialize key content
@@ -1712,15 +1811,15 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
 
             // Write key content to file
             // Make sure that ALL fields have been initialized/set
-            WriteFile(hFileWholeReg, &sKC, sizeof(sKC), &NBW, NULL);
+            WriteFileBuffer(-1, &sKC, sizeof(sKC));
 
             // Write key name to file
             if (0 < sKC.nKeyNameLen) {
-                WriteFile(hFileWholeReg, lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR), &NBW, NULL);
+                WriteFileBuffer(-1, lpszKeyName, sKC.nKeyNameLen * sizeof(TCHAR));
 #ifndef _UNICODE
             } else {
                 // Write empty string for backward compatibility
-                WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
+                WriteFileBuffer(-1, lpszEmpty, 1 * sizeof(TCHAR));
 #endif
             }
         }  // End of extra local block
@@ -1735,14 +1834,11 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
             for (lpVC = lpKC->lpFirstVC; NULL != lpVC; lpVC = lpVC->lpBrotherVC) {
                 // Get current file position
                 // put in a separate var for later use
-                nFPValue = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+                nFPValue = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
                 // Write position of current reg value in caller's field
                 if (0 < nFPCaller) {
-                    SetFilePointer(hFileWholeReg, nFPCaller, NULL, FILE_BEGIN);
-                    WriteFile(hFileWholeReg, &nFPValue, sizeof(nFPValue), &NBW, NULL);
-
-                    SetFilePointer(hFileWholeReg, nFPValue, NULL, FILE_BEGIN);
+                    WriteFileBuffer(nFPCaller, &nFPValue, sizeof(nFPValue));
                 }
 
                 // Initialize value content
@@ -1783,15 +1879,15 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
 
                 // Write value content to file
                 // Make sure that ALL fields have been initialized/set
-                WriteFile(hFileWholeReg, &sVC, sizeof(sVC), &NBW, NULL);
+                WriteFileBuffer(-1, &sVC, sizeof(sVC));
 
                 // Write value name to file
                 if (0 < sVC.nValueNameLen) {
-                    WriteFile(hFileWholeReg, lpVC->lpszValueName, sVC.nValueNameLen * sizeof(TCHAR), &NBW, NULL);
+                    WriteFileBuffer(-1, lpVC->lpszValueName, sVC.nValueNameLen * sizeof(TCHAR));
 #ifndef _UNICODE
                 } else {
                     // Write empty string for backward compatibility
-                    WriteFile(hFileWholeReg, lpszEmpty, 1 * sizeof(TCHAR), &NBW, NULL);
+                    WriteFileBuffer(-1, lpszEmpty, 1 * sizeof(TCHAR));
 #endif
                 }
 
@@ -1800,15 +1896,12 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
                     DWORD nFPValueData;
 
                     // Write position of value data in value content field ofsValueData
-                    nFPValueData = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+                    nFPValueData = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
-                    SetFilePointer(hFileWholeReg, nFPValue + offsetof(SAVEVALUECONTENT, ofsValueData), NULL, FILE_BEGIN);
-                    WriteFile(hFileWholeReg, &nFPValueData, sizeof(nFPValueData), &NBW, NULL);
-
-                    SetFilePointer(hFileWholeReg, nFPValueData, NULL, FILE_BEGIN);
+                    WriteFileBuffer(nFPValue + offsetof(SAVEVALUECONTENT, ofsValueData), &nFPValueData, sizeof(nFPValueData));
 
                     // Write value data
-                    WriteFile(hFileWholeReg, lpVC->lpValueData, sVC.cbData, &NBW, NULL);
+                    WriteFileBuffer(-1, lpVC->lpValueData, sVC.cbData);
                 }
 
                 // Set "ofsBrotherValue" position for storing the following brother's position
@@ -1883,6 +1976,7 @@ VOID SaveShot(LPREGSHOT lpShot)
 
     // Initialize file header
     ZeroMemory(&fileheader, sizeof(fileheader));
+    ZeroMemory(&fileextradata, sizeof(fileextradata));
 
     // Copy SBCS/MBCS signature to header (even in Unicode builds for backwards compatibility)
     strncpy(fileheader.signature, szRegshotFileSignature, MAX_SIGNATURE_LENGTH);
@@ -1950,37 +2044,31 @@ VOID SaveShot(LPREGSHOT lpShot)
     fileheader.nEndianness = FILEHEADER_ENDIANNESS_VALUE;
 
     // Write header to file
-    WriteFile(hFileWholeReg, &fileheader, sizeof(fileheader), &NBW, NULL);
+    WriteFileBuffer(-1, &fileheader, sizeof(fileheader));
 
     // new since header version 2
     // (v2) full computername
     if (0 < fileheader.nComputerNameLen) {
         // Write position in file header
-        nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+        nFPCurrent = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
-        SetFilePointer(hFileWholeReg, offsetof(FILEHEADER, ofsComputerName), NULL, FILE_BEGIN);
-        WriteFile(hFileWholeReg, &nFPCurrent, sizeof(nFPCurrent), &NBW, NULL);
+        WriteFileBuffer(offsetof(FILEHEADER, ofsComputerName), &nFPCurrent, sizeof(nFPCurrent));
         fileheader.ofsComputerName = nFPCurrent;  // keep track in memory too
 
-        SetFilePointer(hFileWholeReg, nFPCurrent, NULL, FILE_BEGIN);
-
         // Write computername
-        WriteFile(hFileWholeReg, lpShot->lpszComputerName, fileheader.nComputerNameLen * sizeof(TCHAR), &NBW, NULL);
+        WriteFileBuffer(-1, lpShot->lpszComputerName, fileheader.nComputerNameLen * sizeof(TCHAR));
     }
 
     // (v2) full username
     if (0 < fileheader.nUserNameLen) {
         // Write position in file header
-        nFPCurrent = SetFilePointer(hFileWholeReg, 0, NULL, FILE_CURRENT);
+        nFPCurrent = fileextradata.ofsFBFile + fileextradata.ofsFBuffer;
 
-        SetFilePointer(hFileWholeReg, offsetof(FILEHEADER, ofsUserName), NULL, FILE_BEGIN);
-        WriteFile(hFileWholeReg, &nFPCurrent, sizeof(nFPCurrent), &NBW, NULL);
+        WriteFileBuffer(offsetof(FILEHEADER, ofsUserName), &nFPCurrent, sizeof(nFPCurrent));
         fileheader.ofsUserName = nFPCurrent;  // keep track in memory too
 
-        SetFilePointer(hFileWholeReg, nFPCurrent, NULL, FILE_BEGIN);
-
         // Write username
-        WriteFile(hFileWholeReg, lpShot->lpszUserName, fileheader.nUserNameLen * sizeof(TCHAR), &NBW, NULL);
+        WriteFileBuffer(-1, lpShot->lpszUserName, fileheader.nUserNameLen * sizeof(TCHAR));
     }
 
     // Save HKLM
@@ -2017,7 +2105,13 @@ VOID SaveShot(LPREGSHOT lpShot)
     }
 
     // Close file
+    EmptyFileBuffer();
     CloseHandle(hFileWholeReg);
+
+    if (NULL != lpFileBuffer) {
+        MYFREE(lpFileBuffer);
+        lpFileBuffer = NULL;
+    }
 
     // Update progress bar display (final)
     if (0 != cEnd) {
