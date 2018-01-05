@@ -1,6 +1,6 @@
 
-Readme file of Regshot development snapshot (post 1.9.0)
-(Note: this is for testing purpose only)
+Readme file of Regshot 1.9.1 beta 2015-07-26
+(Note: this is the beta version for testing purpose only)
 
 -----------------
 Introduction:
@@ -83,7 +83,7 @@ Loading ANSI hive files in Unicode builds and vice versa is not supported.
 The skip list is now additionally checked against the single name of keys, values, dirs and files.
 Internally Regshot always uses the short forms HKLM and HKU, so these have to be used in your skip lists too.
 
-(13) New to development snapshot (alpha):
+(13) New to 1.9.1:
 Reworked User Interface to provide more functions and flexibility.
 Support for DWORDs and QWORDs with different endiannes than CPU.
 New INI options to fine tune UI behaviour and output result.
