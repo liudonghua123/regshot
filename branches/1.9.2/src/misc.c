@@ -1,6 +1,6 @@
 /*
     Copyright 1999-2003,2007 TiANWEi
-    Copyright 2011-2012 Regshot Team
+    Copyright 2011-2018 Regshot Team
 
     This file is part of Regshot.
 
@@ -26,7 +26,12 @@
 // ----------------------------------------------------------------------
 VOID ErrMsg(LPTSTR lpszErrMsg)
 {
+#ifdef _WINDOWS
     MessageBox(hWnd, lpszErrMsg, asLangTexts[iszTextError].lpszText, MB_ICONHAND);
+#endif
+#ifdef _CONSOLE
+    _tprintf(_T("%-20s : %s\n"),asLangTexts[iszTextError].lpszText , lpszErrMsg);
+#endif
 }
 
 

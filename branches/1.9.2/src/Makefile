@@ -1,5 +1,5 @@
 #******************************************************************************
-#*  Copyright 2011-2012 XhmikosR
+#*  Copyright 2011-2018 XhmikosR
 #*  Copyright 2011-2012 Regshot Team
 #*
 #*  This file is part of Regshot.
@@ -48,16 +48,16 @@ ifeq ($(DEBUG),yes)
 else
     CFLAGS+=-DNDEBUG -UDEBUG
 endif
-
-SRCS_C=\
-    fileshot.c \
-    language.c \
-    misc.c \
-    output.c \
-    regshot.c \
-    setup.c \
-    ui.c \
-    winmain.c
+SRCS_C=main.c
+#SRCS_C=\
+#    fileshot.c \
+#    language.c \
+#    misc.c \
+#    output.c \
+#    regshot.c \
+#    setup.c \
+#    ui.c \
+#    winmain.c
 
 RESSRC=regshot.rc
 

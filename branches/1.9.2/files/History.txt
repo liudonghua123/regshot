@@ -11,6 +11,9 @@ http://sourceforge.net/projects/regshot/
 -: Function deleted
 -------------------------------------------------
 
+V1.9.2 beta 2018-01-05
++ Adding Regshot_cmd.exe to bring the possibility to use Regshot without graphical UI, and to pilot it in scripts or via administrative agents
+
 V1.9.1 beta 2015-07-26
 + Reworked User Interface to provide more functions and flexibility
 + Saving a shot is now possible all the time, except when it was loaded from a file

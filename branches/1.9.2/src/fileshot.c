@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -583,9 +583,15 @@ VOID GetFilesSnap(LPREGSHOT lpShot, LPTSTR lpszFullName, LPFILECONTENT lpFatherF
 // ----------------------------------------------------------------------
 VOID FileShot(LPREGSHOT lpShot)
 {
+#ifdef _WINDOWS
     UINT cchExtDir;
-
     cchExtDir = GetDlgItemText(hWnd, IDC_EDITDIR, lpszExtDir, EXTDIRLEN);  // length incl. NULL character
+#endif
+#ifdef _CONSOLE
+    size_t cchExtDir = 0;
+    cchExtDir = _tcslen(lpszExtDir);
+#endif
+
     if (0 < cchExtDir) {
         LPHEADFILE *lplpHFPrev;
         LPTSTR lpszSubExtDir;

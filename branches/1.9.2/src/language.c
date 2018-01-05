@@ -1,6 +1,6 @@
 /*
     Copyright 1999-2003,2007 TiANWEi
-    Copyright 2011-2012 Regshot Team
+    Copyright 2011-2018 Regshot Team
 
     This file is part of Regshot.
 
@@ -143,15 +143,22 @@ VOID SetTextsToDefaultLanguage(VOID)
 // ----------------------------------------------------------------------
 VOID LoadAvailableLanguagesFromIni(HWND hDlg)
 {
+#ifdef _WINDOWS
     LRESULT nResult;
+#endif
     LPTSTR lpgrszSectionNames;
     DWORD cchSectionNames;
     size_t i;
     size_t nLanguageNameLen;
 
+#ifdef _CONSOLE
+    UNREFERENCED_PARAMETER(hDlg);
+#endif
     // Always add default language to combo box and select it as default
+#ifdef _WINDOWS
     nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)lpszDefaultLanguage);  // TODO: handle CB_ERR and CB_ERRSPACE
     SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_SETCURSEL, (WPARAM)nResult, (LPARAM)0);
+#endif
     cchMaxLanguageNameLen = _tcslen(lpszDefaultLanguage) + 1;  // incl. NULL character
 
     // Get sections (=language names) from language ini
@@ -166,7 +173,9 @@ VOID LoadAvailableLanguagesFromIni(HWND hDlg)
             nLanguageNameLen = _tcslen(&lpgrszSectionNames[i]) + 1;  // incl. NULL character
 
             if ((0 != _tcsicmp(&lpgrszSectionNames[i], lpszSectionCurrent)) && (0 != _tcsicmp(&lpgrszSectionNames[i], lpszDefaultLanguage))) {
+#ifdef _WINDOWS
                 nResult = SendDlgItemMessage(hDlg, IDC_COMBOLANGUAGE, CB_ADDSTRING, (WPARAM)0, (LPARAM)&lpgrszSectionNames[i]);  // TODO: handle CB_ERR and CB_ERRSPACE
+#endif
                 if (nLanguageNameLen > cchMaxLanguageNameLen) {
                     cchMaxLanguageNameLen = nLanguageNameLen;
                 }

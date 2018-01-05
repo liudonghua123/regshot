@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007 TiANWEi
     Copyright 2004 tulipfan
 
@@ -41,10 +41,16 @@ DWORD cEnd;
 // ----------------------------------------------------------------------
 VOID UI_ShowHideCounters(int nCmdShow)  // 1.8.2
 {
+#ifdef _WINDOWS
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT1), nCmdShow);
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT2), nCmdShow);
     ShowWindow(GetDlgItem(hWnd, IDC_TEXTCOUNT3), nCmdShow);
     UpdateWindow(hWnd);
+#endif
+#ifdef _CONSOLE
+    UNREFERENCED_PARAMETER(nCmdShow);
+    _tprintf(_T("\r%79s\r"), "");
+#endif
 }
 
 
@@ -53,8 +59,13 @@ VOID UI_ShowHideCounters(int nCmdShow)  // 1.8.2
 // ----------------------------------------------------------------------
 VOID UI_ShowHideProgressBar(int nCmdShow)
 {
+#ifdef _WINDOWS
     ShowWindow(GetDlgItem(hWnd, IDC_PROGBAR), nCmdShow);
     UpdateWindow(hWnd);
+#endif
+#ifdef _CONSOLE
+    UNREFERENCED_PARAMETER(nCmdShow);
+#endif
 }
 
 
@@ -68,10 +79,12 @@ VOID UI_InitCounters(VOID)
     nLastTime = nStartTime;
 
     UI_ShowHideProgressBar(SW_HIDE);
+#ifdef _WINDOWS
     _tcscpy(lpszMessage, TEXT(" "));  // clear the counters
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT1, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT2, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
+#endif
     UI_ShowHideCounters(SW_SHOW);
 }
 
@@ -87,8 +100,10 @@ VOID UI_InitProgressBar(VOID)
     nLastTime = nStartTime;
 
     UI_ShowHideCounters(SW_HIDE);  // 1.8.2
+#ifdef _WINDOWS
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETRANGE32, (WPARAM)0, (LPARAM)MAXPBPOSITION);
     SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)0, (LPARAM)0);
+#endif
     UI_ShowHideProgressBar(SW_SHOW);
 }
 
@@ -102,6 +117,7 @@ VOID UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWOR
     nLastTime = nCurrentTime;
 
     // Update "status bar"
+#ifdef _WINDOWS
     _sntprintf(lpszMessage, REGSHOT_MESSAGE_LENGTH, TEXT("%s %us%03ums\0"), asLangTexts[iszTextTime].lpszText, (nCurrentTime - nStartTime) / 1000, (nCurrentTime - nStartTime) % 1000);
     lpszMessage[REGSHOT_MESSAGE_LENGTH - 1] = (TCHAR)'\0';  // safety NULL char
     SendDlgItemMessage(hWnd, IDC_TEXTCOUNT3, WM_SETTEXT, (WPARAM)0, (LPARAM)lpszMessage);
@@ -117,6 +133,15 @@ VOID UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWOR
     // Refresh window display
     UpdateWindow(hWnd);
     PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+#endif
+#ifdef _CONSOLE
+    UI_ShowHideCounters(SW_HIDE);
+    _tprintf(_T("\t\t\t%s %us%03ums, %s %u, %s %u")
+        , asLangTexts[iszTextTime].lpszText, (nCurrentTime - nStartTime) / 1000, (nCurrentTime - nStartTime) % 1000
+        , lpszTitle1, nCount1
+        , lpszTitle2, nCount2
+    );
+#endif
 }
 
 
@@ -133,15 +158,18 @@ VOID UI_UpdateProgressBar(VOID)
     // Update "status bar"
     if (0 != cEnd) {
         nPBPos = (DWORD)(cCurrent * (__int64)MAXPBPOSITION / cEnd);
+#ifdef _WINDOWS
         SendDlgItemMessage(hWnd, IDC_PROGBAR, PBM_SETPOS, (WPARAM)nPBPos, (LPARAM)0);
 
         // Refresh window display
         UpdateWindow(hWnd);
         PeekMessage(&msg, hWnd, WM_ACTIVATE, WM_ACTIVATE, PM_REMOVE);
+#endif
     }
 }
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Set mouse cursor to hour glass
 // ----------------------------------------------------------------------
@@ -152,8 +180,10 @@ VOID UI_SetHourGlassCursor(VOID)
     }
     hSaveCursor = SetCursor(hHourGlass);
 }
+#endif
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Set back to previous mouse cursor
 // ----------------------------------------------------------------------
@@ -161,8 +191,10 @@ VOID UI_RemoveHourGlassCursor(VOID)
 {
     SetCursor(hSaveCursor);
 }
+#endif
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Enable and disable buttons depending on status
 // ----------------------------------------------------------------------
@@ -206,8 +238,10 @@ VOID UI_EnableMainButtons(VOID)
 
     UpdateWindow(hWnd);
 }
+#endif
 
 
+#ifdef _WINDOWS
 //--------------------------------------------------
 // Show popup menu for shot buttons
 //--------------------------------------------------
@@ -245,8 +279,10 @@ VOID UI_CreateShotPopupMenu(VOID)
 
     SetMenuDefaultItem(hMenu, nIDDefault, FALSE);
 }
+#endif
 
 
+#ifdef _WINDOWS
 //--------------------------------------------------
 // Show popup menu for compare button
 //--------------------------------------------------
@@ -278,3 +314,4 @@ VOID UI_CreateComparePopupMenu(VOID)
 
     SetMenuDefaultItem(hMenu, nIDDefault, FALSE);
 }
+#endif

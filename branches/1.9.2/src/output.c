@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2007 Belogorokhov Youri
 
