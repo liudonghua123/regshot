@@ -1,6 +1,6 @@
 #******************************************************************************
 #* Copyright 2010-2011 XhmikosR
-#* Copyright 2011-2012 Regshot Team
+#* Copyright 2011-2018 Regshot Team
 #*
 #* This file is part of Regshot.
 #*
@@ -38,12 +38,17 @@ CFG=Regshot - Win32 Release
 !MESSAGE No configuration specified. Defaulting to Regshot - Win32 Release.
 !ENDIF
 
+!IF "$(EXE_UI)" == ""
+EXE_UI=WINDOWS
+!MESSAGE No EXE UI type specified. Defaulting to WINDOWS.
+!ENDIF
+
 !IF "$(CFG)" != "Regshot - Win32 Release" && "$(CFG)" != "Regshot - Win32 Release Unicode" && "$(CFG)" != "Regshot - x64 Release" && "$(CFG)" != "Regshot - x64 Release Unicode"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE
-!MESSAGE NMAKE /f "regshot_wdk.mak" CFG="Regshot - Win32 Release"
+!MESSAGE NMAKE /f "regshot_wdk.mak" CFG="Regshot - Win32 Release" EXE_UI="WINDOWS"
 !MESSAGE
 !MESSAGE Possible choices for configuration are:
 !MESSAGE
@@ -53,6 +58,22 @@ CFG=Regshot - Win32 Release
 !MESSAGE "Regshot - x64 Release Unicode" (based on "Application (.exe)")
 !MESSAGE
 !ERROR An invalid configuration is specified.
+!ENDIF
+
+
+!IF "$(EXE_UI)" != "WINDOWS" && "$(EXE_UI)" != "CONSOLE"
+!MESSAGE Invalid user interface "$(EXE_UI)" specified.
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro EXE_UI on the command line. For example:
+!MESSAGE
+!MESSAGE NMAKE /f "regshot_wdk.mak" CFG="Regshot - Win32 Release" EXE_UI="WINDOWS"
+!MESSAGE
+!MESSAGE Possible choices for user interface are:
+!MESSAGE
+!MESSAGE "WINDOWS"
+!MESSAGE "CONSOLE"
+!MESSAGE
+!ERROR An invalid user interface is specified.
 !ENDIF
 
 !IF "$(OS)" == "Windows_NT"
@@ -65,8 +86,15 @@ NULL=nul
 #######################
 ##  Global settings  ##
 #######################
-
+!IF "$(EXE_UI)" == "WINDOWS"
 ProjectName=Regshot
+EXE_UI=$(EXE_UI)
+!ELSEIF "$(EXE_UI)" == "CONSOLE"
+ProjectName=Regshot_cmd
+EXE_UI=$(EXE_UI)
+!ELSE
+!ERROR An invalid EXE UI type is specified.
+!ENDIF
 
 SRCDIR=.\src
 OUTDIR=$(VS_OUTPUT)bin\WDK\$(ProjectName)\$(PlatformName)\$(ConfigurationName)
@@ -94,40 +122,40 @@ LDOBJS= \
 PlatformName=Win32
 ConfigurationName=Release
 TargetName=$(ProjectName)-x86-ANSI
-CFLAGS=/O2 /GL /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_CRT_SECURE_NO_WARNINGS" /D "_MBCS" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
+CFLAGS=/O2 /GL /D "WIN32" /D "NDEBUG" /D "_$(EXE_UI)" /D "_CRT_SECURE_NO_WARNINGS" /D "_MBCS" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
 RFLAGS=/d "WIN32" /d "_M_IX86" /d "TARGETFILENAME=$(TargetName).exe" /l 0x409 /fo"$(INTDIR)\regshot.res"
 LDLIBS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
-LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:WINDOWS /LARGEADDRESSAWARE /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT
+LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:$(EXE_UI) /LARGEADDRESSAWARE /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT
 
 !ELSEIF  "$(CFG)" == "Regshot - Win32 Release Unicode"
 
 PlatformName=Win32
 ConfigurationName=Release_Unicode
 TargetName=$(ProjectName)-x86-Unicode
-CFLAGS=/O2 /GL /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_CRT_SECURE_NO_WARNINGS" /D "_UNICODE" /D "UNICODE" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
+CFLAGS=/O2 /GL /D "WIN32" /D "NDEBUG" /D "_$(EXE_UI)" /D "_CRT_SECURE_NO_WARNINGS" /D "_UNICODE" /D "UNICODE" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
 RFLAGS=/d "WIN32" /d "_M_IX86" /d "TARGETFILENAME=$(TargetName).exe" /d "_UNICODE" /d "UNICODE" /l 0x409 /fo"$(INTDIR)\regshot.res"
 LDLIBS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
-LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:WINDOWS /LARGEADDRESSAWARE /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT
+LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:$(EXE_UI) /LARGEADDRESSAWARE /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT
 
 !ELSEIF  "$(CFG)" == "Regshot - x64 Release"
 
 PlatformName=x64
 ConfigurationName=Release
 TargetName=$(ProjectName)-x64-ANSI
-CFLAGS=/O2 /GL /D "_WIN64" /D "NDEBUG" /D "_WINDOWS" /D "_CRT_SECURE_NO_WARNINGS" /D "_MBCS" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
+CFLAGS=/O2 /GL /D "_WIN64" /D "NDEBUG" /D "_$(EXE_UI)" /D "_CRT_SECURE_NO_WARNINGS" /D "_MBCS" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
 RFLAGS=/d "_WIN64" /d "_M_AMD64" /d "TARGETFILENAME=$(TargetName).exe" /l 0x409 /fo"$(INTDIR)\regshot.res"
 LDLIBS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
-LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X64 /ERRORREPORT:PROMPT
+LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:$(EXE_UI) /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X64 /ERRORREPORT:PROMPT
 
 !ELSEIF  "$(CFG)" == "Regshot - x64 Release Unicode"
 
 PlatformName=x64
 ConfigurationName=Release_Unicode
 TargetName=$(ProjectName)-x64-Unicode
-CFLAGS=/O2 /GL /D "_WIN64" /D "NDEBUG" /D "_WINDOWS" /D "_CRT_SECURE_NO_WARNINGS" /D "_UNICODE" /D "UNICODE" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
+CFLAGS=/O2 /GL /D "_WIN64" /D "NDEBUG" /D "_$(EXE_UI)" /D "_CRT_SECURE_NO_WARNINGS" /D "_UNICODE" /D "UNICODE" /FD /EHsc /MT /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /W4 /nologo /c /Zi /TC /errorReport:prompt
 RFLAGS=/d "_WIN64" /d "_M_AMD64" /d "TARGETFILENAME=$(TargetName).exe" /d "_UNICODE" /d "UNICODE" /l 0x409 /fo"$(INTDIR)\regshot.res"
 LDLIBS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
-LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X64 /ERRORREPORT:PROMPT
+LDFLAGS=/OUT:"$(OUTDIR)\$(TargetName).exe" /INCREMENTAL:NO /NOLOGO /MANIFEST:NO /DEBUG /PDB:"$(OUTDIR)\$(TargetName).pdb" /SUBSYSTEM:$(EXE_UI) /OPT:REF /OPT:ICF /LTCG /RELEASE /DYNAMICBASE /NXCOMPAT /MACHINE:X64 /ERRORREPORT:PROMPT
 
 !ENDIF
 

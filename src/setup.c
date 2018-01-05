@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 2004 tulipfan
 
     This file is part of Regshot.
@@ -60,6 +60,10 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
     DWORD cchSection;
     TCHAR szIniKey[17];
 
+#ifdef _CONSOLE
+    UNREFERENCED_PARAMETER(hDlg);
+    _tprintf(_T("Load Settings From Ini - BEBIN\n"));
+#endif
     // Get registry skip strings
     lprgszRegSkipStrings = MYALLOC0((MAX_INI_SKIPITEMS + 1) * sizeof(LPTSTR));
     lprgszRegSkipStrings[MAX_INI_SKIPITEMS] = NULL;  // saftey NULL pointer
@@ -72,6 +76,10 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
             lprgszRegSkipStrings[i] = FindKeyInIniSection(lpgrszRegSkipStrings, szIniKey, cchSection, _tcslen(szIniKey));
             if (NULL == lprgszRegSkipStrings[i]) {
                 break;  // not found, so do not look any further
+#ifdef _CONSOLE
+            } else {
+                _tprintf(_T("\t%-30s : \"%s\"\n"), _T("Exclude to registry scan"), lprgszRegSkipStrings[i]);
+#endif
             }
         }
     }
@@ -88,12 +96,17 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
             lprgszFileSkipStrings[i] = FindKeyInIniSection(lpgrszFileSkipStrings, szIniKey, cchSection, _tcslen(szIniKey));
             if (NULL == lprgszFileSkipStrings[i]) {
                 break;  // not found, so do not look any further
+#ifdef _CONSOLE
+            } else {
+                _tprintf(_T("\t%-30s : \"%s\"\n"), _T("Exclude to file scan"), lprgszFileSkipStrings[i]);
+#endif
             }
         }
     }
 
     // Flags
     nFlag = (BYTE)GetPrivateProfileInt(lpszIniSetup, lpszIniFlag, 1, lpszRegshotIni); // default from 0 to 1 in 1.8.2 (TEXT)
+#ifdef _WINDOWS
     /*if (nFlag != 0) {  // deleted in 1.8.1 */
     SendMessage(GetDlgItem(hDlg, IDC_RADIO1), BM_SETCHECK, (WPARAM)(nFlag & 0x01), (LPARAM)0);  // Text output
     SendMessage(GetDlgItem(hDlg, IDC_RADIO2), BM_SETCHECK, (WPARAM)((nFlag & 0x01) ^ 0x01), (LPARAM)0);  // HTML output
@@ -105,28 +118,55 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
         SendMessage(GetDlgItem(hDlg, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)0x00, (LPARAM)0);
     }
     */
+#endif
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%u\"\n"), _T("Flag"), nFlag);
+#endif
 
     // UseLongRegHead
     fUseLongRegHead = GetPrivateProfileInt(lpszIniSetup, lpszIniUseLongRegHead, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%u\"\n"), _T("Use Long Reg Head"), fUseLongRegHead);
+#endif
 
     // Scan Dirs
     if (0 != GetPrivateProfileString(lpszIniSetup, lpszIniExtDir, NULL, lpszExtDir, MAX_PATH, lpszRegshotIni)) {  // length incl. NULL character
+#ifdef _WINDOWS
         SetDlgItemText(hDlg, IDC_EDITDIR, lpszExtDir);
+#endif
     } else {
+#ifdef _WINDOWS
         SetDlgItemText(hDlg, IDC_EDITDIR, lpszWindowsDirName);
+#endif
     }
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%s\"\n"), _T("Dirs to scan"), lpszExtDir);
+#endif
 
     // Output Dir
     if (0 != GetPrivateProfileString(lpszIniSetup, lpszIniOutDir, NULL, lpszOutputPath, MAX_PATH, lpszRegshotIni)) {  // length incl. NULL character
+#ifdef _WINDOWS
         SetDlgItemText(hDlg, IDC_EDITPATH, lpszOutputPath);
+#endif
     } else {
+#ifdef _WINDOWS
         SetDlgItemText(hDlg, IDC_EDITPATH, lpszTempPath);
+#endif
     }
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%s\"\n"), _T("Output Path"), lpszOutputPath);
+#endif
 
+
+#ifdef _WINDOWS
     SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
+#endif
 
     // 1.9.1: Separate objects in output with empty line
     fOutSeparateObjs = GetPrivateProfileInt(lpszIniSetup, lpszIniOutSeparateObjs, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%u\"\n"), _T("Out Separate Objects"), fOutSeparateObjs);
+#endif
 
     // 1.9.1: Limit output length of binary data
     nOutMaxBinaryBytes = GetPrivateProfileInt(lpszIniSetup, lpszIniOutMaxBinaryBytes, 0, lpszRegshotIni);
@@ -134,9 +174,17 @@ BOOL LoadSettingsFromIni(HWND hDlg) // tfx get ini info
         nOutMaxBinaryBytes = 0;
     }
     cbOutBinaryMax = nOutMaxBinaryBytes;
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%u\"\n"), _T("Out Max Binary Bytes"), nOutMaxBinaryBytes);
+#endif
 
     // 1.9.1: Don't display info dialog after shot
     fDontDisplayInfoAfterShot = GetPrivateProfileInt(lpszIniSetup, lpszIniDontDisplayInfoAfterShot, 0, lpszRegshotIni) != 0 ? TRUE : FALSE;
+#ifdef _CONSOLE
+    _tprintf(_T("\t%-30s : \"%u\"\n"), _T("Dont Display Info After Shot"), fDontDisplayInfoAfterShot);
+    _tprintf(_T("Load Settings From Ini - END\n"));
+#endif
+
 
     return TRUE;
 }

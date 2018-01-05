@@ -1,5 +1,5 @@
 
-Readme file of Regshot 1.9.1 beta 2015-07-26
+Readme file of Regshot 1.9.2 beta 2018-01-05
 (Note: this is the beta version for testing purpose only)
 
 -----------------
@@ -87,7 +87,7 @@ Internally Regshot always uses the short forms HKLM and HKU, so these have to be
 Reworked User Interface to provide more functions and flexibility.
 Support for DWORDs and QWORDs with different endiannes than CPU.
 New INI options to fine tune UI behaviour and output result.
-
+Adding Regshot_cmd.exe to bring the possibility to use Regshot without graphical UI, and to pilot it in scripts or via administrative agents.
 
 -----------------
 Thanks:
@@ -142,7 +142,7 @@ Dchenka, itschy, HANDLE and all those we forgot to mention!!
 LICENSE:
 -----------------
 
-Copyright 2011-2015 The Regshot Team : TiANWEi, Maddes, XhmikosR
+Copyright 2011-2018 The Regshot Team : TiANWEi, Maddes, XhmikosR
 Copyright 1999-2003,2007,2011 TiANWEi
 Copyright 2004 tulipfan
 Copyright 2007 Belogorokhov Youri

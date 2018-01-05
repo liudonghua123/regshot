@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007 TiANWEi
     Copyright 2007 Belogorokhov Youri
     Copyright 2004 tulipfan
@@ -57,18 +57,24 @@ LPTSTR lpszLanguageIni;  // For language.ini
 LPTSTR lpszCurrentTranslator;
 LPTSTR lpszRegshotIni;
 
+#ifdef _WINDOWS
 MSG        msg;          // Windows MSG struct
 HWND       hWnd;         // The handle of REGSHOT
 HMENU      hMenu;        // Handle of popup menu
+#endif
 LPREGSHOT  lpMenuShot;   // Pointer to current Shot for popup menus and alike
+#ifdef _WINDOWS
 RECT       rect;         // Window RECT
 BROWSEINFO BrowseInfo1;  // BrowseINFO struct
+#endif
 
 #ifdef USEHEAPALLOC_DANGER
 HANDLE hHeap;  // 1.8.2
 #endif
 
 
+
+#ifdef _WINDOWS
 // this new function added by Youri in 1.8.2, for expanding path in browse dialog
 int CALLBACK SelectBrowseFolder(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
@@ -536,6 +542,123 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     return(int)(msg.wParam);
 }
+#endif
+
+#ifdef _CONSOLE
+int _tmain(int argc, _TCHAR *argv[])
+{
+	//int i;
+	size_t nLenExtDir;
+	_tprintf(_T("############################################################\n"));
+	_tprintf(_T("%s (Console version)\n"), lpszProgramName);
+	_tprintf(_T("############################################################\n"));
+	_tprintf(_T("%s\n"), lpszAboutRegshot);
+	_tprintf(_T("############################################################\n"));
+#ifdef USEHEAPALLOC_DANGER
+	hHeap = GetProcessHeap(); // 1.8.2
+#endif
+	//for (i=0; i < argc; i++)
+	//{
+	//	_tprintf(_T("Argument %ld : %s \n"), i, argv[i]);
+	//}
+	//getchar();
+	if (argc > 1) {
+		_tprintf(_T("Initialyse...\n"));
+		initialyse();
+		_tprintf(_T("############################################################\n"));
+		if (argc > 2) {
+			nLenExtDir = _tcslen(argv[2]);
+			_tcsncpy(lpszExtDir, argv[2], nLenExtDir);
+		}
+		// remove trailing semicolons on lpszExtDir
+		nLenExtDir = _tcslen(lpszExtDir);
+		while ((0 < nLenExtDir) && ((TCHAR)';' == lpszExtDir[nLenExtDir - 1])) {
+			nLenExtDir--;
+		}
+		lpszExtDir[nLenExtDir] = (TCHAR)'\0';
+		//
+		_tprintf(_T("Take snapshot to file : \"%s\"...\n"), argv[1]);
+		_tprintf(_T("         Dirs to scan : \"%s\"\n"), lpszExtDir);
+		_tprintf(_T("############################################################\n"));
+		SnapshotToFile(argv[1]);
+		_tprintf(_T("############################################################\n"));
+		return EXIT_SUCCESS;
+	}
+	_tprintf(_T("Error : Arguments missing\n"));
+	_tprintf(_T("Usage : RegShot.exe <snapshotfile> [ScanDir1[;ScanDir2[;...]]]\n"));
+	_tprintf(_T("Note  : <snapshotfile> must be have extension \".hiv\" for RegShot.exe ANSI, and \".hivu\" for UNICODE version.\n"));
+	return 1;
+}
+VOID initialyse(VOID)
+{
+	size_t  nLen;
+
+	//enlarge some buffer in 201201
+	lpszLanguage       = NULL;
+	lpszExtDir         = MYALLOC0(EXTDIRLEN * sizeof(TCHAR));      // EXTDIRLEN is actually MAX_PATH * 4
+	lpszLanguageIni    = MYALLOC0((MAX_PATH + 1 + _tcslen(lpszLanguageFileName)) * sizeof(TCHAR));   // for language.ini
+	lpszRegshotIni     = MYALLOC0((MAX_PATH + 1 + _tcslen(lpszIniFileName)) * sizeof(TCHAR));   // for regshot.ini
+	lpszMessage        = MYALLOC0(REGSHOT_MESSAGE_LENGTH * sizeof(TCHAR));  // For status bar text message store
+	lpszWindowsDirName = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+	lpszTempPath       = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+	lpszStartDir       = MYALLOC0(MAX_PATH * sizeof(TCHAR));
+	lpszOutputPath     = MYALLOC0(MAX_PATH * sizeof(TCHAR));  // store last save/open hive file dir, +1 for possible change in CompareShots()
+	lpgrszLangSection  = NULL;
+
+	ZeroMemory(&Shot1, sizeof(Shot1));
+	ZeroMemory(&Shot2, sizeof(Shot2));
+	ZeroMemory(&CompareResult, sizeof(CompareResult));
+
+	GetWindowsDirectory(lpszWindowsDirName, MAX_PATH);  // length incl. NULL character
+	lpszWindowsDirName[MAX_PATH] = (TCHAR)'\0';
+
+	GetTempPath(MAX_PATH, lpszTempPath);  // length incl. NULL character
+	lpszTempPath[MAX_PATH] = (TCHAR)'\0';
+
+	//_asm int 3;
+	GetCurrentDirectory(MAX_PATH, lpszStartDir);  // length incl. NULL character // fixed in 1.8.2 former version used getcommandline()
+	lpszStartDir[MAX_PATH] = (TCHAR)'\0';
+
+	//_tcscpy(lpszLanguageIni, lpszStartDir);
+	//nLen = _tcslen(lpszLanguageIni);
+	//if (0 < nLen) {
+	//	nLen--;
+	//	if (lpszLanguageIni[nLen] != (TCHAR)'\\') {
+	//		_tcscat(lpszLanguageIni, TEXT("\\"));
+	//	}
+	//}
+	//_tcscat(lpszLanguageIni, lpszLanguageFileName);
+
+	_tcscpy(lpszRegshotIni, lpszStartDir);
+	nLen = _tcslen(lpszRegshotIni);
+	if (0 < nLen) {
+		nLen--;
+		if (lpszRegshotIni[nLen] != (TCHAR)'\\') {
+			_tcscat(lpszRegshotIni, TEXT("\\"));
+		}
+	}
+	_tcscat(lpszRegshotIni, lpszIniFileName);
+
+	LoadAvailableLanguagesFromIni(NULL);
+	//LoadLanguageFromIni(hDlg);
+	SetTextsToDefaultLanguage();
+	//SetTextsToSelectedLanguage(hDlg);
+
+	//lpszLastSaveDir = lpszOutputPath;
+	//lpszLastOpenDir = lpszOutputPath;
+
+	LoadSettingsFromIni(NULL); // tfx
+}
+VOID SnapshotToFile(TCHAR *filepath)
+{
+	//_tprintf(_T("SnapshotToFile - BEGIN\n"));
+	lpMenuShot = &Shot1;
+	Shot(lpMenuShot);
+	_tprintf(_T("Save snapshot to file...\n"));
+	SaveShot(lpMenuShot, filepath);
+	//_tprintf(_T("SnapshotToFile - END\n"));
+}
+#endif
 
 #ifdef REPLACEMENT_STRNLEN
 size_t strnlen(const char *lpszText, size_t cchMax)

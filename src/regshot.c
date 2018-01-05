@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -882,7 +882,9 @@ VOID CompareRegKeys(LPKEYCONTENT lpStartKC1, LPKEYCONTENT lpStartKC2)
 VOID CompareShots(VOID)
 {
     if (!DirChainMatch(Shot1.lpHF, Shot2.lpHF)) {
+#ifdef _WINDOWS
         MessageBox(hWnd, TEXT("Found two shots with different DIR chain! (or with different order)\r\nYou can continue, but file comparison result would be abnormal!"), asLangTexts[iszTextWarning].lpszText, MB_ICONWARNING);  //TODO: I18N, create text index and translate
+#endif
     }
 
     // Initialize result and markers
@@ -970,18 +972,24 @@ BOOL OutputComparisonResult(VOID)
     cEnd = CompareResult.stcChanged.cAll;
     UI_InitProgressBar();
 
+#ifdef _WINDOWS
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_RADIO1), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
+#endif
         fAsHTML = FALSE;
         lpszExtension = TEXT(".txt");
+#ifdef _WINDOWS
     } else {
         fAsHTML = TRUE;
         lpszExtension = TEXT(".htm");
     }
+#endif
 
     lpszDestFileName = MYALLOC0(EXTDIRLEN * sizeof(TCHAR));
     lpszBuffer = MYALLOC0(nBufferSize * sizeof(TCHAR)); // nBufferSize must > commentlength + 10 .txt 0000
+#ifdef _WINDOWS
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpszBuffer, COMMENTLENGTH);  // length incl. NULL character
     GetDlgItemText(hWnd, IDC_EDITPATH, lpszOutputPath, MAX_PATH);  // length incl. NULL character
+#endif
 
     cchString = _tcslen(lpszOutputPath);
 
@@ -1035,7 +1043,9 @@ BOOL OutputComparisonResult(VOID)
     }
 
     //_asm int 3;
+#ifdef _WINDOWS
     GetDlgItemText(hWnd, IDC_EDITCOMMENT, lpszBuffer, COMMENTLENGTH);  // length incl. NULL character
+#endif
     WriteTitle(asLangTexts[iszTextComments].lpszText, lpszBuffer, fAsHTML);
 
     _sntprintf(lpszBuffer, nBufferSize, TEXT("%04d-%02d-%02d %02d:%02d:%02d, %04d-%02d-%02d %02d:%02d:%02d\0"),
@@ -1136,9 +1146,11 @@ BOOL OutputComparisonResult(VOID)
     // Close file
     CloseHandle(hFile);
 
+#ifdef _WINDOWS
     if (32 >= (size_t)ShellExecute(hWnd, TEXT("open"), lpszDestFileName, NULL, NULL, SW_SHOW)) {
         ErrMsg(asLangTexts[iszTextErrorExecViewer].lpszText);
     }
+#endif
     MYFREE(lpszDestFileName);
 
     UI_ShowHideProgressBar(SW_HIDE);
@@ -1571,6 +1583,9 @@ VOID Shot(LPREGSHOT lpShot)
 {
     DWORD cchString;
 
+#ifdef _CONSOLE
+    _tprintf(_T("Snapshot - BEGIN\n"));
+#endif
     // Clear shot
     cEnd = 0;
     FreeShot(lpShot);
@@ -1595,34 +1610,70 @@ VOID Shot(LPREGSHOT lpShot)
     // Set current system time
     GetSystemTime(&lpShot->systemtime);
 
+#ifdef _CONSOLE
+    _tprintf(_T("\tGetRegistrySnap HKEY_LOCAL_MACHINE...\n"));
+#endif
     // Take HKLM registry shot
     GetRegistrySnap(lpShot, HKEY_LOCAL_MACHINE, lpszHKLMShort, NULL, &lpShot->lpHKLM);
+#ifdef _CONSOLE
+    UI_ShowHideCounters(SW_HIDE);
+#endif
 
     // Update counters display (reg keys/values final)
     nCurrentTime = GetTickCount();
     UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
 
+
+
+
+#ifdef _CONSOLE
+    UI_ShowHideCounters(SW_HIDE);
+    _tprintf(_T("\tGetRegistrySnap HKEY_USERS...\n"));
+#endif
     // Take HKU registry shot
     GetRegistrySnap(lpShot, HKEY_USERS, lpszHKUShort, NULL, &lpShot->lpHKU);
+#ifdef _CONSOLE
+    UI_ShowHideCounters(SW_HIDE);
+#endif
 
     // Update counters display (reg keys/values final)
     nCurrentTime = GetTickCount();
     UI_UpdateCounters(asLangTexts[iszTextKey].lpszText, asLangTexts[iszTextValue].lpszText, lpShot->stCounts.cKeys, lpShot->stCounts.cValues);
+#ifdef _CONSOLE
+    UI_ShowHideCounters(SW_HIDE);
+    _tprintf(_T("\tFileShot...\n"));
+#endif
 
     // Take file shot
+#ifdef _WINDOWS
     if (1 == SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_GETCHECK, (WPARAM)0, (LPARAM)0)) {
+#endif
         FileShot(lpShot);
 
         // Update counters display (dirs/files final)
         nCurrentTime = GetTickCount();
         UI_UpdateCounters(asLangTexts[iszTextDir].lpszText, asLangTexts[iszTextFile].lpszText, lpShot->stCounts.cDirs, lpShot->stCounts.cFiles);
+#ifdef _CONSOLE
+        UI_ShowHideCounters(SW_HIDE);
+#endif
+#ifdef _WINDOWS
     }
+#endif
 
     // Get total count of all items
     lpShot->stCounts.cAll = lpShot->stCounts.cKeys
                             + lpShot->stCounts.cValues
                             + lpShot->stCounts.cDirs
                             + lpShot->stCounts.cFiles;
+#ifdef _CONSOLE
+    _tprintf(_T("\tRESULT : RegKeys=%u ; RegEntries=%u ; Dirs=%u ; Files=%u ; Total=%u\n")
+        , lpShot->stCounts.cKeys
+        , lpShot->stCounts.cValues
+        , lpShot->stCounts.cDirs
+        , lpShot->stCounts.cFiles
+        , lpShot->stCounts.cAll
+    );
+#endif
 
     // Set flags
     lpShot->fFilled = TRUE;
@@ -1638,6 +1689,9 @@ VOID Shot(LPREGSHOT lpShot)
         MYFREE(lpDataBuffer);
         lpDataBuffer = NULL;
     }
+#ifdef _CONSOLE
+    _tprintf(_T("Snapshot - END\n"));
+#endif
 }
 
 
@@ -1939,10 +1993,16 @@ VOID SaveRegKeys(LPREGSHOT lpShot, LPKEYCONTENT lpKC, DWORD nFPFatherKey, DWORD 
 // ----------------------------------------------------------------------
 // Save registry and files to HIVE file
 // ----------------------------------------------------------------------
+#ifdef _WINDOWS
 VOID SaveShot(LPREGSHOT lpShot)
 {
     OPENFILENAME opfn;
     TCHAR filepath[MAX_PATH];
+#endif
+#ifdef _CONSOLE
+VOID SaveShot(LPREGSHOT lpShot, TCHAR *filepath)
+{
+#endif
     DWORD nFPCurrent;
 
     // Check if there's anything to save
@@ -1950,6 +2010,7 @@ VOID SaveShot(LPREGSHOT lpShot)
         return;  // leave silently
     }
 
+#ifdef _WINDOWS
     // Clear Save File Name result buffer
     ZeroMemory(filepath, sizeof(filepath));
 
@@ -1971,6 +2032,10 @@ VOID SaveShot(LPREGSHOT lpShot)
 
     // Open file for writing
     hFileWholeReg = CreateFile(opfn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+#endif
+#ifdef _CONSOLE
+    hFileWholeReg = CreateFile(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+#endif
     if (INVALID_HANDLE_VALUE == hFileWholeReg) {
         ErrMsg(asLangTexts[iszTextErrorCreateFile].lpszText);
         return;
@@ -2127,9 +2192,11 @@ VOID SaveShot(LPREGSHOT lpShot)
 
     UI_ShowHideProgressBar(SW_HIDE);
 
+#ifdef _WINDOWS
     // overwrite first letter of file name with NULL character to get path only, then create backup for initialization on next call
     *(opfn.lpstrFile + opfn.nFileOffset) = (TCHAR)'\0';  // TODO: check
     _tcscpy(lpszLastSaveDir, opfn.lpstrFile);
+#endif
 }
 
 
@@ -2384,6 +2451,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
 
     // Prepare Open File Name dialog
     ZeroMemory(&opfn, sizeof(opfn));
+#ifdef _WINDOWS
     opfn.lStructSize = sizeof(opfn);
     opfn.hwndOwner = hWnd;
     opfn.lpstrFilter = lpszFilter;
@@ -2392,6 +2460,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
     opfn.lpstrInitialDir = lpszLastOpenDir;
     opfn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     opfn.lpstrDefExt = lpszRegshotFileDefExt;
+#endif
 
     // Display Open File Name dialog
     if (!GetOpenFileName(&opfn)) {
@@ -2731,13 +2800,19 @@ BOOL LoadShot(LPREGSHOT lpShot)
 
     // Set GUI fields after loading...
     if (NULL != lpShot->lpHF) {
+#ifdef _WINDOWS
         SendMessage(GetDlgItem(hWnd, IDC_CHECKDIR), BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
         SendMessage(hWnd, WM_COMMAND, (WPARAM)IDC_CHECKDIR, (LPARAM)0);
+#endif
 
         FindDirChain(lpShot->lpHF, lpszExtDir, EXTDIRLEN);  // Get new chains, must do this after loading! Length in TCHARs incl. NULL char
+#ifdef _WINDOWS
         SetDlgItemText(hWnd, IDC_EDITDIR, lpszExtDir);
+#endif
     } else {
+#ifdef _WINDOWS
         SetDlgItemText(hWnd, IDC_EDITDIR, TEXT(""));
+#endif
     }
 
     if (NULL != lpStringBuffer) {
@@ -2764,6 +2839,7 @@ BOOL LoadShot(LPREGSHOT lpShot)
 }
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Display details of shot in message box
 // ----------------------------------------------------------------------
@@ -2813,8 +2889,10 @@ VOID DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot)
     MessageBox(hDlg, lpszInfoBox, lpszTitle, MB_OK);
     MYFREE(lpszInfoBox);
 }
+#endif
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Display details of comparison result in message box
 // ----------------------------------------------------------------------
@@ -2845,6 +2923,7 @@ VOID DisplayResultInfo(HWND hDlg)
     MessageBox(hDlg, lpszInfoBox, lpszTitle, MB_OK);
     MYFREE(lpszInfoBox);
 }
+#endif
 
 
 // ----------------------------------------------------------------------
@@ -2860,6 +2939,7 @@ VOID SwapShots(VOID)
 }
 
 
+#ifdef _WINDOWS
 // ----------------------------------------------------------------------
 // Check if shot 1 and shot 2 are in chronological order, otherwise prompt to swap
 //   YES = swap, then proceed (returns TRUE)
@@ -2932,3 +3012,4 @@ BOOL CheckShotsChronology(HWND hDlg)
 
     return TRUE;
 }
+#endif

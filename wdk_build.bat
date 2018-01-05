@@ -2,7 +2,7 @@
 
 @rem ***************************************************************************
 @rem * Copyright 2010-2011 XhmikosR
-@rem * Copyright 2011-2012 Regshot Team
+@rem * Copyright 2011-2018 Regshot Team
 @rem *
 @rem * This file is part of Regshot.
 @rem *
@@ -113,9 +113,13 @@ SET INCLUDE=%WDKBASEDIR%\inc\api;%WDKBASEDIR%\inc\api\crt\stl60;%WDKBASEDIR%\inc
 SET LIB=%WDKBASEDIR%\lib\crt\i386;%WDKBASEDIR%\lib\win7\i386
 PATH %WDKBASEDIR%\bin\x86\x86;%WDKBASEDIR%\bin\x86;%ORGPATH%
 CALL :SubMsg "INFO" "Building Regshot x86 ANSI"
-CALL :NMake CFG="Regshot - Win32 Release"
+CALL :NMake CFG="Regshot - Win32 Release" EXE_UI="WINDOWS"
+CALL :SubMsg "INFO" "Building Regshot_cmd x86 ANSI"
+CALL :NMake CFG="Regshot - Win32 Release" EXE_UI="CONSOLE"
 CALL :SubMsg "INFO" "Building Regshot x86 Unicode"
-CALL :NMake CFG="Regshot - Win32 Release Unicode"
+CALL :NMake CFG="Regshot - Win32 Release Unicode" EXE_UI="WINDOWS"
+CALL :SubMsg "INFO" "Building Regshot_cmd x86 Unicode"
+CALL :NMake CFG="Regshot - Win32 Release Unicode" EXE_UI="CONSOLE"
 :x86_end
 
 @rem *** x64 build
@@ -125,9 +129,13 @@ SET INCLUDE=%WDKBASEDIR%\inc\api;%WDKBASEDIR%\inc\api\crt\stl60;%WDKBASEDIR%\inc
 SET LIB=%WDKBASEDIR%\lib\crt\amd64;%WDKBASEDIR%\lib\win7\amd64
 PATH %WDKBASEDIR%\bin\x86\amd64;%WDKBASEDIR%\bin\x86;%ORGPATH%
 CALL :SubMsg "INFO" "Building Regshot x64 ANSI"
-CALL :NMake CFG="Regshot - x64 Release"
+CALL :NMake CFG="Regshot - x64 Release" EXE_UI="WINDOWS"
+CALL :SubMsg "INFO" "Building Regshot_cmd x64 ANSI"
+CALL :NMake CFG="Regshot - x64 Release" EXE_UI="CONSOLE"
 CALL :SubMsg "INFO" "Building Regshot x64 Unicode"
-CALL :NMake CFG="Regshot - x64 Release Unicode"
+CALL :NMake CFG="Regshot - x64 Release Unicode" EXE_UI="WINDOWS"
+CALL :SubMsg "INFO" "Building Regshot_cmd x64 Unicode"
+CALL :NMake CFG="Regshot - x64 Release Unicode" EXE_UI="CONSOLE"
 :x64_end
 
 @rem *** All done

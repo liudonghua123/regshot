@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 2011-2012 XhmikosR
 
     This file is part of Regshot.
@@ -42,7 +42,7 @@
 #define REGSHOT_VERSION_TYPE    beta
 #define REGSHOT_VERSION_MAJOR   1
 #define REGSHOT_VERSION_MINOR   9
-#define REGSHOT_VERSION_PATCH   1
+#define REGSHOT_VERSION_PATCH   2
 
 #define REGSHOT_VERSION_NUM_DOTS  REGSHOT_VERSION_MAJOR.REGSHOT_VERSION_MINOR.REGSHOT_VERSION_PATCH
 

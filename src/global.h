@@ -1,5 +1,5 @@
 /*
-    Copyright 2011-2015 Regshot Team
+    Copyright 2011-2018 Regshot Team
     Copyright 1999-2003,2007,2011 TiANWEi
     Copyright 2004 tulipfan
 
@@ -28,6 +28,9 @@
 #endif
 #include <windows.h>
 #include <stdio.h>
+#ifdef _CONSOLE
+#include <stdlib.h>
+#endif
 #include <shlobj.h>
 #include <stddef.h>  // for "offsetof" macro
 #include <string.h>
@@ -486,6 +489,10 @@ extern BOOL      fOutSeparateObjs;          // since 1.9.1: Separate objects in 
 extern DWORD     cbOutBinaryMax;            // since 1.9.1: Limit output length of binary data
 extern BOOL      fDontDisplayInfoAfterShot; // since 1.9.1: Don't display info dialog after shot
 
+#ifdef _CONSOLE
+VOID initialyse(VOID);
+VOID SnapshotToFile(TCHAR *filepath);
+#endif
 VOID    CreateNewResult(DWORD nActionType, LPVOID lpContentOld, LPVOID lpContentNew);
 size_t  ResultToString(LPTSTR rgszResultStrings[], size_t iResultStringsMac, DWORD nActionType, LPVOID lpContent, BOOL fNewContent);
 BOOL    LoadSettingsFromIni(HWND hDlg);
@@ -502,16 +509,23 @@ VOID    UI_InitCounters(VOID);
 VOID    UI_InitProgressBar(VOID);
 VOID    UI_UpdateCounters(LPTSTR lpszTitle1, LPTSTR lpszTitle2, DWORD nCount1, DWORD nCount2);
 VOID    UI_UpdateProgressBar(VOID);
+#ifdef _WINDOWS
 VOID    UI_SetHourGlassCursor(VOID);
 VOID    UI_RemoveHourGlassCursor(VOID);
 VOID    UI_EnableMainButtons(VOID);
 VOID    UI_CreateShotPopupMenu(VOID);
 VOID    UI_CreateComparePopupMenu(VOID);
+#endif
 
 VOID    Shot(LPREGSHOT lpShot);
 VOID    CompareShots(VOID);
 BOOL    OutputComparisonResult(VOID);
+#ifdef _WINDOWS
 VOID    SaveShot(LPREGSHOT lpShot);
+#endif
+#ifdef _CONSOLE
+VOID    SaveShot(LPREGSHOT lpShot, TCHAR *filepath);
+#endif
 BOOL    LoadShot(LPREGSHOT lpShot);
 VOID    FreeCompareResult(void);
 VOID    FreeShot(LPREGSHOT lpShot);
@@ -531,10 +545,14 @@ VOID    ClearHeadFileMatchFlags(LPHEADFILE lpHF);
 BOOL    FindDirChain(LPHEADFILE lpHF, LPTSTR lpszDir, size_t nBufferLen);
 BOOL    DirChainMatch(LPHEADFILE lpHF1, LPHEADFILE lpHF2);
 VOID    CompareHeadFiles(LPHEADFILE lpStartHF1, LPHEADFILE lpStartHF2);
+#ifdef _WINDOWS
 VOID    DisplayShotInfo(HWND hDlg, LPREGSHOT lpShot);
 VOID    DisplayResultInfo(HWND hDlg);
+#endif
 VOID    SwapShots(VOID);
+#ifdef _WINDOWS
 BOOL    CheckShotsChronology(HWND hDlg);
+#endif
 VOID    WriteFileBuffer(long ofsFile, LPCVOID lpData, DWORD cbData);
 
 #define REGSHOT_BUFFER_BLOCK_BYTES 1024
